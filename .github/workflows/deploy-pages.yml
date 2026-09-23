@@ -48,10 +48,12 @@ jobs:
             echo "No static build directory was produced (.output/public or dist)."
             exit 1
           fi
-          # Preserve client-side routes when served by GitHub Pages.
-          if [ -f pages-artifact/index.html ]; then
-            cp pages-artifact/index.html pages-artifact/404.html
+          if [ ! -f pages-artifact/index.html ]; then
+            echo "The build produced no index.html; check the SPA prerender in vite.config.ts."
+            exit 1
           fi
+          # Preserve client-side routes when served by GitHub Pages.
+          cp pages-artifact/index.html pages-artifact/404.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
