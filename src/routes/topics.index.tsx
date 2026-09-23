@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{TopicsPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/topics/")({head:()=>pageMeta("Learning tracks — UniDojo","Explore Money Basics, Islamic Finance and Student Life."),component:TopicsPage});

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<title>Unidojo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:'Inter',system-ui,sans-serif;background:#FBF8F1;color:#0B1A24;-webkit-font-smoothing:antialiased;user-select:none;position:relative}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;z-index:1;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#app{width:100%;height:100dvh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;position:relative;overflow:hidden;z-index:2}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.screen{flex:1;display:flex;flex-direction:column;overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;overscroll-behavior-y:contain;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:#0F766E #EAE4D6}
+.screen::-webkit-scrollbar{width:14px;display:block}
+.screen::-webkit-scrollbar-track{background:#EAE4D6;border-radius:999px;margin:6px}
+.screen::-webkit-scrollbar-thumb{background:#0F766E;border:3px solid #EAE4D6;border-radius:999px;min-height:60px}
+.screen::-webkit-scrollbar-thumb:active{background:#0B1A24}
+.pad{padding:22px}
+.pb{padding-bottom:110px}
+h1{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.035em;line-height:1.05}
+h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;letter-spacing:-.025em;line-height:1.2}
+.label{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8378}
+.dim{color:#5A5246}
+.muted{color:#8A8378}
+.btn{width:100%;height:58px;border:none;border-radius:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,box-shadow .08s}
+.btn-p{background:#0F766E;color:#fff;box-shadow:0 5px 0 #084F49}
+.btn-p:active{transform:translateY(4px);box-shadow:0 1px 0 #084F49}
+.btn-p:disabled{background:#DCD6CA;color:#8A8378;box-shadow:none;cursor:not-allowed}
+.btn-c{background:#E85A3D;color:#fff;box-shadow:0 5px 0 #B23F27}
+.btn-c:active{transform:translateY(4px);box-shadow:0 1px 0 #B23F27}
+.btn-d{background:#0B1A24;color:#fff;box-shadow:0 5px 0 #000}
+.btn-d:active{transform:translateY(4px);box-shadow:0 1px 0 #000}
+.btn-s{background:#F0EBE0;color:#0B1A24;box-shadow:none}
+.topbar{padding:16px 22px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.wm{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.05em;color:#0B1A24}
+.wm span{color:#0F766E}
+.sb{font-size:13px;font-weight:800;color:#E85A3D;display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace}
+.card{background:#fff;border-radius:20px;padding:22px;border:1px solid #EAE4D6}
+.card-s{background:#F5F0E4;border-radius:20px;padding:20px;border:1px solid #EAE4D6}
+.sr{display:flex;gap:10px}
+.sc{flex:1;background:#fff;border:1px solid #EAE4D6;border-radius:16px;padding:16px 12px;text-align:center}
+.sv{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:800;color:#0B1A24}
+.sl{font-size:9.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#8A8378;margin-top:4px}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:#FBF8F1;z-index:50;display:flex;flex-direction:column;animation:ovIn .35s cubic-bezier(.2,.8,.2,1);max-width:480px;margin:0 auto;overflow:hidden}
+.ov::after{content:'';position:fixed;inset:0;pointer-events:none;opacity:.03;z-index:1;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.ov>*{position:relative;z-index:2}
+@keyframes ovIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.tb{position:absolute;bottom:0;left:0;right:0;background:rgba(251,248,241,.95);backdrop-filter:blur(24px);border-top:1px solid #EAE4D6;display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:40}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;background:none;border:none;font-family:inherit;cursor:pointer;color:#8A8378;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;transition:color .15s}
+.tab.active{color:#0F766E}
+.ti{font-size:20px;line-height:1}
+@keyframes fU{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fU .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes nP{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.np{animation:nP .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes bI{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.bi{animation:bI .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes sh{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}60%{transform:translateX(6px)}}
+.shk{animation:sh .45s}
+@keyframes pG{0%,100%{box-shadow:0 6px 0 rgba(0,0,0,.15),0 0 0 0 rgba(232,90,61,.4)}50%{box-shadow:0 6px 0 rgba(0,0,0,.15),0 0 0 18px rgba(232,90,61,0)}}
+.pn{animation:pG 2s infinite}
+.ph{padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
+.pd{display:flex;gap:6px}
+.pdd{width:22px;height:4px;border-radius:2px;background:#EAE4D6}
+.pdd.done{background:#0F766E}
+.pdd.cur{background:#0B1A24}
+.uh{background:#0B1A24;color:#fff;border-radius:20px;padding:18px 20px;margin-bottom:24px;position:relative;overflow:hidden;scroll-margin-top:64px}
+.jb{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;margin-bottom:12px;background:#FBF8F1;-webkit-overflow-scrolling:touch}
+.jb::-webkit-scrollbar{display:none}
+.jc{flex:0 0 auto;border:1px solid #EAE4D6;background:#fff;color:#5A5246;border-radius:999px;padding:7px 13px;font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap}
+.jc.on{background:#0B1A24;border-color:#0B1A24;color:#fff}
+.jc.done{border-color:#0F766E;color:#0F766E}
+.jc.lk{opacity:.5}
+.uh::after{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#0F766E 0%,transparent 70%);opacity:.6}
+.uh.comp{background:#0F766E}
+.uh.lock{background:#DCD6CA;color:#8A8378}
+.ut{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;position:relative;z-index:2}
+.ud{font-size:11.5px;font-weight:600;opacity:.8;position:relative;z-index:2}
+.up{position:absolute;top:18px;right:20px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;z-index:2}
+.pw{display:flex;justify-content:center;margin-bottom:16px}
+.pnode{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;border:none;cursor:pointer;transition:transform .15s;position:relative;box-shadow:0 6px 0 rgba(0,0,0,.15);font-family:inherit}
+.pnode:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.pnode.comp{background:#0F766E;color:#fff}
+.pnode.cur{background:#E85A3D;color:#fff}
+.pnode.lock{background:#E5DFD2;color:#A8A192;box-shadow:0 6px 0 rgba(0,0,0,.06)}
+.pnode.boss{width:90px;height:90px;font-size:34px}
+.pnode.comp::after{content:'✓';position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:#FCD34D;color:#0B1A24;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;border:2px solid #FBF8F1}
+.nl{text-align:center;font-size:11px;font-weight:700;color:#0B1A24;margin-top:8px;margin-bottom:4px}
+.nl.lock{color:#8A8378}
+.ns{text-align:center;font-size:10px;font-weight:600;color:#8A8378;margin-bottom:12px}
+.lt{padding:18px 22px;display:flex;align-items:center;gap:12px}
+.lpg{flex:1;height:14px;background:#EAE4D6;border-radius:999px;overflow:hidden}
+.lp{height:100%;background:linear-gradient(90deg,#0F766E,#10B981);border-radius:999px;transition:width .4s ease}
+.hr{display:flex;gap:4px;font-size:18px}
+.ht{transition:opacity .3s,transform .3s}
+.ht.lost{opacity:.25;transform:scale(.85)}
+.ci{background:#0B1A24;border-radius:22px;padding:26px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden}
+.ci::after{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,#0F766E 0%,transparent 70%);opacity:.5}
+.ci h2{color:#fff;font-size:24px;position:relative;z-index:2;margin-bottom:10px}
+.ci p{color:rgba(255,255,255,.8);font-size:14px;line-height:1.55;position:relative;z-index:2}
+.cc{background:linear-gradient(135deg,#F0EBE0,#fff);border:2px solid #0F766E;border-radius:22px;padding:26px;margin-bottom:16px}
+.cc .label{color:#0F766E;margin-bottom:12px}
+.cc h2{font-size:22px;margin-bottom:14px}
+.cc p{font-size:15px;line-height:1.6;color:#2A2A3E;font-weight:500}
+.cp{background:#0B1A24;border-radius:22px;padding:26px;color:#fff;position:relative;overflow:hidden;margin-bottom:16px}
+.cp::after{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,#FCD34D 0%,transparent 70%);opacity:.2}
+.cp .label{color:#FCD34D;position:relative;z-index:2;margin-bottom:12px}
+.cp p{font-size:17px;font-weight:700;line-height:1.5;color:#fff;position:relative;z-index:2}
+.qt{font-size:18px;font-weight:700;line-height:1.45;color:#0B1A24;margin-bottom:22px}
+.op{background:#fff;border:1.5px solid #EAE4D6;border-radius:16px;padding:17px 18px;font-family:inherit;cursor:pointer;display:flex;align-items:flex-start;gap:14px;transition:transform .1s,border-color .15s,background .15s;text-align:left;font-size:15px;font-weight:600;color:#0B1A24;line-height:1.4;margin-bottom:10px;width:100%}
+.op:active{transform:scale(.99)}
+.op.sel{border-color:#0F766E;background:#E8F5F2;border-width:2px;padding:16px 17px}
+.op.cor{border-color:#10B981;background:#EAFBF3;border-width:2px;padding:16px 17px}
+.op.wr{border-color:#E85A3D;background:#FEF3EE;border-width:2px;padding:16px 17px}
+.op .ol{font-family:'JetBrains Mono',monospace;font-weight:800;color:#8A8378;flex-shrink:0;font-size:13px;width:18px}
+.op.sel .ol{color:#0F766E}
+.op.cor .ol{color:#10B981}
+.op.wr .ol{color:#E85A3D}
+.op .oi{font-size:18px;margin-left:auto;flex-shrink:0}
+.sz{position:relative;padding:30px 20px;background:#0B1A24;border-radius:22px;color:#fff;text-align:center;margin-bottom:16px;overflow:hidden;height:280px;display:flex;flex-direction:column;justify-content:center;align-items:center;touch-action:none}
+.swc{font-size:16px;font-weight:700;line-height:1.5;padding:22px;background:rgba(255,255,255,.08);border-radius:16px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em;max-width:100%;width:100%}
+.swh{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:.5}
+.swa{position:absolute;inset:0;pointer-events:none}
+.sar{position:absolute;font-size:22px;font-weight:800;opacity:.3;transition:opacity .15s,color .15s}
+.sar.act{opacity:1;color:#FCD34D}
+.sar.l{left:14px;top:50%;transform:translateY(-50%)}
+.sar.r{right:14px;top:50%;transform:translateY(-50%)}
+.sar.u{left:50%;top:14px;transform:translateX(-50%)}
+.sar.d{left:50%;bottom:14px;transform:translateX(-50%)}
+.rt{font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:800;color:#E85A3D;text-align:center;margin:16px 0;letter-spacing:-.05em}
+.rb{height:8px;background:#EAE4D6;border-radius:999px;overflow:hidden;margin-bottom:24px}
+.rf{height:100%;background:linear-gradient(90deg,#E85A3D,#FCD34D);border-radius:999px;transition:width .1s linear}
+.fs{font-size:20px;font-weight:700;line-height:1.6;color:#0B1A24;margin-bottom:24px}
+.fb{display:inline-block;min-width:110px;border-bottom:3px solid #0F766E;text-align:center;font-weight:900;color:#0F766E;padding:2px 8px;margin:0 6px}
+.fb.em{color:#DCD6CA;border-bottom-color:#DCD6CA}
+.wc{display:inline-block;padding:12px 18px;background:#fff;border:1.5px solid #EAE4D6;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;color:#0B1A24;margin:0 6px 10px 0;cursor:pointer;transition:transform .1s,border-color .15s}
+.wc:active{transform:scale(.97)}
+.wc.sel{border-color:#0F766E;background:#E8F5F2}
+.cbb{position:absolute;top:60px;right:24px;background:#FCD34D;color:#0B1A24;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:900;padding:6px 14px;border-radius:999px;box-shadow:0 4px 0 #C7A73B;z-index:10;animation:bI .35s}
+.lr{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border:1px solid #EAE4D6;border-radius:14px;margin-bottom:8px}
+.lr.me{background:#E8F5F2;border-color:#0F766E;border-width:2px}
+.lrk{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:#8A8378;width:24px;text-align:center}
+.lrk.t1{color:#C7A73B}
+.lrk.t2{color:#8A8378}
+.lrk.t3{color:#B88B5D}
+.la{width:38px;height:38px;border-radius:50%;background:#0F766E;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;font-family:'Space Grotesk',sans-serif;flex-shrink:0}
+.la.c{background:#E85A3D}
+.la.g{background:#C7A73B;color:#0B1A24}
+.li{flex:1}
+.ln{font-size:14px;font-weight:800;color:#0B1A24;margin-bottom:2px}
+.lm{font-size:11px;font-weight:600;color:#8A8378}
+.lrt{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;color:#0B1A24}
+.lr.me .lrt{color:#0F766E}
+.gb{background:#FEF3EE;border:1.5px solid #E85A3D;border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13px;font-weight:700;color:#0B1A24;display:flex;align-items:center;gap:10px}
+.gb b{color:#E85A3D}
+.obh{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 22px;text-align:center}
+.obe{font-size:96px;margin-bottom:24px;display:inline-block;animation:bI .7s}
+.obt{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px;color:#0B1A24}
+.obs{font-size:15px;font-weight:600;color:#5A5246;line-height:1.55;max-width:340px;margin:0 auto}
+.cb{width:100%;text-align:left;padding:20px;background:#fff;border:1.5px solid #EAE4D6;border-radius:18px;margin-bottom:12px;cursor:pointer;font-family:inherit;transition:transform .1s,border-color .15s,background .15s;display:flex;align-items:center;gap:14px}
+.cb:active{transform:scale(.99)}
+.cb.sel{border-color:#0F766E;border-width:2px;background:#E8F5F2;padding:19px}
+.ce{font-size:28px;flex-shrink:0}
+.cio{flex:1}
+.ct{font-size:15px;font-weight:800;color:#0B1A24;margin-bottom:3px;letter-spacing:-.01em}
+.cd{font-size:12.5px;font-weight:600;color:#8A8378;line-height:1.4}
+.if{width:100%;height:60px;border:1.5px solid #EAE4D6;border-radius:16px;padding:0 20px;font-size:17px;font-weight:700;font-family:inherit;background:#fff;color:#0B1A24;outline:none;letter-spacing:-.01em}
+.if:focus{border-color:#0F766E;border-width:2px;padding:0 19px}
+.il{font-size:12px;font-weight:800;color:#8A8378;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:block}
+.cf{position:fixed;width:10px;height:10px;top:-10px;z-index:100;pointer-events:none;animation:cF 2.6s ease-in forwards}
+@keyframes cF{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+.gw{display:flex;justify-content:center;margin:16px 0}
+.gf{font-size:68px;cursor:pointer;filter:drop-shadow(0 12px 24px rgba(15,118,110,.3));animation:gB 1.9s ease-in-out infinite;user-select:none;line-height:1}
+@keyframes gB{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}}
+.qr{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border:1px solid #EAE4D6;border-radius:14px;margin-bottom:8px}
+.qi{font-size:22px;width:28px;text-align:center}
+.qt2{flex:1;font-size:13px;font-weight:700;color:#0B1A24}
+.qs{font-size:18px}
+.qd{opacity:.5;text-decoration:line-through}
+.cr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:#fff;border-radius:16px;border:1px solid #EAE4D6;cursor:pointer;font-family:inherit;text-align:left;width:100%;margin-bottom:10px}
+.cr:active{transform:scale(.99)}
+.rl{background:#0B1A24;border-radius:22px;padding:26px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
+.rl::after{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,#0F766E 0%,transparent 70%);opacity:.6}
+.rn{font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:800;letter-spacing:-.05em;position:relative;z-index:2;line-height:1}
+.rr{font-size:14px;font-weight:700;opacity:.9;margin-top:4px;position:relative;z-index:2}
+.re{font-size:88px;margin-bottom:18px;display:inline-block}
+.rti{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;letter-spacing:-.03em;margin-bottom:12px}
+.rsub{font-size:15px;color:#5A5246;font-weight:600;line-height:1.5}
+/* mini games */
+.mg{margin-bottom:8px}
+.mgt{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:2px solid #EAE4D6;background:#fff;color:#2A2A3E;border-radius:14px;padding:11px 14px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left}
+.chip.on{background:#0B1A24;border-color:#0B1A24;color:#fff}
+.chip.cor{background:#EAFBF3;border-color:#10B981;color:#0F766E}
+.chip.wr{background:#FEF3EE;border-color:#E85A3D;color:#C92A2A}
+.chip.gone{opacity:.35;pointer-events:none}
+.slot{display:flex;align-items:center;gap:10px;background:#F5F0E4;border:2px dashed #DCD6CA;border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:13.5px;font-weight:700}
+.slot .num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:#8A8378;width:18px;flex-shrink:0}
+.slot.full{background:#fff;border-style:solid;border-color:#0B1A24}
+.buk{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.bk{background:#F5F0E4;border:2px solid #EAE4D6;border-radius:16px;padding:12px;min-height:90px}
+.bkh{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5A5246;margin-bottom:8px;text-align:center}
+.bki{background:#fff;border:1px solid #EAE4D6;border-radius:10px;padding:7px 9px;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.sl{width:100%;-webkit-appearance:none;appearance:none;height:14px;border-radius:999px;background:#EAE4D6;outline:none;margin:18px 0 10px}
+.sl::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:#0F766E;border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer}
+.sl::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:#0F766E;border:4px solid #fff;cursor:pointer}
+.slv{font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:800;text-align:center;letter-spacing:-.02em}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mcol{display:flex;flex-direction:column;gap:8px}
+.memo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.mtile{aspect-ratio:1;border:2px solid #EAE4D6;background:#0B1A24;color:#0B1A24;border-radius:14px;font-size:22px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mtile.up{background:#fff;color:#2A2A3E}
+.mtile.got{background:#EAFBF3;border-color:#10B981;color:#0F766E}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+const KEY='unidojo_v5';
+const todayS=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const yestS=()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const S={
+onboardingComplete:false,name:'',level:null,goal:null,tab:'learn',rating:1200,xp:0,streak:0,longestStreak:0,shields:1,lastLessonDate:null,daysPlayed:0,totalCorrect:0,totalQuestions:0,completedNodes:[],conceptStats:{},conceptsRead:[],badges:[],todayQuests:{lesson:false,perfect:false,library:false,questsCompletedDate:null},history:[],giftOpenedDate:null,giftContent:null,waitlistEmail:null,waitlistSubmitted:false,doubleRating:false,overlay:null,overlayData:null,onboard:{step:0,name:'',level:null,goal:null},live:{ui:0,li:0,step:0,hearts:3,selected:null,answered:false,wrongThisLesson:0,correctThisLesson:0,combo:0,rapidTime:10,failIndex:null}
+};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem(KEY);if(r)Object.assign(S,JSON.parse(r))}catch(e){}}
+let actx=null;
+function iA(){try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+function tn(f,d,w,v,t){try{iA();if(!actx)return;const tt=actx.currentTime+(w||0);const o=actx.createOscillator();const g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.05,tt);g.gain.exponentialRampToValueAtTime(.0001,tt+d);o.connect(g);g.connect(actx.destination);o.start(tt);o.stop(tt+d)}catch(e){}}
+const sx={t:()=>tn(680,.035,0,.022),c:()=>{tn(660,.07,0,.06);tn(880,.08,.06,.06);tn(1320,.18,.13,.055)},w:()=>{tn(190,.12,0,.05);tn(120,.24,.1,.05)},f:()=>{[523,659,784,1046,1318].forEach((f,i)=>tn(f,.16,i*.075,.055))},fa:()=>{[330,260,196,130].forEach((f,i)=>tn(f,.22,i*.1,.05,'triangle'))},g:()=>{tn(880,.06,0,.05);tn(1320,.09,.06,.05);tn(1760,.18,.14,.05)},b:()=>{tn(1046,.09,0,.055);tn(1318,.12,.09,.055);tn(1568,.22,.2,.055)},sk:()=>{tn(440,.08,0,.045);tn(660,.16,.08,.045)},j:()=>{tn(659,.08,0,.06);tn(988,.1,.08,.06);tn(1318,.25,.18,.06)},co:(l)=>{tn(660+l*80,.08,0,.055);tn(880+l*80,.12,.06,.055)},tk:()=>tn(940,.02,0,.014)};
+const FRIENDS=[{n:'James',u:'Leeds',b:1350},{n:'Priya',u:'Manchester',b:1280},{n:'Ollie',u:'Bristol',b:1195},{n:'Fatima',u:'Edinburgh',b:1420},{n:'Sam',u:'Warwick',b:1120},{n:'Zara',u:'KCL',b:1310},{n:'Tom',u:'Birmingham',b:1050},{n:'Harper',u:'Glasgow',b:1230}];
+function genBoard(){const d=Math.floor(Date.now()/864e5);const s=d%7;return FRIENDS.map((f,i)=>({name:f.n,uni:f.u,rating:f.b+((s*(i+3))%40)-20+((d*(i+7))%60)-30,streak:((d+i*3)%14)+1,isMe:false}))}
+const U=[
+{id:'u1',title:'Money Basics',desc:'What money actually is',icon:'💰',lessons:[
+{id:'u1l1',title:'What is money',concept:'Foundations',intro:{title:'Money is a tool',body:'It is not good. It is not evil. It is a system humans invented to trade time and effort.'},cards:[{title:'It is a tool',body:'Money lets you store the value of your work and swap it for things you need later. It is neutral. Behaviour decides what it becomes.'},{title:'Your behaviour matters',body:'Two people can earn the same amount. One builds wealth. One stays broke. The difference is what they do with it.'}],qs:[
+{type:'choice',q:'What is money fundamentally?',opts:['A tool for exchange','A measure of your worth','A source of stress','A government trick'],correct:0,why:'Money is a tool. Nothing more. Nothing less.'},
+{type:'swipe',q:'Two students earn £1,500 a month. One saves £200. The other spends it all. Who has more in 5 years?',opts:['The saver','The spender','Equal','Unsure'],correct:0,why:'£200 a month for 60 months is £12,000 before any growth.'},
+{type:'choice',q:'What most determines your financial future?',opts:['Your income','Your habits','Your luck','Your parents'],correct:1,why:'Habits compound. Income can be spent. Luck runs out.'}],p:'Money is neutral. Your behaviour decides what it becomes.'},
+{id:'u1l2',title:'Income vs outgoings',concept:'Foundations',intro:{title:'The gap is everything',body:'Wealth is not what you earn. It is what you keep.'},cards:[{title:'Income',body:'Money that comes in. Student loan, job, parents, side income. Irregular for most students.'},{title:'Outgoings',body:'Money that leaves. Rent, food, transport, fun. The trap is when it equals or exceeds income.'}],qs:[
+{type:'rapid',q:'You earn £1,500 and spend £1,200. What is your gap?',opts:['£300','£1,500','£0','£2,700'],correct:0,why:'£1,500 minus £1,200 is £300. That is your buffer.'},
+{type:'choice',q:'What matters most for building wealth?',opts:['Income size','The gap between income and outgoings','Investment returns','Credit score'],correct:1,why:'Even a big income spent entirely builds nothing. The gap is what you keep.'},
+{type:'fill',q:'Save 20% of your income means saving £1 out of every £___.',opts:['5','3','10','2'],correct:0,why:'One pound in five is twenty percent.'}],p:'Wealth is built in the gap between what you earn and what you spend.'},
+{id:'u1l3',title:'Needs vs wants',concept:'Foundations',intro:{title:'The line moves when you are not watching',body:'Needs keep you alive. Wants make life enjoyable. The trap is when wants dress up as needs.'},cards:[{title:'Needs',body:'Rent. Food. Transport. Medicine. Utilities. These come first. No negotiation.'},{title:'Wants',body:'Everything else. Takeaway instead of cooking. The newest phone. Nights out.'}],qs:[
+{type:'swipe',q:'Which is a need?',opts:['Rent','Spotify','The latest iPhone','A night out'],correct:0,why:'Rent keeps a roof over your head.'},
+{type:'choice',q:'Which is a want disguised as a need?',opts:['Rice and pasta','The newest iPhone','Prescription medicine','Bus fare'],correct:1,why:'A phone is a need. The newest phone is a want.'},
+{type:'choice',q:'What is a good order of priority?',opts:['Needs, savings, wants','Wants, needs, savings','Savings, needs, wants','Wants, savings, needs'],correct:0,why:'Needs first so you survive. Savings second so you progress.'}],p:'The line between needs and wants moves when you are not watching.'},
+{id:'u1l4',title:'Your first budget',concept:'Foundations',intro:{title:'A budget is permission',body:'It tells your money where to go before it disappears.'},cards:[{title:'Plan before you spend',body:'A budget assigns every pound a job before the month starts.'},{title:'50 30 20',body:'50 percent needs. 30 percent wants. 20 percent savings. It is a template, not law.'}],qs:[
+{type:'choice',q:'What is a budget?',opts:['A plan for your money','A restriction','A bank statement','A form of tax'],correct:0,why:'A budget is a plan.'},
+{type:'fill',q:'The 50 30 20 rule assigns ___ percent to savings.',opts:['20','10','30','50'],correct:0,why:'Twenty percent of income goes to savings.'},
+{type:'choice',q:'Which category is most often forgotten?',opts:['Rent','Food','Savings','Transport'],correct:2,why:'People plan what they spend. Few plan what they keep.'}],p:'A budget is permission to spend, not a punishment.'},
+{id:'u1boss',title:'The Money Master',concept:'Foundations',type:'boss',intro:{title:'Prove what you learned',body:'Five questions. Three hearts. No mercy.'},qs:[
+{type:'choice',q:'What is money?',opts:['A tool','A measure of worth','A trap','A right'],correct:0,why:'A tool for exchange.'},
+{type:'rapid',q:'Wealth comes from:',opts:['Earning more','Spending less','The gap between both','Inheritance'],correct:2,why:'The gap is everything.'},
+{type:'swipe',q:'A need is:',opts:['Anything you feel you need','Something essential for life','A gift','A frequent purchase'],correct:1,why:'Needs are essential.'},
+{type:'fill',q:'A budget is a ___ for your money.',opts:['plan','punishment','restriction','trap'],correct:0,why:'A budget is a plan.'},
+{type:'choice',q:'50 30 20 refers to:',opts:['Age groups','Needs wants savings','Bank types','Tax brackets'],correct:1,why:'Needs wants savings split.'}],p:'You now know the foundation. Build on it.'}
+]},
+{id:'u2',title:'Banking',desc:'How the system works',icon:'🏦',lessons:[
+{id:'u2l1',title:'Current accounts',concept:'Banking',intro:{title:'Where your money lives',body:'Every bill, every pay, every purchase flows through it.'},cards:[{title:'What it does',body:'Receives income. Sends payments. Holds short term money.'},{title:'Student accounts',body:'Most UK banks offer free overdrafts up to a limit for students.'}],qs:[
+{type:'choice',q:'A current account is for:',opts:['Long term savings','Everyday money','Investments','Retirement'],correct:1,why:'Money in motion.'},
+{type:'swipe',q:'Most UK student accounts offer:',opts:['Free overdrafts','Free shares','Guaranteed returns','No fees for life'],correct:0,why:'Free overdraft up to a limit.'},
+{type:'choice',q:'Safest weekly habit?',opts:['Ignore balance','Check balance','Spend until declined','Borrow more'],correct:1,why:'Catches problems early.'}],p:'Your current account is a tool. Check it.'},
+{id:'u2l2',title:'Overdrafts',concept:'Banking',intro:{title:'A bridge, not a lifestyle',body:'An overdraft lets you spend money you do not have.'},cards:[{title:'What it is',body:'The bank allows you to spend below zero up to a limit. It is a loan.'},{title:'The trap',body:'Living in your overdraft means living on borrowed money.'}],qs:[
+{type:'choice',q:'An overdraft is:',opts:['Extra income','A loan','A savings type','Free money'],correct:1,why:'It is a loan.'},
+{type:'rapid',q:'Student overdrafts are:',opts:['Free up to a limit','Always free','Never free','Graduate only'],correct:0,why:'Free while studying.'},
+{type:'fill',q:'An overdraft is a ___ from the bank.',opts:['loan','gift','fee','tax'],correct:0,why:'It is a loan.'}],p:'Overdraft is a bridge, not a lifestyle.'},
+{id:'u2l3',title:'Debit vs credit',concept:'Banking',intro:{title:'One spends yours. One spends theirs.',body:'Debit spends what you have. Credit spends what you owe.'},cards:[{title:'Debit',body:'Takes money directly from your current account.'},{title:'Credit',body:'The bank pays. You owe them. Interest compounds if unpaid.'}],qs:[
+{type:'choice',q:'A debit card takes money from:',opts:['Your account','The bank','A loan','Nothing'],correct:0,why:'Debit spends your money.'},
+{type:'choice',q:'A credit card takes money from:',opts:['Your account','The bank','A friend','Nowhere'],correct:1,why:'Credit spends the bank money.'},
+{type:'swipe',q:'Which is riskier?',opts:['Debit','Credit if unpaid','Both equal','Neither'],correct:1,why:'Credit APR is 20 to 25 percent.'}],p:'Debit spends what you have. Credit spends what you will owe.'},
+{id:'u2l4',title:'Credit scores',concept:'Banking',intro:{title:'Your financial reputation',body:'A number lenders use to decide if they can trust you.'},cards:[{title:'What builds it',body:'On time payments. Low use. Long history.'},{title:'What kills it',body:'Missed payments. Maxed cards. Multiple applications.'}],qs:[
+{type:'choice',q:'A credit score measures:',opts:['Income','Reliability as a borrower','Savings','Age'],correct:1,why:'Reliability to repay debt.'},
+{type:'choice',q:'What builds a good score?',opts:['Earning more','Paying on time','Opening many','Borrowing often'],correct:1,why:'Reliability builds the score.'},
+{type:'rapid',q:'What damages it most?',opts:['Missing a payment','Checking score','Having a card','Being a student'],correct:0,why:'Stays on file six years.'}],p:'Your credit score is your financial reputation.'},
+{id:'u2boss',title:'The Bank Breaker',concept:'Banking',type:'boss',intro:{title:'The bank tests you',body:'Five questions. Three hearts.'},qs:[
+{type:'choice',q:'A current account is for:',opts:['Savings','Everyday money','Investments','Retirement'],correct:1,why:'Everyday money.'},
+{type:'swipe',q:'An overdraft is:',opts:['Extra income','A bank loan','Savings','Free money'],correct:1,why:'A loan.'},
+{type:'fill',q:'Credit spends the ___ money.',opts:['bank','your','friend','government'],correct:0,why:'The bank money.'},
+{type:'choice',q:'What kills a credit score?',opts:['Checking it','Missed payments','Having a card','Being a student'],correct:1,why:'Missed payments.'},
+{type:'rapid',q:'A student overdraft is:',opts:['Free up to a limit','Always free','Never free','Unlimited'],correct:0,why:'Free while studying.'}],p:'You understand banking. The system rewards discipline.'}
+]},
+{id:'u3',title:'Emergency Fund',desc:'Your financial shield',icon:'🛡️',lessons:[
+{id:'u3l1',title:'Why buffers matter',concept:'Buffers',intro:{title:'Crisis or inconvenience',body:'A buffer turns a disaster into a bad day.'},cards:[{title:'What it is',body:'Money set aside for the unexpected.'},{title:'Why it matters',body:'Laptop breaks. Job ends. Without a buffer, you borrow.'}],qs:[
+{type:'choice',q:'An emergency fund is for:',opts:['Holidays','Unplanned essentials','Fun','Investing'],correct:1,why:'Only for the unexpected.'},
+{type:'swipe',q:'How much do you need?',opts:['£50','3 to 6 months of essentials','£10,000','One year of income'],correct:1,why:'Three to six months.'},
+{type:'choice',q:'What happens without one?',opts:['Nothing','Small problems become debt','You earn more','You save more'],correct:1,why:'Every surprise becomes debt.'}],p:'A buffer turns a crisis into an inconvenience.'},
+{id:'u3l2',title:'How to build one',concept:'Buffers',intro:{title:'Start small',body:'£50 is a real buffer. So is £200.'},cards:[{title:'Start at £50',body:'Small enough to hit in a month.'},{title:'Automate it',body:'Standing order on payday. Move it before you can spend it.'}],qs:[
+{type:'choice',q:'Where should you start?',opts:['£5,000','£50','£500','£10,000'],correct:1,why:'£50 is a real start.'},
+{type:'swipe',q:'Where should it live?',opts:['Same account','Separate savings','Under mattress','In stocks'],correct:1,why:'Separate. Accessible.'},
+{type:'fill',q:'Automate the transfer so willpower does not ___ you.',opts:['stop','help','save','move'],correct:0,why:'Automation removes willpower.'}],p:'Build the buffer before the buffer is needed.'},
+{id:'u3l3',title:'When to use it',concept:'Buffers',intro:{title:'Most things are not emergencies',body:'A sale is not an emergency.'},cards:[{title:'Real emergencies',body:'Job loss. Medical bills. Essential repairs.'},{title:'Not emergencies',body:'Sales. Holidays. Upgrades. Concert tickets.'}],qs:[
+{type:'choice',q:'Which is a real emergency?',opts:['New phone','Broken laptop','Concert tickets','Weekend away'],correct:1,why:'Affects ability to work.'},
+{type:'rapid',q:'Which is not an emergency?',opts:['Medical bill','Rent shortfall','Sale on trainers','Car repair'],correct:2,why:'A sale is a sale.'},
+{type:'choice',q:'How do you decide?',opts:['If it feels urgent','If it affects life or work','If expensive','If unexpected'],correct:1,why:'Impact not size.'}],p:'If you have to ask, it probably is not.'},
+{id:'u3l4',title:'Rebuilding',concept:'Buffers',intro:{title:'Buffer is priority one',body:'If you use it, rebuild it first.'},cards:[{title:'Rebuild first',body:'A new laptop is a reason to save harder.'},{title:'Even while investing',body:'Without a buffer, investing is premature.'}],qs:[
+{type:'choice',q:'Priority after using the buffer?',opts:['Investing','Rebuilding it','Fun spending','New goals'],correct:1,why:'Rebuild first.'},
+{type:'choice',q:'Can you invest while rebuilding?',opts:['Yes always','Only after buffer is solid','Never','Only in stocks'],correct:1,why:'Buffer protects investments.'},
+{type:'fill',q:'The buffer is priority ___.',opts:['one','two','three','none'],correct:0,why:'Always priority one.'}],p:'The buffer is priority one. Always.'},
+{id:'u3boss',title:'The Shock',concept:'Buffers',type:'boss',intro:{title:'Test your shield',body:'Five questions. Three hearts.'},qs:[
+{type:'choice',q:'An emergency fund is for:',opts:['Holidays','Unplanned essentials','Fun','Investing'],correct:1,why:'Unexpected essentials.'},
+{type:'swipe',q:'Where should it live?',opts:['Current account','Separate savings','Invested','At home'],correct:1,why:'Separate and accessible.'},
+{type:'fill',q:'Start with £___ at minimum.',opts:['50','5','5000','500000'],correct:0,why:'Fifty pounds.'},
+{type:'choice',q:'Is a sale an emergency?',opts:['Yes','No','Sometimes','Always'],correct:1,why:'Sales are not emergencies.'},
+{type:'rapid',q:'Buffer or investing first?',opts:['Buffer','Investing','Both','Neither'],correct:0,why:'Buffer first.'}],p:'This habit separates stability from stress.'}
+]},
+{id:'u4',title:'Investing',desc:'How to make money grow',icon:'📈',lessons:[
+{id:'u4l1',title:'Risk vs return',concept:'Investing',intro:{title:'No free lunch',body:'Higher returns require higher risk.'},cards:[{title:'The trade off',body:'Cash is safest and pays least.'},{title:'The red flag',body:'High returns with low risk is a scam.'}],qs:[
+{type:'choice',q:'Higher return requires:',opts:['More skill','Higher risk','Larger investment','Longer time'],correct:1,why:'Risk is the price.'},
+{type:'swipe',q:'Lowest risk?',opts:['Cash','Global stocks','Single stocks','Crypto'],correct:0,why:'Cash has almost no risk.'},
+{type:'choice',q:'What is a red flag?',opts:['7 percent historical','Guaranteed 20 percent','Volatile market','0.1 percent fee'],correct:1,why:'Guaranteed high returns do not exist.'}],p:'If it promises high returns with no risk, walk away.'},
+{id:'u4l2',title:'Index funds',concept:'Investing',intro:{title:'Buy the whole market',body:'Hundreds of companies at once.'},cards:[{title:'What it is',body:'A fund that tracks an index.'},{title:'Why it works',body:'90 percent of managers underperform it.'}],qs:[
+{type:'choice',q:'An index fund holds:',opts:['One stock','A basket','Bonds only','Cash'],correct:1,why:'A basket of companies.'},
+{type:'rapid',q:'Why is it safer than one stock?',opts:['Guaranteed returns','Diversification','Government protection','Lower fees'],correct:1,why:'Diversification.'},
+{type:'fill',q:'Target fees below ___ percent.',opts:['0.3','3','10','0.0001'],correct:0,why:'Below 0.3 percent.'}],p:'Buy the whole market.'},
+{id:'u4l3',title:'Compound growth',concept:'Investing',intro:{title:'Growth on growth',body:'Time beats amount.'},cards:[{title:'What it is',body:'Interest earned on interest.'},{title:'Time beats amount',body:'£100 a month from 22 beats £200 a month from 32.'}],qs:[
+{type:'choice',q:'Compound growth is:',opts:['Returns on returns','Higher fees','Tax break','Savings account'],correct:0,why:'Growth on growth.'},
+{type:'swipe',q:'What matters more?',opts:['Time','Amount','Both equal','Fees'],correct:0,why:'Time beats amount.'},
+{type:'choice',q:'Rule of 72 estimates:',opts:['Tax rate','Years to double','Credit score','Monthly fees'],correct:1,why:'Years to double money.'}],p:'Time in the market beats everything.'},
+{id:'u4l4',title:'Fees',concept:'Investing',intro:{title:'The invisible leak',body:'1 percent in fees costs a quarter of wealth over 30 years.'},cards:[{title:'The maths',body:'0.05 percent fees ends at £70,000. 1.5 percent ends at £52,000.'},{title:'What to look for',body:'Ongoing charge figure. Target below 0.3 percent.'}],qs:[
+{type:'choice',q:'1 percent fee over 30 years costs:',opts:['1 percent','Quarter of final wealth','Nothing','Half'],correct:1,why:'Fees compound.'},
+{type:'fill',q:'A good annual fee is below ___ percent.',opts:['0.3','3','10','1'],correct:0,why:'Below 0.3 percent.'},
+{type:'rapid',q:'Why do fees compound?',opts:['They do not','Every pound cannot grow','Banks compound','Governments do'],correct:1,why:'Every pound in fees cannot grow.'}],p:'Keep fees low. They compound against you.'},
+{id:'u4boss',title:'Market Maker',concept:'Investing',type:'boss',intro:{title:'Prove you are ready',body:'Five questions. Three hearts.'},qs:[
+{type:'choice',q:'Higher return requires:',opts:['Luck','Higher risk','More skill','Patience'],correct:1,why:'Risk is the price.'},
+{type:'swipe',q:'An index fund is:',opts:['One stock','Basket of stocks','Bond','Cash'],correct:1,why:'A basket.'},
+{type:'fill',q:'___ in the market beats amount.',opts:['Time','Luck','Skill','Fees'],correct:0,why:'Time in the market.'},
+{type:'rapid',q:'A good annual fee is:',opts:['Below 0.3 percent','Around 2 percent','Whatever','No fees'],correct:0,why:'Below 0.3 percent.'},
+{type:'choice',q:'Guaranteed high returns means:',opts:['Good deal','Scam','Typical','Nothing'],correct:1,why:'Guaranteed returns do not exist.'}],p:'You are ready to invest with discipline.'}
+]},
+{id:'u5',title:'Debt',desc:'Getting out and staying out',icon:'💀',lessons:[
+{id:'u5l1',title:'Types of debt',concept:'Debt',intro:{title:'Not all debt is equal',body:'7 percent student loan is not 24 percent credit card.'},cards:[{title:'Cheap debt',body:'Student loans. Interest free overdrafts. Family.'},{title:'Expensive debt',body:'Credit cards. Payday loans. BNPL gone wrong.'}],qs:[
+{type:'choice',q:'Which is cheapest?',opts:['Student loan','Credit card','Payday loan','Car finance'],correct:0,why:'Student loans are cheap.'},
+{type:'choice',q:'Which is most expensive?',opts:['Student loan','Credit card','Mortgage','Family loan'],correct:1,why:'Credit cards 20 to 25 percent.'},
+{type:'fill',q:'Debt with higher ___ is more urgent.',opts:['interest','balance','age','name'],correct:0,why:'Interest rate matters.'}],p:'Not all debt is equal. Know which costs most.'},
+{id:'u5l2',title:'Priority order',concept:'Debt',intro:{title:'Highest interest first',body:'Every pound to the expensive debt.'},cards:[{title:'The rule',body:'List by interest rate. Pay minimums on all. Spare pound to highest rate.'},{title:'The exception',body:'Some need the psychological win of clearing small ones first.'}],qs:[
+{type:'choice',q:'Which debt first?',opts:['Smallest balance','Highest interest','Newest','Friend'],correct:1,why:'Highest interest saves most.'},
+{type:'swipe',q:'What do you pay on others?',opts:['Minimum','As much as possible','Nothing','Double'],correct:0,why:'Minimums on everything else.'},
+{type:'choice',q:'0 percent debts?',opts:['Pay first','Leave, they are cheap','Ignore','Never repay'],correct:1,why:'Cheap. Pay them after expensive.'}],p:'Kill the expensive debt. Ignore the cheap debt.'},
+{id:'u5l3',title:'Snowball vs avalanche',concept:'Debt',intro:{title:'Two methods. Both work.',body:'Avalanche saves money. Snowball keeps motivation.'},cards:[{title:'Avalanche',body:'Highest interest first. Optimal.'},{title:'Snowball',body:'Smallest balance first. Feels good.'}],qs:[
+{type:'choice',q:'Which saves more money?',opts:['Avalanche','Snowball','Neither','Both'],correct:0,why:'Avalanche is optimal.'},
+{type:'rapid',q:'Which keeps motivation?',opts:['Avalanche','Snowball','Neither','Both'],correct:1,why:'Snowball clears small first.'},
+{type:'choice',q:'Which is best for you?',opts:['Avalanche always','Snowball always','Whichever you finish','Neither'],correct:2,why:'The one you stick to.'}],p:'The best debt plan is the one you stick to.'},
+{id:'u5l4',title:'Getting out',concept:'Debt',intro:{title:'It is a sequence',body:'You do not fix everything at once.'},cards:[{title:'The process',body:'Pay minimums. Spare pound to top priority.'},{title:'The timeline',body:'£500 at £100 a month clears in about 6 months.'}],qs:[
+{type:'choice',q:'Where does every spare pound go?',opts:['Savings','Priority debt','Fun','Investment'],correct:1,why:'To top priority.'},
+{type:'swipe',q:'When a debt clears?',opts:['Celebrate stop','Move to next','Restart','Forget it'],correct:1,why:'Move to next immediately.'},
+{type:'fill',q:'£500 at £100 a month takes about ___ months.',opts:['5','2','12','24'],correct:0,why:'£500 divided by 100 is 5.'}],p:'Debt is a sequence. Work through it.'},
+{id:'u5boss',title:'The Collector',concept:'Debt',type:'boss',intro:{title:'Final test',body:'Five questions. Three hearts.'},qs:[
+{type:'choice',q:'Which is cheapest?',opts:['Credit card','Student loan','Payday loan','Store card'],correct:1,why:'Student loans are cheap.'},
+{type:'fill',q:'Pay the highest ___ debt first.',opts:['interest','balance','fees','age'],correct:0,why:'Highest interest first.'},
+{type:'rapid',q:'Avalanche saves:',opts:['Motivation','Money','Time','Nothing'],correct:1,why:'Avalanche saves most money.'},
+{type:'swipe',q:'Pay on other debts?',opts:['Minimum','Maximum','Nothing','Double'],correct:0,why:'Minimums on others.'},
+{type:'choice',q:'Best debt plan?',opts:['Avalanche always','Snowball always','One you stick to','No plan'],correct:2,why:'The one you stick to.'}],p:'You know how to get out. Never go back in.'}
+]}
+];
+const CONCEPTS={'Foundations':{s:'The rules of money.',b:'Money is a tool for exchange. It is neutral. Behaviour decides what it becomes.\n\nWealth is built in the gap between what you earn and what you spend.\n\nNeeds come first. Wants second. Savings third. A budget assigns every pound a job before the month starts.\n\n50 30 20 is a starting template. 50 percent needs. 30 percent wants. 20 percent savings.'},'Banking':{s:'Current accounts, overdrafts, credit scores.',b:'A current account holds money in motion. Income in, bills out.\n\nAn overdraft is a loan. Free for students while studying. Dangerous if relied on.\n\nDebit spends your money. Credit spends the bank money. Credit card interest runs 20 to 25 percent APR.\n\nYour credit score is your financial reputation. Missed payments stay on file for six years.'},'Buffers':{s:'Why emergency funds come first.',b:'An emergency fund is money set aside for the unexpected. Not invested. Not spent.\n\nStart at £50. Build to £200. Build to £500. Aim for three to six months of essential outgoings.\n\nKeep it separate. Automate the transfer on payday.\n\nReal emergencies affect your ability to live or work. Not sales. Not holidays.\n\nIf you use the buffer, rebuild it first. Before goals. Before investing. Before fun.'},'Investing':{s:'Risk, index funds, compounding, fees.',b:'Higher potential returns require higher risk. No free lunch.\n\nAn index fund holds hundreds or thousands of companies. Around 90 percent of professional managers underperform a simple global index fund over 20 years.\n\nCompound growth is returns on returns. £100 a month from 22 beats £200 a month from 32.\n\nFees compound against you. A 1 percent fee over 30 years costs roughly a quarter of your final wealth.'},'Debt':{s:'How to get out and stay out.',b:'Not all debt is equal. Student loans are cheap. Credit cards are expensive.\n\nPay highest-interest debt first. Pay minimums on everything else. Send every spare pound to the priority.\n\nAvalanche saves the most money. Snowball keeps you motivated. The best plan is the one you finish.\n\nOnce a debt clears, immediately move to the next.'}};
+function gn(ui,li){if(!U[ui]||!U[ui].lessons[li])return null;return{ui,li,u:U[ui],l:U[ui].lessons[li]}}
+function isC(ui,li){return S.completedNodes.includes(U[ui].lessons[li].id)}
+function isU(ui,li){if(ui===0&&li===0)return true;if(li===0){const p=U[ui-1];return p?isC(ui-1,p.lessons.length-1):false}return isC(ui,li-1)}
+function isCur(ui,li){return !isC(ui,li)&&isU(ui,li)}
+function ucc(ui){return U[ui].lessons.filter((l,i)=>isC(ui,i)).length}
+function doneToday(){return S.lastLessonDate===todayS()}
+function timeLeft(){const n=new Date();const m=new Date();m.setHours(24,0,0,0);const ms=m-n;const h=Math.floor(ms/3600e3);const mm=Math.floor((ms%3600e3)/60e3);return h+'h '+mm+'m'}
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911;const t=1/(1+p*x);const y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return s*y}
+function pct(r){const z=(r-1200)/250;const c=.5*(1+erf(z/Math.sqrt(2)));return Math.max(.1,(1-c)*100)}
+function fp(p){if(p>=10)return'Top '+Math.round(p)+'%';if(p>=1)return'Top '+p.toFixed(1)+'%';return'Top '+p.toFixed(2)+'%'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function bonusGame(l){const all=[
+{type:'order',q:'Build a healthy money routine from first to last.',items:['Check what came in','Cover essentials','Save part of the gap','Choose flexible spending'],order:[0,1,2,3],correct:0,why:'A clear order protects essentials before optional spending.'},
+{type:'tapall',q:'Which choices strengthen your financial position?',opts:['Tracking spending','Paying priority bills','Ignoring statements','Building a buffer'],answers:[0,1,3],correct:0,why:'Awareness, priority payments and a buffer all improve resilience.'},
+{type:'sort',q:'Sort each item by whether it is usually essential or flexible.',labels:['Essential','Flexible'],items:[{t:'Rent',b:0},{t:'Groceries',b:0},{t:'Takeaway',b:1},{t:'Streaming',b:1}],correct:0,why:'Essentials keep daily life running; flexible costs can usually be changed sooner.'},
+{type:'slider',q:'You receive £1,200 and spend £950. Set the amount left.',min:0,max:500,step:10,target:250,tolerance:0,unit:'£',correct:0,why:'£1,200 minus £950 leaves a £250 gap.'},
+{type:'match',q:'Match each term to its meaning.',pairs:[['Income','Money coming in'],['Outgoings','Money going out'],['Buffer','Money kept for surprises']],correct:0,why:'Knowing these core terms makes every later money decision clearer.'}
+];let n=0;for(const c of l.id)n+=c.charCodeAt(0);return all[n%all.length]}
+function getSteps(l){const s=[];if(l.intro)s.push({type:'intro',data:l.intro});(l.cards||[]).forEach(c=>s.push({type:'card',data:c}));(l.qs||[]).forEach((q,i)=>s.push({type:'q',data:q,index:i}));s.push({type:'q',data:bonusGame(l),index:(l.qs||[]).length});s.push({type:'p',data:{text:l.p}});return s}
+function render(){const app=document.getElementById('app');
+if(!S.onboardingComplete){app.innerHTML=renderOB();bind();return}
+if(S.overlay==='lesson'){app.innerHTML=renderLesson();bind();return}
+if(S.overlay==='done'){app.innerHTML=renderDone();bind();return}
+if(S.overlay==='fail'){app.innerHTML=renderFail();bind();return}
+if(S.overlay==='gift'){app.innerHTML=renderGift();bind();return}
+if(S.overlay==='badge'){app.innerHTML=renderBadge();bind();return}
+if(S.overlay==='waitlist'){app.innerHTML=renderWaitlist();bind();return}
+if(S.overlay==='waitThanks'){app.innerHTML=renderWaitThanks();bind();return}
+if(S.overlay==='concept'){app.innerHTML=renderConceptDetail();bind();return}
+if(S.overlay==='addFriend'){app.innerHTML=renderAddFriend();bind();return}
+let h='';if(S.tab==='learn')h=renderLearn();else if(S.tab==='leaders')h=renderLeaders();else if(S.tab==='library')h=renderLibrary();else if(S.tab==='profile')h=renderProfile();app.innerHTML=h+renderTB();bind()}
+function renderTB(){const t=[{id:'learn',l:'Learn',i:'◎'},{id:'leaders',l:'Leaders',i:'🏆'},{id:'library',l:'Library',i:'▤'},{id:'profile',l:'Profile',i:'◉'}];return`<div class="tb">${t.map(x=>`<button class="tab ${S.tab===x.id?'active':''}" data-a="tab" data-t="${x.id}"><span class="ti">${x.i}</span><span>${x.l}</span></button>`).join('')}</div>`}
+function renderOB(){const o=S.onboard;
+if(o.step===0)return`<div class="screen" style="background:#FBF8F1"><div class="obh"><div class="obe">🎯</div><div class="obt">Learn money.<br>Actually.</div><div class="obs" style="margin-bottom:28px">Real scenarios. Real consequences. One lesson a day. Built for UK university students.</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><span style="background:#fff;border:1px solid #EAE4D6;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:800;color:#5A5246">No bank login</span><span style="background:#fff;border:1px solid #EAE4D6;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:800;color:#5A5246">Free</span><span style="background:#fff;border:1px solid #EAE4D6;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:800;color:#5A5246">3 min a day</span></div></div><div class="pad" style="padding-bottom:32px"><button class="btn btn-p" data-a="obStart">Get started</button></div></div>`;
+if(o.step===1)return`<div class="ov"><div class="screen pad" style="padding-top:60px"><div class="label" style="margin-bottom:12px">Step 1 of 4</div><h1 style="margin-bottom:12px">What should we call you?</h1><p class="dim" style="font-size:15px;font-weight:600;margin-bottom:30px;line-height:1.5">Just a first name. Nothing leaves this device.</p><label class="il">Your name</label><input id="obName" class="if" placeholder="Alex" maxlength="20" value="${esc(o.name||'')}"></div><div class="pad" style="padding-bottom:32px"><button class="btn btn-p" data-a="obNameNext">Continue</button></div></div>`;
+if(o.step===2){const ls=[{id:'beginner',e:'🌱',t:'Starting from scratch',d:'I know very little about money or investing'},{id:'intermediate',e:'🌿',t:'I know the basics',d:'I understand saving and want to learn about investing'},{id:'advanced',e:'🌳',t:'I already invest',d:'I want to sharpen my strategy'}];return`<div class="ov"><div class="screen pad" style="padding-top:60px"><div class="label" style="margin-bottom:12px">Step 2 of 4</div><h1 style="margin-bottom:12px">How much do you know?</h1><p class="dim" style="font-size:15px;font-weight:600;margin-bottom:26px;line-height:1.5">We place you on the right part of the path.</p>${ls.map(l=>`<button class="cb ${o.level===l.id?'sel':''}" data-a="obLevel" data-l="${l.id}"><span class="ce">${l.e}</span><div class="cio"><div class="ct">${l.t}</div><div class="cd">${l.d}</div></div></button>`).join('')}</div><div class="pad" style="padding-bottom:32px"><button class="btn btn-p" data-a="obLevelNext" ${!o.level?'disabled':''}>Continue</button></div></div>`}
+if(o.step===3){const gs=[{id:'basics',e:'💡',t:'Understand money',d:'Learn how it works so I stop feeling lost'},{id:'save',e:'🛡️',t:'Build a buffer',d:'Save my first £500 without stress'},{id:'invest',e:'📈',t:'Start investing',d:'Learn enough to open an ISA with confidence'},{id:'debt',e:'💀',t:'Get out of debt',d:'Clear what I owe and stay out'}];return`<div class="ov"><div class="screen pad" style="padding-top:60px"><div class="label" style="margin-bottom:12px">Step 3 of 4</div><h1 style="margin-bottom:12px">What do you want most?</h1><p class="dim" style="font-size:15px;font-weight:600;margin-bottom:26px;line-height:1.5">This shapes which lessons we surface first.</p>${gs.map(g=>`<button class="cb ${o.goal===g.id?'sel':''}" data-a="obGoal" data-g="${g.id}"><span class="ce">${g.e}</span><div class="cio"><div class="ct">${g.t}</div><div class="cd">${g.d}</div></div></button>`).join('')}</div><div class="pad" style="padding-bottom:32px"><button class="btn btn-p" data-a="obGoalNext" ${!o.goal?'disabled':''}>Continue</button></div></div>`}
+if(o.step===4){let info='';if(o.level==='beginner')info='You will start at <b>Unit 1: Money Basics</b>. Build the foundation.';else if(o.level==='intermediate')info='You will start at <b>Unit 3: Emergency Fund</b>. Units 1 and 2 are pre-completed.';else info='You will start at <b>Unit 4: Investing</b>. Units 1 to 3 are pre-completed.';return`<div class="ov"><div class="screen pad" style="padding-top:60px"><div class="label" style="margin-bottom:12px">Step 4 of 4</div><div class="obe" style="font-size:80px">🎉</div><h1 style="margin-bottom:16px">You are set, ${esc(o.name||'friend')}.</h1><p class="dim" style="font-size:15px;font-weight:600;margin-bottom:26px;line-height:1.6">${info}</p><div class="card-s"><div class="label" style="margin-bottom:10px">How this works</div><div style="font-size:13.5px;line-height:1.7;color:#5A5246;font-weight:500">One lesson a day. Fail and you retry tomorrow.<br><br>Every correct answer earns rating. Every wrong loses it.<br><br>Quests reset at midnight. Show up daily and the compounding does the rest.</div></div></div><div class="pad" style="padding-bottom:32px"><button class="btn btn-p" data-a="obFinish">Start my first lesson</button></div></div>`}
+return''}
+function renderLearn(){const done=doneToday();const giftReady=S.giftOpenedDate!==todayS();const p=pct(S.rating);
+let uh='';U.forEach((u,ui)=>{const dc=ucc(ui);const tot=u.lessons.length;const comp=dc===tot;const fu=isU(ui,0);let cls='uh';if(comp)cls+=' comp';else if(!fu)cls+=' lock';
+uh+=`<div class="${cls}" id="unit-${ui}"><div class="ut">${u.icon} ${esc(u.title)}</div><div class="ud">${esc(u.desc)}</div><div class="up">${dc}/${tot}</div></div><div style="margin-bottom:32px">`;
+u.lessons.forEach((l,li)=>{const c=isC(ui,li);const un=isU(ui,li);const cur=isCur(ui,li);const lk=!un&&!c;const isB=l.type==='boss';const pat=[0,-1,0,1,0,-1];const off=pat[li%pat.length]*50;let nc='pnode';let inner='';if(c){nc+=' comp';inner=isB?'🏆':'★'}else if(cur){nc+=' cur pn';inner=isB?'⚔️':'▶'}else if(lk){nc+=' lock';inner='🔒'}if(isB)nc+=' boss';const a=lk?'locked':'startLess';
+uh+=`<div class="pw" style="transform:translateX(${off}px)"><div style="display:flex;flex-direction:column;align-items:center;width:180px"><button class="${nc}" data-a="${a}" data-ui="${ui}" data-li="${li}">${inner}</button><div class="nl ${lk?'lock':''}">${esc(l.title)}</div>${cur?'<div class="ns">Tap to begin</div>':''}</div></div>`});
+uh+='</div>'});
+const left=U.reduce((a,u)=>a+u.lessons.length,0)-S.completedNodes.length;
+const curU=U.findIndex((u,ui)=>isU(ui,0)&&ucc(ui)<u.lessons.length);
+const jump=`<div class="jb">`+U.map((u,ui)=>{const cm=ucc(ui)===u.lessons.length;const lk=!isU(ui,0);let c='jc';if(ui===curU)c+=' on';if(cm)c+=' done';if(lk)c+=' lk';return`<button class="${c}" data-a="jumpUnit" data-ui="${ui}">${u.icon} ${esc(u.title)}</button>`}).join('')+`</div>`;
+return`<div class="screen pad pb"><div class="topbar" style="padding:8px 0 16px"><div class="wm">uni<span>dojo</span></div><div class="sb">🔥 ${S.streak}</div></div><div style="display:flex;justify-content:space-between;margin-bottom:16px"><div><div class="label" style="margin-bottom:4px">Rating</div><div class="mono" style="font-size:24px;font-weight:800">${S.rating.toLocaleString()}</div><div style="font-size:11px;font-weight:700;color:#0F766E">${fp(p)} of students</div></div><div style="text-align:right"><div class="label" style="margin-bottom:4px">Progress</div><div class="mono" style="font-size:24px;font-weight:800">${S.completedNodes.length}/${U.reduce((a,u)=>a+u.lessons.length,0)}</div><div style="font-size:11px;font-weight:700;color:#8A8378">${left} left</div></div></div>${done?`<div class="card fu" style="background:#F5F0E4;border-color:#0F766E;margin-bottom:16px"><div class="label" style="color:#0F766E;margin-bottom:6px">Today is done</div><div style="font-size:14px;font-weight:700;margin-bottom:4px">Come back at midnight.</div><div class="mono" style="font-size:13px;font-weight:800;color:#0F766E">${timeLeft()}</div></div>`:''}${giftReady?`<div class="card-s" style="text-align:center;margin-bottom:18px;padding:16px"><div class="label" style="margin-bottom:6px">Daily gift</div><div class="gw"><div class="gf" data-a="openGift">🎁</div></div></div>`:''}<div class="label" style="margin-bottom:12px">Your path</div>${jump}${uh}</div>`}
+function renderLeaders(){const f=genBoard();const all=f.concat([{name:S.name||'You',uni:'You',rating:S.rating,streak:S.streak,isMe:true}]);all.sort((a,b)=>b.rating-a.rating);const mi=all.findIndex(x=>x.isMe);const ab=mi>0?all[mi-1]:null;const gap=ab?ab.rating-S.rating:0;
+const rows=all.map((p,i)=>{const r=i+1;let rk='';if(r===1)rk='t1';else if(r===2)rk='t2';else if(r===3)rk='t3';let av='';if(p.isMe)av='g';else if(r<=3)av='c';return`<div class="lr ${p.isMe?'me':''}"><div class="lrk ${rk}">${r}</div><div class="la ${av}">${esc((p.name||'U')[0])}</div><div class="li"><div class="ln">${esc(p.name)}${p.isMe?' (you)':''}</div><div class="lm">${esc(p.uni)} · 🔥 ${p.streak}</div></div><div class="lrt">${p.rating.toLocaleString()}</div></div>`}).join('');
+return`<div class="screen pad pb"><div class="topbar" style="padding:8px 0 12px"><div class="wm">leaders</div></div><h1 style="margin-bottom:6px">This week</h1><p class="dim" style="font-size:14px;margin-bottom:20px;line-height:1.5">You are ranked ${mi+1} of ${all.length}.</p>${ab?`<div class="gb">${esc(ab.name)} is <b>${gap} points ahead</b>. One lesson closes the gap.</div>`:`<div class="gb" style="background:#E8F5F2;border-color:#0F766E">You are top. <b>Stay sharp.</b></div>`}<div class="card" style="background:#F5F0E4;border-color:#0F766E;margin-bottom:16px"><div class="label" style="color:#0F766E;margin-bottom:6px">Your rank</div><div style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.03em">#${mi+1}</div><div style="font-size:13px;font-weight:700;color:#5A5246;margin-top:4px">${fp(pct(S.rating))} of all students</div></div><div class="label" style="margin-bottom:12px">Friends</div>${rows}<button class="btn btn-d" data-a="openAddFriend" style="margin-top:12px">Add a friend</button></div>`}
+function renderAddFriend(){return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px"><button data-a="closeOv" style="background:none;border:none;color:#8A8378;font-size:14px;font-weight:700;padding:8px 0;font-family:inherit;cursor:pointer">Back</button><div style="margin-top:40px"><div class="label" style="margin-bottom:12px;color:#0F766E">Friends</div><h1 style="margin-bottom:14px">Add a friend</h1><p class="dim" style="font-size:15px;line-height:1.6;margin-bottom:28px;font-weight:500">Enter their email. When they join, they appear on your leaderboard.</p><label class="il">Their email</label><input id="friendEmail" type="email" class="if" placeholder="friend@uni.ac.uk"></div></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="submitFriend">Send invite</button></div></div>`}
+function renderLibrary(){const list=Object.keys(CONCEPTS);const rows=list.map(n=>{const st=S.conceptStats[n]||{c:0,t:0};const ac=st.t>0?Math.round(st.c/st.t*100):null;let sh='<span style="color:#8A8378;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:800">—</span>';if(ac!==null){const col=ac>=80?'#0F766E':ac>=50?'#E85A3D':'#C92A2A';sh=`<span style="color:${col};font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800">${ac}%</span>`}return`<button class="cr" data-a="openConcept" data-c="${esc(n)}"><div><div style="font-size:14px;font-weight:800;color:#0B1A24;margin-bottom:3px">${esc(n)}</div><div style="font-size:11.5px;font-weight:600;color:#8A8378;max-width:220px;line-height:1.4">${esc(CONCEPTS[n].s)}</div></div>${sh}</button>`}).join('');
+return`<div class="screen pad pb"><div class="topbar" style="padding:8px 0 12px"><div class="wm">library</div></div><h1 style="margin-bottom:10px">Concepts</h1><p class="dim" style="font-size:14px;margin-bottom:22px;line-height:1.55">Everything you have learned. Read one a day to boost accuracy.</p>${rows}</div>`}
+function renderConceptDetail(){const n=S.overlayData;const c=CONCEPTS[n];if(!c)return'';if(!S.conceptsRead)S.conceptsRead=[];if(!S.conceptsRead.includes(n))S.conceptsRead.push(n);if(S.todayQuests.questsCompletedDate!==todayS())S.todayQuests={lesson:false,perfect:false,library:false,questsCompletedDate:todayS()};S.todayQuests.library=true;save();
+return`<div class="ov"><div class="screen pad" style="padding-top:24px"><button data-a="closeOv" style="background:none;border:none;color:#8A8378;font-size:14px;font-weight:700;padding:8px 0;font-family:inherit;cursor:pointer">Back</button><h1 style="margin:18px 0 14px">${esc(n)}</h1><p style="font-size:15px;font-weight:600;color:#5A5246;line-height:1.55;margin-bottom:26px">${esc(c.s)}</p><div style="font-size:15px;line-height:1.75;color:#2A2A3E;font-weight:500;white-space:pre-line">${esc(c.b)}</div></div></div>`}
+function renderProfile(){const p=pct(S.rating);const rec=S.history.slice(-10).reverse();
+const hr=rec.length>0?rec.map(h=>{const s=h.change>0?'+':'';const c=h.change>0?'#0F766E':h.change<0?'#E85A3D':'#8A8378';return`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F0EBE0"><span style="font-size:13px;font-weight:600;color:#5A5246">${h.date}</span><span class="mono" style="font-size:13px;font-weight:800;color:${c}">${s}${h.change}</span></div>`}).join(''):'<p class="muted" style="font-size:13px;padding:20px 0;text-align:center">No history yet.</p>';
+const q=S.todayQuests;const qr=q.questsCompletedDate===todayS();const lD=qr&&q.lesson;const pD=qr&&q.perfect;const liD=qr&&q.library;const all=lD&&pD&&liD;const uD=U.filter((_,ui)=>ucc(ui)===U[ui].lessons.length).length;
+return`<div class="screen pad pb"><div class="topbar" style="padding:8px 0 12px"><div class="wm">profile</div></div><div class="rl"><div class="label" style="color:rgba(255,255,255,.7);margin-bottom:10px;position:relative;z-index:2">${esc(S.name||'Your')} rating</div><div class="rn">${S.rating.toLocaleString()}</div><div class="rr">${fp(p)} of UK students</div></div><div class="sr" style="margin-bottom:18px"><div class="sc"><div class="sv">${S.streak}</div><div class="sl">Streak</div></div><div class="sc"><div class="sv">${S.shields}</div><div class="sl">Shields</div></div><div class="sc"><div class="sv">${uD}</div><div class="sl">Units</div></div></div><div class="label" style="margin-bottom:12px">Today's quests</div><div class="qr ${lD?'qd':''}"><div class="qi">📖</div><div class="qt2">Complete today's lesson</div><div class="qs">${lD?'✅':'⬜'}</div></div><div class="qr ${pD?'qd':''}"><div class="qi">✨</div><div class="qt2">Get 100% on today's lesson</div><div class="qs">${pD?'✅':'⬜'}</div></div><div class="qr ${liD?'qd':''}"><div class="qi">📚</div><div class="qt2">Read one concept</div><div class="qs">${liD?'✅':'⬜'}</div></div>${all?'<div class="muted" style="font-size:12px;font-weight:700;text-align:center;margin-bottom:20px">All quests complete. +50 reputation</div>':''}${!S.waitlistSubmitted?`<div class="card" style="margin:20px 0;background:#E8F5F2;border-color:#0F766E"><div class="label" style="margin-bottom:8px;color:#0F766E">Early access</div><div style="font-size:15px;font-weight:700;margin-bottom:6px">Ready to invest for real?</div><div class="dim" style="font-size:13px;line-height:1.5;margin-bottom:16px">The simplest way for UK students to start investing. Join the waitlist.</div><button class="btn btn-p" data-a="openWait">Join the waitlist</button></div>`:`<div class="card" style="margin:20px 0;background:#E8F5F2;border-color:#0F766E"><div class="label" style="color:#0F766E;margin-bottom:6px">You are on the list</div><div style="font-size:13px;font-weight:600">We will email ${esc(S.waitlistEmail||'')} when early access opens.</div></div>`}<div class="label" style="margin:24px 0 12px">Recent days</div><div class="card" style="padding:4px 20px">${hr}</div><div class="label" style="margin:24px 0 12px">Reset</div><button class="btn btn-s" data-a="resetConfirm" style="color:#C92A2A">Reset all data</button></div>`}
+function shuf(n){const a=[...Array(n).keys()];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function mg(q){const lv=S.live;if(!lv.mg||lv.mg.k!==lv.step){const n=(q.items||q.opts||q.pairs||[]).length;lv.mg={k:lv.step,picked:[],pool:shuf(n),sel:[],place:{},got:[],pick:null,miss:0,lp:shuf(n),rp:shuf(n)}}return lv.mg}
+function fbBox(q){const lv=S.live;if(!lv.answered)return'';const ok=lv.selected===q.correct;return`<div style="background:${ok?'#EAFBF3':'#FEF3EE'};border:2px solid ${ok?'#10B981':'#E85A3D'};border-radius:16px;padding:16px;margin:16px 0"><div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${ok?'#0F766E':'#C92A2A'};margin-bottom:6px">${ok?'Correct':'Not quite'}</div><div style="font-size:14px;line-height:1.5;color:#2A2A3E;font-weight:600">${esc(q.why)}</div></div><button class="btn btn-p" data-a="nextStep">Continue</button>`}
+function miniDone(ok){S.live.selected=ok?0:-1;handle('checkAns',null)}
+function renderLesson(){const lv=S.live;const n=gn(lv.ui,lv.li);if(!n)return'<div class="ov"><div class="screen pad">Not found</div></div>';const l=n.l;const steps=getSteps(l);const st=steps[lv.step];if(!st)return'';const pp=(lv.step/steps.length)*100;let body='';const cb=lv.combo>=2?`<div class="cbb">x${lv.combo} COMBO</div>`:'';
+if(st.type==='intro')body=`<div class="ci fu"><h2>${esc(st.data.title)}</h2><p>${esc(st.data.body)}</p></div><button class="btn btn-p" data-a="nextStep">Begin lesson</button>`;
+else if(st.type==='card')body=`<div class="cc fu"><div class="label">Concept</div><h2>${esc(st.data.title)}</h2><p>${esc(st.data.body)}</p></div><button class="btn btn-p" data-a="nextStep">Got it</button>`;
+else if(st.type==='q'){const q=st.data;const qt=q.type||'choice';
+if(qt==='choice'||qt==='rapid'){const opts=q.opts.map((o,i)=>{let cls='op';let ic='';if(lv.answered){if(i===q.correct){cls+=' cor';ic='✓'}else if(i===lv.selected){cls+=' wr';ic='✗'}}else if(lv.selected===i)cls+=' sel';return`<button class="${cls}" data-a="selOpt" data-i="${i}"><span class="ol">${['A','B','C','D'][i]}</span><span>${esc(o)}</span>${ic?`<span class="oi">${ic}</span>`:''}</button>`}).join('');
+const fb=lv.answered?`<div style="background:${lv.selected===q.correct?'#EAFBF3':'#FEF3EE'};border:2px solid ${lv.selected===q.correct?'#10B981':'#E85A3D'};border-radius:16px;padding:16px;margin:16px 0"><div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${lv.selected===q.correct?'#0F766E':'#C92A2A'};margin-bottom:6px">${lv.selected===q.correct?'Correct':'Not quite'}</div><div style="font-size:14px;line-height:1.5;color:#2A2A3E;font-weight:600">${esc(q.why)}</div></div><button class="btn btn-p" data-a="nextStep">Continue</button>`:'';
+const ck=!lv.answered&&lv.selected!==null?'<button class="btn btn-p" data-a="checkAns" style="margin-top:8px">Check</button>':'';
+if(qt==='rapid'){const rp=(lv.rapidTime/10)*100;body=`<div class="fu"><div class="label" style="color:#E85A3D;margin-bottom:8px">Rapid fire</div><div class="rt mono" id="rapidTimer">${lv.rapidTime.toFixed(1)}s</div><div class="rb"><div class="rf" id="rapidFill" style="width:${rp}%"></div></div><div class="qt">${esc(q.q)}</div>${opts}${fb}</div>`}else{body=`<div class="fu"><div class="qt">${esc(q.q)}</div>${opts}${fb}${ck}</div>`}}
+else if(qt==='swipe'){const fb=lv.answered?`<div style="background:${lv.selected===q.correct?'#EAFBF3':'#FEF3EE'};border:2px solid ${lv.selected===q.correct?'#10B981':'#E85A3D'};border-radius:16px;padding:16px;margin:16px 0"><div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${lv.selected===q.correct?'#0F766E':'#C92A2A'};margin-bottom:6px">${lv.selected===q.correct?'Correct':'Not quite'}</div><div style="font-size:14px;line-height:1.5;color:#2A2A3E;font-weight:600">${esc(q.why)}</div></div><button class="btn btn-p" data-a="nextStep">Continue</button>`:'';
+body=`<div class="fu"><div class="qt" style="margin-bottom:16px">${esc(q.q)}</div><div class="sz" id="swipeZone" data-c="${q.correct}"><div class="swa"><span class="sar l">←</span><span class="sar r">→</span><span class="sar u">↑</span><span class="sar d">↓</span></div><div class="swc">← ${esc(q.opts[0])}<br>→ ${esc(q.opts[1])}<br>↑ ${esc(q.opts[2])}<br>↓ ${esc(q.opts[3])}</div><div class="swh">Swipe to answer</div></div>${fb}</div>`}
+else if(qt==='fill'){const opts=q.opts.map((o,i)=>{let cls='wc';if(lv.answered&&i===q.correct)cls+=' sel';else if(lv.selected===i)cls+=' sel';return`<button class="${cls}" data-a="selOpt" data-i="${i}">${esc(o)}</button>`}).join('');
+const sent=q.q.replace('___',lv.selected!==null?`<span class="fb">${esc(q.opts[lv.selected])}</span>`:'<span class="fb em">___</span>');
+const fb=lv.answered?`<div style="background:${lv.selected===q.correct?'#EAFBF3':'#FEF3EE'};border:2px solid ${lv.selected===q.correct?'#10B981':'#E85A3D'};border-radius:16px;padding:16px;margin:16px 0"><div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${lv.selected===q.correct?'#0F766E':'#C92A2A'};margin-bottom:6px">${lv.selected===q.correct?'Correct':'Not quite'}</div><div style="font-size:14px;line-height:1.5;color:#2A2A3E;font-weight:600">${esc(q.why)}</div></div><button class="btn btn-p" data-a="nextStep">Continue</button>`:'';
+const ck=!lv.answered&&lv.selected!==null?'<button class="btn btn-p" data-a="checkAns" style="margin-top:8px">Check</button>':'';
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Fill the blank</div><div class="fs">${sent}</div><div style="margin-bottom:8px">${opts}</div>${fb}${ck}</div>`}
+else if(qt==='order'){const m=mg(q);const fb=fbBox(q);
+const slots=m.picked.map((pi,i)=>`<div class="slot full"><span class="num">${i+1}</span>${esc(q.items[pi])}</div>`).join('')+(m.picked.length<q.items.length?`<div class="slot"><span class="num">${m.picked.length+1}</span><span style="color:#8A8378;font-weight:600">Tap one below</span></div>`:'');
+const pool=m.pool.map(pi=>`<button class="chip ${m.picked.includes(pi)?'gone':''}" data-a="mgOrder" data-i="${pi}">${esc(q.items[pi])}</button>`).join('');
+const ck=!lv.answered&&m.picked.length===q.items.length?'<button class="btn btn-p" data-a="mgOrderCheck">Check</button>':'';
+const un=!lv.answered&&m.picked.length?'<button class="btn btn-s" data-a="mgUndo" style="margin-top:8px">Undo</button>':'';
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Put it in order</div><div class="qt">${esc(q.q)}</div><div class="mg">${slots}</div><div class="mgt">${lv.answered?'':pool}</div>${fb}${ck}${un}</div>`}
+else if(qt==='tapall'){const m=mg(q);const fb=fbBox(q);
+const chips=q.opts.map((o,i)=>{let c='chip';if(lv.answered){if(q.answers.includes(i))c+=' cor';else if(m.sel.includes(i))c+=' wr'}else if(m.sel.includes(i))c+=' on';return`<button class="${c}" data-a="mgTap" data-i="${i}" style="width:100%">${esc(o)}</button>`}).join('');
+const ck=!lv.answered?'<button class="btn btn-p" data-a="mgTapCheck" style="margin-top:4px">Check</button>':'';
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Tap all that apply</div><div class="qt">${esc(q.q)}</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">${chips}</div>${fb}${ck}</div>`}
+else if(qt==='sort'){const m=mg(q);const fb=fbBox(q);
+const bk=b=>q.items.map((it,i)=>m.place[i]===b?`<div class="bki">${esc(it.t)}</div>`:'').join('');
+const cur=q.items.findIndex((_,i)=>m.place[i]===undefined);
+const card=cur>=0&&!lv.answered?`<div class="card-s" style="text-align:center;margin-bottom:12px"><div class="label" style="margin-bottom:6px">Where does this go?</div><div style="font-size:19px;font-weight:800">${esc(q.items[cur].t)}</div></div><div style="display:flex;gap:10px"><button class="btn btn-d" data-a="mgSort" data-b="0">${esc(q.labels[0])}</button><button class="btn btn-d" data-a="mgSort" data-b="1">${esc(q.labels[1])}</button></div>`:'';
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Sort them</div><div class="qt">${esc(q.q)}</div><div class="buk"><div class="bk"><div class="bkh">${esc(q.labels[0])}</div>${bk(0)}</div><div class="bk"><div class="bkh">${esc(q.labels[1])}</div>${bk(1)}</div></div>${card}${fb}</div>`}
+else if(qt==='slider'){const m=mg(q);const fb=fbBox(q);
+const val=m.val===undefined?Math.round((q.min+q.max)/2):m.val;
+const ck=!lv.answered?'<button class="btn btn-p" data-a="mgSlideCheck" style="margin-top:8px">Lock it in</button>':'';
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Make the call</div><div class="qt">${esc(q.q)}</div><div class="slv" id="mgSlideVal">${esc(q.unit||'')}${val.toLocaleString()}${esc(q.suffix||'')}</div><input type="range" class="sl" id="mgSlide" min="${q.min}" max="${q.max}" step="${q.step||1}" value="${val}" ${lv.answered?'disabled':''} oninput="document.getElementById('mgSlideVal').textContent='${esc(q.unit||'')}'+Number(this.value).toLocaleString()+'${esc(q.suffix||'')}'"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:#8A8378;margin-bottom:12px"><span>${esc(q.unit||'')}${q.min.toLocaleString()}</span><span>${esc(q.unit||'')}${q.max.toLocaleString()}</span></div>${lv.answered?`<div class="card-s" style="margin-bottom:12px;text-align:center"><div class="label" style="margin-bottom:4px">Real answer</div><div class="mono" style="font-size:22px;font-weight:800">${esc(q.unit||'')}${q.target.toLocaleString()}${esc(q.suffix||'')}</div></div>`:''}${fb}${ck}</div>`}
+else if(qt==='match'){const m=mg(q);const fb=fbBox(q);
+const L=m.lp.map(i=>{const got=m.got.includes(i);return`<button class="chip ${got?'cor':(m.pick===i?'on':'')}" data-a="mgMatchL" data-i="${i}" ${got?'disabled':''}>${esc(q.pairs[i][0])}</button>`}).join('');
+const R=m.rp.map(i=>{const got=m.got.includes(i);return`<button class="chip ${got?'cor':''}" data-a="mgMatchR" data-i="${i}" ${got?'disabled':''}>${esc(q.pairs[i][1])}</button>`}).join('');
+body=`<div class="fu"><div class="label" style="margin-bottom:8px">Match the pairs</div><div class="qt">${esc(q.q)}</div><div class="mrow"><div class="mcol">${L}</div><div class="mcol">${R}</div></div>${m.miss?`<div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">Misses: ${m.miss}</div>`:''}${fb}</div>`}
+}
+else if(st.type==='p')body=`<div class="cp fu"><div class="label">The principle</div><p>${esc(st.data.text)}</p></div><button class="btn btn-p" data-a="finishLesson">Complete lesson</button>`;
+const hh=Array.from({length:3},(_,i)=>`<span class="ht ${i<lv.hearts?'':'lost'}">❤️</span>`).join('');
+return`<div class="ov"><div class="lt"><button data-a="quitLesson" style="background:none;border:none;color:#8A8378;font-size:16px;font-weight:800;cursor:pointer;padding:4px;font-family:inherit">✕</button><div class="lpg"><div class="lp" style="width:${pp}%"></div></div><div class="hr">${hh}</div></div>${cb}<div class="screen pad" style="padding-top:8px">${body}</div></div>`}
+function renderDone(){const lv=S.live;const n=gn(lv.ui,lv.li);const l=n.l;const isB=l.type==='boss';const acc=lv.correctThisLesson/Math.max(1,lv.correctThisLesson+lv.wrongThisLesson);const perf=lv.wrongThisLesson===0;const base=isB?75:15;let gain=base+Math.round(acc*(isB?50:25));if(perf)gain=Math.round(gain*1.3);if(S.doubleRating)gain*=2;
+return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px;align-items:center;text-align:center"><div class="re bi">${isB?'🏆':perf?'⭐':'✨'}</div><div class="rti" style="color:${isB?'#0F766E':'#0B1A24'}">${isB?'Boss defeated':perf?'Perfect lesson':'Lesson complete'}</div><div class="rsub" style="margin-bottom:24px">${perf?'Every answer correct. Bonus applied.':`${lv.correctThisLesson} correct, ${lv.wrongThisLesson} wrong.`}</div><div style="width:100%;background:#fff;border-radius:20px;padding:20px;border:1px solid #EAE4D6;margin-bottom:20px"><div class="label" style="margin-bottom:8px">Rating gained</div><div class="mono" style="font-size:36px;font-weight:800;color:#0F766E;letter-spacing:-.03em">+${gain}</div></div>${perf&&lv.hearts===3?`<div style="width:100%;background:#FEF3EE;border:2px solid #FCD34D;border-radius:16px;padding:16px;margin-bottom:16px"><div style="font-size:14px;font-weight:800;color:#C92A2A">Flawless</div><div style="font-size:12px;font-weight:600;color:#5A5246;margin-top:4px">No hearts lost. No wrong answers.</div></div>`:''}${!S.waitlistSubmitted&&S.completedNodes.length>=8?'<button class="btn btn-c" data-a="openWait" style="margin-bottom:10px">Ready to invest for real</button>':''}</div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="closeLesson">Return to path</button></div></div>`}
+function renderFail(){return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px;align-items:center;text-align:center"><div class="re bi">💔</div><div class="rti" style="color:#C92A2A">Out of hearts</div><div class="rsub" style="margin-bottom:20px">The lesson stays where it is. Retry tomorrow.</div><div style="width:100%;background:#FEF3EE;border:2px solid #E85A3D;border-radius:16px;padding:18px;margin-bottom:20px;text-align:left"><div class="label" style="color:#C92A2A;margin-bottom:8px">Streak update</div><div style="font-size:13px;line-height:1.6;color:#2A2A3E;font-weight:600">${S.shields>0?`Your ${S.streak} day streak is protected by a shield. You have ${S.shields} left.`:`Your ${S.streak} day streak is broken. It resets to 0.`}</div></div><div class="muted" style="font-size:12px;font-weight:600;line-height:1.5">Failing is part of it. The retry is where the learning lands.</div></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="closeLesson">Return to path</button></div></div>`}
+function renderGift(){const g=S.giftContent;if(!g)return'';return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px;align-items:center;text-align:center;justify-content:center"><div style="font-size:84px;margin-bottom:26px" class="bi">${g.icon}</div><div class="label" style="margin-bottom:8px">Daily gift</div><h1 style="margin-bottom:14px">${esc(g.title)}</h1><p class="dim" style="font-size:15px;line-height:1.55;max-width:280px;font-weight:500">${esc(g.desc)}</p></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="closeOv">Nice</button></div></div>`}
+function renderBadge(){const b=S.overlayData;if(!b)return'';return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px;align-items:center;text-align:center;justify-content:center"><div style="font-size:92px;margin-bottom:22px" class="bi">${b.icon}</div><div class="label" style="margin-bottom:8px">Badge unlocked</div><h1 style="margin-bottom:10px">${esc(b.title)}</h1><p class="dim" style="font-size:15px;line-height:1.55;font-weight:500">${esc(b.desc)}</p></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="closeOv">Nice</button></div></div>`}
+function renderWaitlist(){return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px"><button data-a="closeOv" style="background:none;border:none;color:#8A8378;font-size:14px;font-weight:700;padding:8px 0;font-family:inherit;cursor:pointer">Back</button><div style="margin-top:40px"><div class="label" style="margin-bottom:12px;color:#0F766E">Early access</div><h1 style="margin-bottom:14px">Invest for real</h1><p class="dim" style="font-size:15px;line-height:1.6;margin-bottom:32px;font-weight:500">You have been practising with real scenarios. Now go one step further.</p><div class="card-s" style="margin-bottom:24px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">What you get</div><div style="font-size:13.5px;line-height:1.7;color:#5A5246">A simple Stocks and Shares ISA built for students<br>Starting from £1<br>A global index fund with fees under 0.25 percent<br>No jargon, no upsells, no pressure</div></div><label class="il">Your email</label><input id="waitlistEmail" type="email" class="if" placeholder="you@university.ac.uk" value="${esc(S.waitlistEmail||'')}"></div></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="submitWait">Join the waitlist</button></div></div>`}
+function renderWaitThanks(){return`<div class="ov"><div class="screen pad" style="padding-top:34px;padding-bottom:24px;align-items:center;text-align:center;justify-content:center"><div style="font-size:92px;margin-bottom:22px" class="bi">💼</div><div class="label" style="margin-bottom:8px">You are on the list</div><h1 style="margin-bottom:14px">Welcome in</h1><p class="dim" style="font-size:15px;line-height:1.6;max-width:300px;font-weight:500">We will email you the moment early access opens. Keep your streak going.</p></div><div class="pad" style="padding-top:0;padding-bottom:24px"><button class="btn btn-p" data-a="closeOv">Back to path</button></div></div>`}
+function bind(){document.querySelectorAll('[data-a]').forEach(el=>{el.onclick=()=>handle(el.getAttribute('data-a'),el)});
+const sz=document.getElementById('swipeZone');if(sz){const dirs=['left','right','up','down'];let px=0,py=0,down=false,mv=false;
+const dirOf=(dx,dy)=>Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
+const start=(x,y)=>{px=x;py=y;down=true;mv=false};
+const move=(x,y)=>{if(!down)return;const dx=x-px,dy=y-py;if(Math.abs(dx)<24&&Math.abs(dy)<24)return;mv=true;const d=dirOf(dx,dy);document.querySelectorAll('.sar').forEach(a=>a.classList.remove('act'));const ar=document.querySelector('.sar.'+d[0]);if(ar)ar.classList.add('act')};
+const end=(x,y)=>{if(!down)return;down=false;const dx=x-px,dy=y-py;if(!mv&&Math.abs(dx)<24&&Math.abs(dy)<24)return;const d=dirOf(dx,dy);const idx=dirs.indexOf(d);if(S.live.answered)return;S.live.selected=idx;sx.t();handle('checkAns',null)};
+sz.addEventListener('touchstart',e=>{const t=e.touches[0];start(t.clientX,t.clientY)},{passive:true});
+sz.addEventListener('touchmove',e=>{const t=e.touches[0];move(t.clientX,t.clientY)},{passive:true});
+sz.addEventListener('touchend',e=>{const t=e.changedTouches[0];end(t.clientX,t.clientY)});
+sz.addEventListener('mousedown',e=>{start(e.clientX,e.clientY)});
+sz.addEventListener('mousemove',e=>{if(e.buttons)move(e.clientX,e.clientY)});
+sz.addEventListener('mouseup',e=>{end(e.clientX,e.clientY)})}}
+function handle(a,el){
+if(a==='jumpUnit'){sx.t();const ui=el.getAttribute('data-ui');const t=document.getElementById('unit-'+ui);const sc=el.closest('.screen');if(t&&sc){const top=t.offsetTop-sc.offsetTop-64;sc.scrollTo({top:Math.max(0,top),behavior:'smooth'})}document.querySelectorAll('.jc').forEach(c=>c.classList.toggle('on',c===el));return}
+if(a==='tab'){sx.t();S.tab=el.getAttribute('data-t');render();return}
+if(a==='obStart'){sx.t();S.onboard.step=1;render();return}
+if(a==='obNameNext'){const i=document.getElementById('obName');const n=i?i.value.trim():'';if(!n){alert('Please enter your name.');return}S.onboard.name=n;S.onboard.step=2;render();return}
+if(a==='obLevel'){sx.t();S.onboard.level=el.getAttribute('data-l');render();return}
+if(a==='obLevelNext'){if(!S.onboard.level)return;S.onboard.step=3;render();return}
+if(a==='obGoal'){sx.t();S.onboard.goal=el.getAttribute('data-g');render();return}
+if(a==='obGoalNext'){if(!S.onboard.goal)return;S.onboard.step=4;render();return}
+if(a==='obFinish'){S.name=S.onboard.name;S.level=S.onboard.level;S.goal=S.onboard.goal;
+if(S.level==='intermediate'){S.completedNodes=['u1l1','u1l2','u1l3','u1l4','u1boss','u2l1','u2l2','u2l3','u2l4','u2boss'];S.rating=1320}
+else if(S.level==='advanced'){S.completedNodes=['u1l1','u1l2','u1l3','u1l4','u1boss','u2l1','u2l2','u2l3','u2l4','u2boss','u3l1','u3l2','u3l3','u3l4','u3boss'];S.rating=1450}
+S.onboardingComplete=true;save();sx.f();confetti();render();return}
+if(a==='startLess'){if(doneToday()){alert('You have already completed today\'s lesson. Come back tomorrow.');return}
+const ui=parseInt(el.getAttribute('data-ui'),10);const li=parseInt(el.getAttribute('data-li'),10);if(!isU(ui,li)){alert('Complete the previous lessons first.');return}
+sx.t();S.live={ui,li,step:0,hearts:3,selected:null,answered:false,wrongThisLesson:0,correctThisLesson:0,combo:0,rapidTime:10};S.overlay='lesson';render();startRapid();return}
+if(a==='locked'){sx.t();alert('Complete the previous lessons first.');return}
+if(a==='selOpt'){if(S.live.answered)return;sx.t();S.live.selected=parseInt(el.getAttribute('data-i'),10);render();return}
+if(a==='mgOrder'){if(S.live.answered)return;const m=mg(getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data);const i=+el.getAttribute('data-i');if(!m.picked.includes(i))m.picked.push(i);sx.t();render();return}
+if(a==='mgUndo'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data;mg(q).picked.pop();sx.t();render();return}
+if(a==='mgOrderCheck'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data;const ok=mg(q).picked.every((v,i)=>v===q.order[i]);miniDone(ok);return}
+if(a==='mgTap'){if(S.live.answered)return;const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data,m=mg(q),i=+el.getAttribute('data-i');m.sel=m.sel.includes(i)?m.sel.filter(x=>x!==i):m.sel.concat(i);sx.t();render();return}
+if(a==='mgTapCheck'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data,m=mg(q);const ok=[...m.sel].sort().join(',')===[...q.answers].sort().join(',');miniDone(ok);return}
+if(a==='mgSort'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data,m=mg(q);const i=q.items.findIndex((_,x)=>m.place[x]===undefined);if(i<0)return;m.place[i]=+el.getAttribute('data-b');sx.t();if(Object.keys(m.place).length===q.items.length){const ok=q.items.every((it,x)=>it.b===m.place[x]);miniDone(ok)}else render();return}
+if(a==='mgSlideCheck'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data;const v=+document.getElementById('mgSlide').value;mg(q).val=v;miniDone(Math.abs(v-q.target)<=q.tolerance);return}
+if(a==='mgMatchL'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data;mg(q).pick=+el.getAttribute('data-i');sx.t();render();return}
+if(a==='mgMatchR'){const q=getSteps(gn(S.live.ui,S.live.li).l)[S.live.step].data,m=mg(q);if(m.pick===null)return;const i=+el.getAttribute('data-i');if(i===m.pick){m.got.push(i);m.pick=null;sx.c();if(m.got.length===q.pairs.length)miniDone(m.miss===0);else render()}else{m.miss++;m.pick=null;sx.w();render()}return}
+if(a==='checkAns'){const n=gn(S.live.ui,S.live.li);const l=n.l;const st=getSteps(l)[S.live.step];if(st.type!=='q')return;const q=st.data;S.live.answered=true;const ok=S.live.selected===q.correct;
+if(ok){S.live.correctThisLesson++;S.live.combo++;sx.c();if(S.live.combo>=2)sx.co(S.live.combo)}else{S.live.wrongThisLesson++;S.live.hearts--;S.live.combo=0;sx.w()}
+if(!S.conceptStats[l.concept])S.conceptStats[l.concept]={c:0,t:0};S.conceptStats[l.concept].t++;if(ok)S.conceptStats[l.concept].c++;
+S.totalQuestions++;if(ok)S.totalCorrect++;
+stopRapid();save();
+if(S.live.hearts<=0){if(S.shields>0)S.shields--;else S.streak=0;S.lastLessonDate=todayS();sx.fa();save();S.overlay='fail';render();return}
+render();return}
+if(a==='nextStep'){S.live.step++;S.live.selected=null;S.live.answered=false;save();render();startRapid();return}
+if(a==='finishLesson'){const n=gn(S.live.ui,S.live.li);const l=n.l;const isB=l.type==='boss';const acc=S.live.correctThisLesson/Math.max(1,S.live.correctThisLesson+S.live.wrongThisLesson);const perf=S.live.wrongThisLesson===0;
+if(!S.completedNodes.includes(l.id))S.completedNodes.push(l.id);
+const base=isB?75:15;let g=base+Math.round(acc*(isB?50:25));if(perf)g=Math.round(g*1.3);if(S.doubleRating){g*=2;S.doubleRating=false}
+S.rating+=g;S.xp+=g;
+const lp=S.lastLessonDate;if(lp===yestS()){S.streak++;sx.sk()}else if(lp!==todayS())S.streak=1;
+if(S.streak>(S.longestStreak||0))S.longestStreak=S.streak;
+S.daysPlayed++;S.lastLessonDate=todayS();
+S.history.push({date:todayS(),rating:S.rating,change:g});if(S.history.length>90)S.history=S.history.slice(-90);
+if(S.todayQuests.questsCompletedDate!==todayS())S.todayQuests={lesson:false,perfect:false,library:false,questsCompletedDate:todayS()};
+S.todayQuests.lesson=true;if(perf)S.todayQuests.perfect=true;
+sx.f();confetti();checkBadges();save();S.overlay='done';render();return}
+if(a==='closeLesson'){sx.t();S.overlay=null;S.live={ui:0,li:0,step:0,hearts:3,selected:null,answered:false,wrongThisLesson:0,correctThisLesson:0,combo:0,rapidTime:10};render();return}
+if(a==='quitLesson'){if(confirm('Quit? Progress is lost.')){S.overlay=null;S.live={ui:0,li:0,step:0,hearts:3,selected:null,answered:false,wrongThisLesson:0,correctThisLesson:0,combo:0,rapidTime:10};render()}return}
+if(a==='openGift'){sx.g();const r=Math.random();let g;
+if(r<.5){const amt=[50,75,100,150][Math.floor(Math.random()*4)];g={icon:'🪙',title:'+'+amt+' reputation',desc:'Loyalty tracked.'}}
+else if(r<.8){g={icon:'🛡️',title:'Streak shield',desc:'Protects your streak if you fail.'};S.shields=(S.shields||0)+1}
+else if(r<.95){g={icon:'💡',title:'Insight unlocked',desc:'Read tomorrow\'s concept early.'}}
+else{g={icon:'⚡',title:'Double rating',desc:'Next lesson earns 2x.'};S.doubleRating=true}
+S.giftContent=g;S.giftOpenedDate=todayS();save();S.overlay='gift';render();return}
+if(a==='openConcept'){sx.t();S.overlayData=el.getAttribute('data-c');S.overlay='concept';render();return}
+if(a==='openAddFriend'){sx.t();S.overlay='addFriend';render();return}
+if(a==='submitFriend'){const i=document.getElementById('friendEmail');const em=i?i.value.trim():'';if(!em||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){alert('Enter a valid email.');return}sx.j();confetti();alert('Invite sent to '+em);S.overlay=null;render();return}
+if(a==='openWait'){sx.t();S.overlay='waitlist';render();setTimeout(()=>{const i=document.getElementById('waitlistEmail');if(i)i.focus()},350);return}
+if(a==='submitWait'){const i=document.getElementById('waitlistEmail');const em=i?i.value.trim():'';if(!em||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){alert('Enter a valid email.');return}S.waitlistEmail=em;S.waitlistSubmitted=true;save();sx.j();confetti();S.overlay='waitThanks';render();checkBadges();return}
+if(a==='closeOv'){sx.t();S.overlay=null;S.overlayData=null;render();return}
+if(a==='resetConfirm'){if(confirm('Reset all data?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}return}}
+let rapidId=null;
+function startRapid(){stopRapid();const n=gn(S.live.ui,S.live.li);if(!n)return;const l=n.l;const st=getSteps(l)[S.live.step];if(!st||st.type!=='q'||st.data.type!=='rapid')return;S.live.rapidTime=10;
+rapidId=setInterval(()=>{if(S.overlay!=='lesson'||S.live.answered){stopRapid();return}S.live.rapidTime=Math.max(0,S.live.rapidTime-.1);
+if(S.live.rapidTime<=3&&S.live.rapidTime>0&&Math.floor(S.live.rapidTime*10)%10===0)sx.tk();
+if(S.live.rapidTime<=0){stopRapid();S.live.selected=-1;handle('checkAns',null);return}
+const t=document.getElementById('rapidTimer');const f=document.getElementById('rapidFill');if(t)t.textContent=S.live.rapidTime.toFixed(1)+'s';if(f)f.style.width=(S.live.rapidTime/10*100)+'%'},100)}
+function stopRapid(){if(rapidId){clearInterval(rapidId);rapidId=null}}
+function checkBadges(){const defs={first:{icon:'🥇',title:'First Steps',desc:'Complete your first lesson.'},streak3:{icon:'🔥',title:'On a Roll',desc:'Reach a 3 day streak.'},streak7:{icon:'💎',title:'Committed',desc:'Reach a 7 day streak.'},five:{icon:'📚',title:'Learner',desc:'Complete 5 lessons.'},ten:{icon:'🎓',title:'Scholar',desc:'Complete 10 lessons.'},investor:{icon:'💼',title:'Ready to Invest',desc:'Join the waitlist.'}};
+const e=[];if(S.daysPlayed>=1&&!S.badges.includes('first'))e.push('first');if(S.streak>=3&&!S.badges.includes('streak3'))e.push('streak3');if(S.streak>=7&&!S.badges.includes('streak7'))e.push('streak7');if(S.completedNodes.length>=5&&!S.badges.includes('five'))e.push('five');if(S.completedNodes.length>=10&&!S.badges.includes('ten'))e.push('ten');if(S.waitlistSubmitted&&!S.badges.includes('investor'))e.push('investor');
+if(e.length>0){e.forEach(id=>S.badges.push(id));save();setTimeout(()=>{sx.b();S.overlayData=defs[e[0]];S.overlay='badge';render()},900)}}
+function confetti(){const cols=['#0F766E','#E85A3D','#FCD34D','#10B981','#FBBF24'];for(let i=0;i<60;i++){setTimeout(()=>{const c=document.createElement('div');c.className='cf';c.style.left=Math.random()*100+'%';c.style.background=cols[Math.floor(Math.random()*cols.length)];c.style.animationDuration=(1.8+Math.random()*1.2)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),3200)},i*18)}}
+load();if(S.lastLessonDate!==todayS()){if(S.todayQuests.questsCompletedDate!==todayS()){S.todayQuests={lesson:false,perfect:false,library:false,questsCompletedDate:todayS()};save()}}render();
+})();
+</script>
+</body>
+</html>

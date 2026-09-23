@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{PuzzlePage}from"@/components/unidojo/rewards";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/puzzle")({head:()=>pageMeta("Daily money puzzle — UniDojo","Solve today’s quick student money puzzle."),component:PuzzlePage});

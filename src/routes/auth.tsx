@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{AuthPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/auth")({head:()=>pageMeta("Keep your progress — UniDojo","Sign in securely to save your student money learning progress."),component:AuthPage});

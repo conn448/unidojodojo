@@ -1,0 +1,1 @@
+import {createFileRoute} from "@tanstack/react-router";import{LanguagePage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/")({head:()=>pageMeta("Choose your language — UniDojo","Start practical money learning in English or Arabic."),component:LanguagePage});

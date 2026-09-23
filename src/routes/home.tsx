@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{HomePage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/home")({head:()=>pageMeta("Your learning space — UniDojo","Continue practical, bite-sized student money lessons."),component:HomePage});

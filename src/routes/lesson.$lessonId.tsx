@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{LessonPage}from"@/components/unidojo/lesson";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/lesson/$lessonId")({head:()=>pageMeta("Money lesson — UniDojo","Learn one practical money idea and check your understanding."),component:LessonPage});

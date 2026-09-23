@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{OnboardingPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/onboarding")({head:()=>pageMeta("Set up your learning — UniDojo","Personalise your student money learning experience."),component:OnboardingPage});

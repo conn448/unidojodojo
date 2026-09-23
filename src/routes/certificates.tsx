@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{CertificatePage}from"@/components/unidojo/rewards";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/certificates")({head:()=>pageMeta("Learning certificates — UniDojo","View chapter certificates earned through UniDojo."),component:CertificatePage});

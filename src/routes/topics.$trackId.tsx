@@ -1,0 +1,1 @@
+import{createFileRoute}from"@tanstack/react-router";import{TopicsPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/topics/$trackId")({head:()=>pageMeta("Track lessons — UniDojo","Choose a short, practical money lesson."),component:()=>{const{trackId}=Route.useParams();return <TopicsPage trackId={trackId}/>}});
