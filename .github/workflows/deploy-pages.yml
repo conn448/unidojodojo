@@ -1,0 +1,70 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build application
+        run: bun run build
+
+      - name: Prepare static Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d .output/public ]; then
+            echo "Using .output/public"
+            mkdir -p pages-artifact
+            cp -R .output/public/. pages-artifact/
+          elif [ -d dist ]; then
+            echo "Using dist"
+            mkdir -p pages-artifact
+            cp -R dist/. pages-artifact/
+          else
+            echo "No static build directory was produced (.output/public or dist)."
+            exit 1
+          fi
+          # Preserve client-side routes when served by GitHub Pages.
+          if [ -f pages-artifact/index.html ]; then
+            cp pages-artifact/index.html pages-artifact/404.html
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-artifact
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
