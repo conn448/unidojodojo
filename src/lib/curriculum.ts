@@ -180,6 +180,26 @@ export const SOURCES = {
     url: "https://www.gov.uk/student-finance",
     publisher: "GOV.UK",
   },
+  govTax: {
+    label: "Income Tax rates and Personal Allowances",
+    url: "https://www.gov.uk/income-tax-rates",
+    publisher: "GOV.UK",
+  },
+  scottishTax: {
+    label: "Income Tax in Scotland, current rates and bands",
+    url: "https://www.gov.uk/scottish-income-tax",
+    publisher: "GOV.UK",
+  },
+  govNI: {
+    label: "National Insurance rates and categories",
+    url: "https://www.gov.uk/national-insurance-rates-letters",
+    publisher: "GOV.UK",
+  },
+  govDeposits: {
+    label: "Tenancy deposit protection",
+    url: "https://www.gov.uk/tenancy-deposit-protection",
+    publisher: "GOV.UK",
+  },
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -1113,8 +1133,401 @@ export const tracks: Track[] = [
             ],
             sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
           },
-          { id: "student-work", title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" }, objective: { en: "Read a payslip and check you were paid correctly.", ar: "اقرأ قسيمة راتبك وتحقّق من صحة أجرك." }, minutes: 7, xp: 110, relevance: { en: "Wrong tax codes are common for term-time workers.", ar: "رموز الضريبة الخاطئة شائعة للعاملين خلال الدراسة." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "student-rent", title: { en: "Rent, deposits, and deposits", ar: "الإيجار والودائع" }, objective: { en: "Know what a landlord can and cannot withhold.", ar: "اعرف ما يحق للمالك حجبه وما لا يحق." }, minutes: 7, xp: 110, relevance: { en: "Deposit protection is a legal requirement most students never verify.", ar: "حماية الوديعة إلزام قانوني لا يتحقّق منه معظم الطلاب." }, steps: [], sources: [SOURCES.moneyHelper] },
+          {
+            id: "student-work",
+            title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" },
+            objective: {
+              en: "Read a payslip properly, and know which deductions should not be there.",
+              ar: "اقرأ قسيمة راتبك بوعي، واعرف أي خصم لا ينبغي أن يكون فيها.",
+            },
+            minutes: 8,
+            xp: 120,
+            relevance: {
+              en: "A term time job usually pays no income tax at all, because earnings sit under the personal allowance. Payroll systems do not always know that, and a first payslip with tax on it is one of the most common things a student never questions.",
+              ar: "العمل خلال الدراسة غالباً لا يخضع لضريبة الدخل أصلاً، لأن الدخل يقل عن الإعفاء الشخصي. لكن أنظمة الرواتب لا تعرف ذلك دائماً، وقسيمة أول راتب فيها ضريبة من أكثر ما لا يسأل عنه الطالب أبداً.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two deductions, not one", ar: "خصمان لا خصم واحد" },
+                body: {
+                  en: "Payroll takes two separate things off your pay, and they have separate thresholds. Income Tax starts above £12,570 a year. National Insurance starts above £242 a week. Both are annual limits, so a summer of full time work can cross them even if term time never does.",
+                  ar: "يُخصم من راتبك أمران منفصلان، ولكل منهما حدّه. ضريبة الدخل تبدأ فوق £12,570 سنوياً. والتأمين الوطني يبدأ فوق £242 أسبوعياً. وكلاهما حدود سنوية، لذا قد يتجاوزها عمل صيفي بدوام كامل حتى لو لم تتجاوزها أيام الدراسة.",
+                },
+                points: [
+                  {
+                    en: "The personal allowance of £12,570 applies across the whole UK, and it is what makes most student jobs tax free.",
+                    ar: "الإعفاء الشخصي البالغ £12,570 يُطبَّق في كل بريطانيا، وهو ما يجعل معظم أعمال الطلاب معفاة من الضريبة.",
+                  },
+                  {
+                    en: "National Insurance is not income tax. It can be taken even when your income tax is zero.",
+                    ar: "التأمين الوطني ليس ضريبة دخل. قد يُخصم حتى عندما تكون ضريبتك صفراً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "Where you live changes your rate", ar: "مكان إقامتك يغيّر نسبتك" },
+                setup: {
+                  en: "The personal allowance is the same everywhere, but the bands above it are not. Scotland has six bands, the rest of the UK has three.",
+                  ar: "الإعفاء الشخصي واحد في كل مكان، لكن الشرائح فوقه ليست كذلك. في اسكتلندا ست شرائح، وفي بقية بريطانيا ثلاث.",
+                },
+                rows: [
+                  {
+                    label: { en: "Starter, Scotland only", ar: "شريحة البداية، في اسكتلندا فقط" },
+                    value: { en: "19% from £12,571 to £16,537", ar: "19% من £12,571 إلى £16,537" },
+                  },
+                  {
+                    label: { en: "Basic", ar: "الشريحة الأساسية" },
+                    value: {
+                      en: "20% up to £50,270 in the rest of the UK, but only to £29,526 in Scotland",
+                      ar: "20% حتى £50,270 في بقية بريطانيا، لكن حتى £29,526 فقط في اسكتلندا",
+                    },
+                  },
+                  {
+                    label: { en: "Intermediate, Scotland only", ar: "الشريحة الوسطى، في اسكتلندا فقط" },
+                    value: { en: "21% from £29,527 to £43,662", ar: "21% من £29,527 إلى £43,662" },
+                  },
+                  {
+                    label: { en: "Higher", ar: "الشريحة العليا" },
+                    value: {
+                      en: "40% above £50,270 in the rest of the UK, but 42% above £43,663 in Scotland",
+                      ar: "40% فوق £50,270 في بقية بريطانيا، لكن 42% فوق £43,663 في اسكتلندا",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "The same salary can be taxed at a different rate depending on where you live. If you move between Scotland and the rest of the UK, your tax code changes with you.",
+                  ar: "قد يُفرض على الراتب نفسه معدل مختلف حسب مكان إقامتك. وإذا انتقلت بين اسكتلندا وبقية بريطانيا، يتغيّر رمزك الضريبي معك.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "An emergency tax code is not your tax code", ar: "الرمز الضريبي الطارئ ليس رمزك" },
+                body: {
+                  en: "Starting a first job without handing over a P45 can put you on an emergency code, which taxes you as though you had no personal allowance. If your first payslip takes tax out of a small wage, that is usually why. Give your employer a P45 or complete the starter checklist, and claim a refund for anything overpaid.",
+                  ar: "بدء أول عمل دون تسليم نموذج P45 قد يضعك على رمز طارئ يفرض عليك الضريبة كأنك بلا إعفاء شخصي. إذا خصمت أول قسيمة راتب ضريبة من أجر صغير، فهذا هو السبب عادة. سلّم جهة عملك نموذج P45 أو أكمل قائمة البداية، وطالب باسترداد ما دُفع بالزيادة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales", "northern-ireland"],
+                prompt: {
+                  en: "You earn £30,000 in England. Which rate applies to the income just above £29,527?",
+                  ar: "تكسب £30,000 في إنجلترا. أي معدل يُطبَّق على الدخل الذي يزيد قليلاً عن £29,527؟",
+                },
+                options: [
+                  { en: "0%, it is inside the allowance", ar: "0%، لأنه داخل الإعفاء" },
+                  { en: "20%", ar: "20%" },
+                  { en: "21%", ar: "21%" },
+                  { en: "40%", ar: "40%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "In England, Wales and Northern Ireland the basic rate of 20% runs all the way to £50,270, so £30,000 is still inside it. The same salary in Scotland would be one band higher.",
+                  ar: "في إنجلترا وويلز وأيرلندا الشمالية تمتد الشريحة الأساسية بمعدل 20% حتى £50,270، لذا يبقى £30,000 داخلها. الراتب نفسه في اسكتلندا يقع في شريحة أعلى.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You earn £30,000 in Scotland. Which rate applies to the income just above £29,527?",
+                  ar: "تكسب £30,000 في اسكتلندا. أي معدل يُطبَّق على الدخل الذي يزيد قليلاً عن £29,527؟",
+                },
+                options: [
+                  { en: "0%, it is inside the allowance", ar: "0%، لأنه داخل الإعفاء" },
+                  { en: "20%", ar: "20%" },
+                  { en: "21%", ar: "21%" },
+                  { en: "42%", ar: "42%" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland's basic rate stops at £29,526, and the intermediate rate of 21% takes over immediately above it. Scotland also has a starter rate of 19%, which the rest of the UK does not have at all.",
+                  ar: "تتوقف الشريحة الأساسية في اسكتلندا عند £29,526، وتبدأ الشريحة الوسطى بمعدل 21% فوراً فوقها. ولدى اسكتلندا أيضاً شريحة بداية بمعدل 19% لا وجود لها في بقية بريطانيا.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each deduction to the point at which it starts.",
+                  ar: "صِل كل خصم بالنقطة التي يبدأ منها.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Income Tax", ar: "ضريبة الدخل" },
+                    right: { en: "Above £12,570 a year", ar: "فوق £12,570 سنوياً" },
+                  },
+                  {
+                    left: { en: "National Insurance", ar: "التأمين الوطني" },
+                    right: { en: "Above £242 a week", ar: "فوق £242 أسبوعياً" },
+                  },
+                  {
+                    left: { en: "Student loan repayment", ar: "سداد قرض الطالب" },
+                    right: { en: "Above your plan threshold", ar: "فوق حدّ خطتك" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You earn £12,000 over the year from a part time job. What should be deducted?",
+                  ar: "تكسب £12,000 خلال السنة من عمل جزئي. ما الذي ينبغي خصمه؟",
+                },
+                options: [
+                  { en: "Nothing at all", ar: "لا شيء إطلاقاً" },
+                  { en: "Income Tax only", ar: "ضريبة الدخل فقط" },
+                  { en: "National Insurance only", ar: "التأمين الوطني فقط" },
+                  { en: "Both", ar: "كلاهما" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£12,000 is under the £12,570 personal allowance and under the £242 a week National Insurance threshold, so both come out at zero. If your payslip shows otherwise, your tax code is wrong.",
+                  ar: "£12,000 أقل من الإعفاء الشخصي البالغ £12,570 وأقل من حد التأمين الوطني البالغ £242 أسبوعياً، لذا يكون كلاهما صفراً. وإذا أظهرت قسيمتك غير ذلك، فرمزك الضريبي خاطئ.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Your first payslip shows £180 of tax taken from a £900 monthly wage. What is the most useful thing to do?",
+                  ar: "تُظهر أول قسيمة راتب خصم £180 ضريبة من أجر شهري قدره £900. ما أنفع خطوة تقوم بها؟",
+                },
+                options: [
+                  {
+                    label: { en: "Accept it, payroll knows best", ar: "أتقبّلها، قسم الرواتب أدرى" },
+                    outcome: {
+                      en: "You keep overpaying for the rest of the tax year. Payroll applies your tax code, it does not check whether the code suits you.",
+                      ar: "تستمر في الدفع بالزيادة لبقية السنة الضريبية. قسم الرواتب يطبّق رمزك الضريبي، ولا يتحقّق من ملاءمته لك.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Hand over a P45 or complete the starter checklist", ar: "سلّم نموذج P45 أو أكمل قائمة البداية" },
+                    outcome: {
+                      en: "Your code is corrected to include the personal allowance, and the tax already taken is refundable.",
+                      ar: "يُصحَّح رمزك ليشمل الإعفاء الشخصي، ويمكن استرداد الضريبة التي خُصمت بالفعل.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask for fewer hours to drop below the threshold", ar: "اطلب تقليل ساعاتك للنزول تحت الحد" },
+                    outcome: {
+                      en: "You reduce your income to solve a paperwork problem, and lose pay you were entitled to keep.",
+                      ar: "تقلّل دخلك لحل مشكلة ورقية، وتخسر أجراً كان من حقك الاحتفاظ به.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Read it once a month", ar: "اقرأها مرة كل شهر" },
+                body: {
+                  en: "Three numbers tell you whether a payslip is right: gross pay, total deductions and net pay. If net pay does not match the hours you worked, the tax code is the first thing to check and the payroll team is the first place to ask.",
+                  ar: "ثلاثة أرقام تخبرك إن كانت القسيمة صحيحة: الأجر الإجمالي، وإجمالي الخصومات، وصافي الأجر. وإذا لم يطابق صافي الأجر ساعات عملك، فرّمز الضريبة هو أول ما تتحقّق منه، وقسم الرواتب هو أول من تسأله.",
+                },
+              },
+            ],
+            sources: [SOURCES.govTax, SOURCES.scottishTax, SOURCES.govNI, SOURCES.moneyHelper],
+          },
+          {
+            id: "student-rent",
+            title: { en: "Rent and deposits", ar: "الإيجار والودائع" },
+            objective: {
+              en: "Know that your deposit is protected by law, and what a landlord cannot keep it for.",
+              ar: "اعرف أن وديعة إيجارك محمية قانوناً، وما لا يحق للمالك الاحتفاظ به منها.",
+            },
+            minutes: 8,
+            xp: 120,
+            relevance: {
+              en: "A deposit is often the largest single payment a student makes in the whole year, and it is the one payment most students never check was lodged anywhere. The protection is automatic only if somebody confirms it happened.",
+              ar: "الوديعة غالباً أكبر دفعة واحدة يقوم بها الطالب في السنة كلها، وهي الدفعة التي لا يتحقّق معظم الطلاب من إيداعها في أي مكان. الحماية لا تُطبَّق إلا إذا تأكّد أحد من وقوع الإيداع.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "It is your money, held by someone else", ar: "مالك، لكن في يد غيرك" },
+                body: {
+                  en: "A tenancy deposit is not rent paid early and it is not the landlord's money to spend. It stays yours, and the law requires it to be held in a government approved tenancy deposit scheme. Those schemes exist to return it to you if you meet the terms of the tenancy, do not damage the property, and pay your rent and bills.",
+                  ar: "وديعة الإيجار ليست إيجاراً مدفوعاً مقدماً وليست مالاً للمالك يتصرّف به. هي تبقى ملكك، ويلزم القانون بإيداعها في نظام ودائع معتمد من الحكومة. وهذه الأنظمة موجودة لإعادة المال إليك إذا التزمت بشروط العقد ولم تُتلف العقار ودفعت الإيجار والفواتير.",
+                },
+                points: [
+                  {
+                    en: "The deposit must be registered in a scheme. It is not enough for the landlord to promise to hold it separately.",
+                    ar: "يجب تسجيل الوديعة في نظام معتمد. ولا يكفي أن يَعِد المالك بالاحتفاظ بها منفصلة.",
+                  },
+                  {
+                    en: "The scheme matters more than the landlord's goodwill, because it is the scheme that decides who gets the money.",
+                    ar: "النظام المعتمد أهم من حسن نية المالك، لأنه هو من يقرّر من يستلم المال.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The timeline of a deposit", ar: "المسار الزمني للوديعة" },
+                setup: {
+                  en: "In England and Wales the law sets deadlines at both ends of the tenancy. Each one protects a different person.",
+                  ar: "في إنجلترا وويلز يحدّد القانون مواعيد في طرفي العقد. كل موعد يحمي طرفاً مختلفاً.",
+                },
+                rows: [
+                  {
+                    label: { en: "You pay the deposit", ar: "تدفع الوديعة" },
+                    value: { en: "Must be protected within 30 days", ar: "يجب إيداعها خلال 30 يوماً" },
+                  },
+                  {
+                    label: { en: "You both agree the amount to return", ar: "تتفقان على المبلغ المسترد" },
+                    value: { en: "Paid back within 10 days", ar: "تُرد خلال 10 أيام" },
+                  },
+                  {
+                    label: { en: "You disagree about the amount", ar: "تختلفان على المبلغ" },
+                    value: {
+                      en: "The scheme holds the money until it is resolved",
+                      ar: "يحتفظ النظام بالمال حتى تُحل المسألة",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "The deposit stays inside the scheme while a dispute runs, so a disagreement cannot be settled by one side simply keeping the money.",
+                  ar: "تبقى الوديعة داخل النظام أثناء أي نزاع، لذا لا يمكن حسم الخلاف بأن يحتفظ أحد الطرفين بالمال ببساطة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales"],
+                prompt: {
+                  en: "You rent in England. Where must your deposit be held?",
+                  ar: "تستأجر في إنجلترا. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In a government approved tenancy deposit scheme", ar: "في نظام ودائع معتمد من الحكومة" },
+                  { en: "With your university", ar: "لدى جامعتك" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 1,
+                why: {
+                  en: "England and Wales use three government approved schemes: the Deposit Protection Service, MyDeposits and the Tenancy Deposit Scheme. Your landlord must lodge it within 30 days of receiving it.",
+                  ar: "تستخدم إنجلترا وويلز ثلاثة أنظمة معتمدة: خدمة حماية الودائع، وماي ديبوزيتس، ونظام ودائع الإيجار. وعلى مالكك إيداعها خلال 30 يوماً من استلامها.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You rent in Scotland. Where must your deposit be held?",
+                  ar: "تستأجر في اسكتلندا. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In one of the England and Wales schemes", ar: "في أحد أنظمة إنجلترا وويلز" },
+                  { en: "In a separate Scottish tenancy deposit scheme", ar: "في نظام ودائع اسكتلندي مستقل" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland runs its own tenancy deposit schemes, separately from England and Wales. A landlord who only knows the English scheme names is a warning sign that the deposit may not have been lodged.",
+                  ar: "لدى اسكتلندا أنظمتها الخاصة للودائع، منفصلة عن إنجلترا وويلز. المالك الذي يعرف أسماء الأنظمة الإنجليزية فقط مؤشر على أن الوديعة قد لا تكون قد أُودعت.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You rent in Northern Ireland. Where must your deposit be held?",
+                  ar: "تستأجر في أيرلندا الشمالية. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In one of the England and Wales schemes", ar: "في أحد أنظمة إنجلترا وويلز" },
+                  { en: "In a separate Northern Ireland tenancy deposit scheme", ar: "في نظام ودائع مستقل لأيرلندا الشمالية" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Northern Ireland has its own tenancy deposit scheme, separate from the three used in England and Wales. Ask which scheme your deposit went into and get the name in writing.",
+                  ar: "لدى أيرلندا الشمالية نظام ودائع خاص بها، منفصل عن الأنظمة الثلاثة المستخدمة في إنجلترا وويلز. اسأل في أي نظام أُودعت وديعة إيجارك واحصل على الاسم كتابةً.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Your parents pay your deposit for you. Does it still need protecting?",
+                  ar: "والداك دفعا الوديعة عنك. هل تبقى بحاجة إلى حماية؟",
+                },
+                options: [
+                  { en: "No, because you did not pay it", ar: "لا، لأنك لم تدفعها" },
+                  { en: "Yes, the same rules apply", ar: "نعم، تنطبق القواعد نفسها" },
+                  { en: "Only if it is more than one month of rent", ar: "فقط إذا زادت عن إيجار شهر" },
+                  { en: "Only if they sign the tenancy too", ar: "فقط إذا وقّعا العقد أيضاً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The landlord must use a scheme even when the deposit comes from someone else, including a rent deposit scheme or a parent. Who paid it does not change the protection.",
+                  ar: "على المالك استخدام نظام معتمد حتى لو جاءت الوديعة من شخص آخر، بما في ذلك نظام ضمان الإيجار أو أحد الوالدين. من دفع لا يغيّر الحماية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You pay £200 to hold a property before the tenancy is signed. Does that need protecting?",
+                  ar: "تدفع £200 لحجز عقار قبل توقيع العقد. هل تحتاج إلى حماية؟",
+                },
+                options: [
+                  { en: "Yes, from the moment you pay it", ar: "نعم، من لحظة دفعها" },
+                  { en: "No, but it does once you become a tenant", ar: "لا، لكنها تحتاج إليها حين تصبح مستأجراً" },
+                  { en: "No, and never", ar: "لا، ولا تحتاج أبداً" },
+                  { en: "Only if the landlord keeps it", ar: "فقط إذا احتفظ بها المالك" },
+                ],
+                answer: 1,
+                why: {
+                  en: "A holding deposit does not have to be protected. Once you become a tenant it turns into a deposit, and from that point it must be lodged in a scheme.",
+                  ar: "وديعة الحجز لا يلزم حمايتها. وعندما تصبح مستأجراً تتحوّل إلى وديعة، ومن تلك اللحظة يجب إيداعها في نظام معتمد.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "At the end of the year your landlord wants to keep £300 for a carpet worn thin along the walkway. What is the strongest move?",
+                  ar: "في نهاية السنة يريد مالكك الاحتفاظ بـ £300 مقابل سجادة رقّت عند ممر المشي. ما أقوى خطوة؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay it, arguing will cost more than £300", ar: "ادفعها، الجدال سيكلّف أكثر من £300" },
+                    outcome: {
+                      en: "You fund a deduction you never tested. Disputes through the scheme are free and the money stays protected while they run.",
+                      ar: "تدفع خصماً لم تختبره قط. النزاع عبر النظام مجاني ويبقى المال محمياً أثناءه.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Raise it through the scheme and let it decide", ar: "اعرض الأمر على النظام واتركه يقرّر" },
+                    outcome: {
+                      en: "Correct move. The scheme holds the money until the dispute is settled, and ordinary wear from living in a property is the classic case where a deduction gets reduced.",
+                      ar: "خطوة صحيحة. يحتفظ النظام بالمال حتى يُحل النزاع، والاستهلاك الطبيعي من السكن هو الحالة الأشهر التي يُخفَّض فيها الخصم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Stop paying rent until it is returned", ar: "أوقف دفع الإيجار حتى تُرد" },
+                    outcome: {
+                      en: "This puts you in breach and gives the landlord a much stronger position than the carpet ever did.",
+                      ar: "هذا يضعك في إخلال بالعقد ويمنح المالك موقفاً أقوى بكثير من مسألة السجادة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Three things to do before you sign", ar: "ثلاث خطوات قبل التوقيع" },
+                body: {
+                  en: "Ask which scheme the deposit will go into. Get the scheme name and the deposit amount in writing. Photograph the whole property on the day you move in, with dates, because the condition you left it in is only ever compared against the condition you found it in.",
+                  ar: "اسأل في أي نظام ستُودع الوديعة. واحصل على اسم النظام ومبلغ الوديعة كتابةً. وصوّر العقار كاملاً يوم انتقالك مع التواريخ، لأن حالة العقار عند خروجك تُقارن دائماً بحالته عند دخولك.",
+                },
+              },
+            ],
+            sources: [SOURCES.govDeposits, SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
         ],
       },
     ],
