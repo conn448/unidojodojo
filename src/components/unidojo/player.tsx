@@ -189,6 +189,53 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
     );
   }
 
+  /* ---------- finished ---------- */
+  if (outcome === "finished") {
+    const practiceCount = Math.max(practice.length, 1);
+    const wrongCount = Math.min(missed.length, practiceCount);
+    const correctCount = Math.max(practiceCount - wrongCount, 0);
+    const accuracy = Math.round((correctCount / practiceCount) * 100);
+    return (
+      <Page nav={false}>
+        <div className="mx-auto flex min-h-[80dvh] max-w-md flex-col justify-center text-center">
+          <Mascot pose="success" className="mx-auto mb-6 scale-125" />
+          <p className="reward-kicker">
+            {locale === "ar" ? "أكملت الدرس" : "Lesson complete"}
+          </p>
+          <h1 className="mt-4 font-display text-3xl font-extrabold leading-tight">
+            {pick(entry.lesson.title, locale)}
+          </h1>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(xp)} label="XP" />
+            <Stat
+              icon={<Heart className="size-5 fill-current text-destructive" />}
+              value={`${accuracy}%`}
+              label={locale === "ar" ? "الدقة" : "Accuracy"}
+            />
+          </div>
+          <p className="mt-6 leading-relaxed text-muted-foreground">
+            {locale === "ar"
+              ? `${correctCount} من ${practiceCount} إجابة صحيحة`
+              : `${correctCount} of ${practiceCount} correct`}
+          </p>
+          {accuracy < 100 && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {locale === "ar"
+                ? "إعادة الدرس تثبّت ما فاتك."
+                : "Running it again will settle what slipped."}
+            </p>
+          )}
+          <Link
+            to="/home"
+            className="btn-3d mt-8 inline-flex min-h-14 items-center justify-center rounded-button bg-primary px-6 font-extrabold text-primary-foreground"
+          >
+            {locale === "ar" ? "العودة للمسار" : "Back to my path"}
+          </Link>
+        </div>
+      </Page>
+    );
+  }
+
   /* ---------- playing ---------- */
   const step = steps[index];
   // index is state and steps can shrink when a nation is picked, so guard.
