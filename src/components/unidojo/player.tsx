@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const MAX_HEARTS = 5;
 
-const pick = (value: L, locale: Locale) => value[locale];
+const pick = (value: L | undefined, locale: Locale) => (value ? value[locale] : "");
 
 /** Deterministic shuffle so an exercise looks the same every time you open it. */
 function shuffle<T>(items: T[], seed: number): T[] {
@@ -17,7 +17,9 @@ function shuffle<T>(items: T[], seed: number): T[] {
   for (let i = out.length - 1; i > 0; i -= 1) {
     s = (s * 1103515245 + 12345) % 2147483648;
     const j = s % (i + 1);
-    [out[i], out[j]] = [out[j], out[i]];
+    const swap = out[i] as T;
+    out[i] = out[j] as T;
+    out[j] = swap;
   }
   return out;
 }
@@ -189,6 +191,14 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
 
   /* ---------- playing ---------- */
   const step = steps[index];
+  // index is state and steps can shrink when a nation is picked, so guard.
+  if (!step) {
+    return (
+      <Page nav={false}>
+        <div className="min-h-[70dvh]" />
+      </Page>
+    );
+  }
   const isLast = index + 1 >= steps.length;
 
   const handleCheck = (correct: boolean) => {
@@ -338,7 +348,7 @@ function evaluate(step: Step, answer: Answer): boolean {
       return (
         answer.kind === "fill" &&
         answer.picked.length === step.answer.length &&
-        answer.picked.every((bankIndex, slot) => step.bank[bankIndex].en === step.answer[slot])
+        answer.picked.every((bankIndex, slot) => step.bank[bankIndex]?.en === step.answer[slot])
       );
     case "categorise": {
       if (answer.kind !== "categorise") return false;
@@ -417,7 +427,7 @@ function Feedback({
   const explain = (() => {
     if (phase === "answer") return "";
     if (step.k === "scenario" && answer.kind === "scenario") {
-      return pick(step.options[answer.index].outcome, locale);
+      return pick(step.options[answer.index]?.outcome, locale);
     }
     if ("why" in step && step.why) return pick(step.why, locale);
     return "";
@@ -868,6 +878,7 @@ function StepView({
                 onClick={() => {
                   if (active === null) return;
                   const left = step.pairs[active];
+                  if (!left) return;
                   if (left.right.en === right.en) {
                     setAnswer({ kind: "match", matched: [...matched, left.left.en], active: null });
                     onPlay("win");

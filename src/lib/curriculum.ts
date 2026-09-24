@@ -75,11 +75,7 @@ export type StepBody =
   /** Tap into the correct sequence. Order of `items` is the answer. */
   | { k: "order"; prompt: L; items: L[]; why: L }
   /** Complete the sentence by tapping words from a bank. */
-  | { k: "fill"; prompt: L; bef
-  phase?: Phase;
-  /** When set, this step is only shown to students in these nations. */
-  nations?: Nation[];
-L; bank: L[]; answer: string[]; why: L }
+  | { k: "fill"; prompt: L; before: L; after: L; bank: L[]; answer: string[]; why: L }
   /**
    * Numeric input. Use ONLY where the number itself is the insight (a rate, a
    * threshold). This is a financial literacy app, not a mental-arithmetic test:
@@ -95,7 +91,11 @@ L; bank: L[]; answer: string[]; why: L }
       options: Array<{ label: L; outcome: L; delta: number }>;
     };
 
-export type Step = StepBody & { phase?: Phase };
+export type Step = StepBody & {
+  phase?: Phase;
+  /** When set, this step is only shown to students in these nations. */
+  nations?: Nation[];
+};
 
 
 /**
@@ -466,94 +466,6 @@ export const tracks: Track[] = [
             ],
             sources: [SOURCES.moneyHelper],
           },
-                    {
-            id: "money-needs",
-            title: { en: "Needs, wants, and lies", ar: "الضروريات والرغبات والأكاذيب" },
-            objective: {
-              en: "Tell a real need from a want that has learned to sound like one.",
-              ar: "ميّز الحاجة الحقيقية من رغبة تعلّمت أن تتحدث بلسان الحاجة.",
-            },
-            minutes: 7,
-            xp: 120,
-            relevance: {
-              en: "Marketing aimed at students works by making wants feel like needs. Spotting the swap is a skill, not a personality trait.",
-              ar: "التسويق الموجّه للطلاب يعمل بتحويل الرغبات إلى ما يشبه الضروريات. ملاحظة هذا التحويل مهارة، لا سمة شخصية.",
-            },
-            steps: [
-              {
-                k: "idea",
-                title: { en: "A need has a consequence", ar: "للحاجة نتيجة" },
-                body: {
-                  en: "The test is not how much you want it. The test is what actually happens if you do not buy it.",
-                  ar: "المعيار ليس شدة رغبتك، بل ما يحدث فعلاً إن لم تشترِه.",
-                },
-                points: [
-                  { en: "Food is a need. Takeaway on a bad day is a want.", ar: "الطعام حاجة. أما الوجبات الجاهزة في يوم سيئ فرغبة." },
-                  { en: "A laptop for your course is a need. A faster one is a preference.", ar: "الحاسوب لدراستك حاجة. أما الأسرع فتفضيل." },
-                  { en: "A phone is a need. Replacing a working one is a want.", ar: "الهاتف حاجة. أما استبدال هاتف يعمل فرغبة." },
-                ],
-              },
-              {
-                k: "watchout",
-                title: { en: "The upgrade slide", ar: "انزلاق الترقية" },
-                body: {
-                  en: "Shops rarely sell you a want directly. They sell you a small step up from a need. You came for a coat and left with the one that cost twice as much, and it felt reasonable the whole way.",
-                  ar: "المتاجر نادراً ما تبيعك رغبة صريحة. إنها تبيعك خطوة صغيرة فوق الحاجة. جئت لمعطف وخرجت بواحد يكلّف ضعف السعر، وبدا الأمر معقولاً في كل خطوة.",
-                },
-              },
-              {
-                k: "categorise",
-                prompt: { en: "Sort these honestly. No judgement, just the consequence test.", ar: "صنّف هذه بصدق. لا حكم هنا، فقط اختبار النتيجة." },
-                buckets: [
-                  {
-                    name: { en: "Need", ar: "حاجة" },
-                    items: [{ en: "Bus pass for lectures", ar: "بطاقة الحافلة للمحاضرات" }, { en: "Prescription medicine", ar: "دواء بوصفة" }, { en: "Course textbook", ar: "كتاب المنهج" }],
-                  },
-                  {
-                    name: { en: "Want", ar: "رغبة" },
-                    items: [{ en: "Concert ticket", ar: "تذكرة حفل" }, { en: "Second pair of trainers", ar: "حذاء رياضي ثانٍ" }, { en: "Takeaway three nights running", ar: "وجبات جاهزة ثلاث ليالٍ متتالية" }],
-                  },
-                ],
-              },
-              {
-                k: "choice",
-                prompt: { en: "Your phone works but the new model is out. Which question actually settles it?", ar: "هاتفك يعمل لكن الطراز الجديد صدر. أي سؤال يحسم الأمر فعلاً؟" },
-                options: [
-                  { en: "What breaks if I do not buy it?", ar: "ما الذي ينكسر إن لم أشترِه؟" },
-                  { en: "Can I afford it this month?", ar: "هل أستطيع تحمّله هذا الشهر؟" },
-                  { en: "Is it good value compared to other phones?", ar: "هل قيمته جيدة مقارنة بهواتف أخرى؟" },
-                  { en: "Will I still want it in a month?", ar: "هل سأرغبه بعد شهر؟" },
-                ],
-                answer: 0,
-                why: {
-                  en: "Affordability is not the same as need. The consequence question is the only one that separates the two, and it is deliberately uncomfortable.",
-                  ar: "القدرة على الدفع ليست حاجة. سؤال النتيجة وحده يفصل بينهما، وهو سؤال مزعج عمداً.",
-                },
-              },
-              {
-                k: "scenario",
-                prompt: { en: "It is week three. You have bought a £70 coat and a £45 night out, and you still need £60 for a course trip next month.", ar: "الأسبوع الثالث. اشتريت معطفاً بـ 70 جنيهاً وليلة ترفيه بـ 45، وما زلت تحتاج 60 جنيهاً لرحلة دراسية الشهر القادم." },
-                options: [
-                  {
-                    label: { en: "Cut the takeaways until the trip is covered", ar: "قلّل الوجبات الجاهزة حتى تغطي الرحلة" },
-                    outcome: { en: "You covered the trip and kept the coat. The money came from the category you had most slack in.", ar: "غطّيت الرحلة واحتفظت بالمعطف. جاء المال من البند الذي كان فيه أكبر هامش." },
-                    delta: 15,
-                  },
-                  {
-                    label: { en: "Skip the trip and keep the money", ar: "تخلَّ عن الرحلة واحتفظ بالمال" },
-                    outcome: { en: "Your budget is fine but you missed a course trip for £60 you could have found elsewhere.", ar: "ميزانيتك بخير، لكنك فوّتت رحلة بـ 60 جنيهاً كان يمكن تدبيرها من بند آخر." },
-                    delta: -5,
-                  },
-                  {
-                    label: { en: "Borrow the £60 from a friend", ar: "استلف 60 جنيهاً من صديق" },
-                    outcome: { en: "You solved this month. You also set a precedent that gets expensive by summer.", ar: "حللت هذا الشهر، وأسّست سابقة تصبح مكلفة بحلول الصيف." },
-                    delta: -10,
-                  },
-                ],
-              },
-            ],
-            sources: [SOURCES.moneyHelper],
-          },
           {
             id: "money-cards",
             title: { en: "Debit, credit, and what you owe", ar: "الخصم والائتمان وما تدين به" },
@@ -722,70 +634,6 @@ export const tracks: Track[] = [
             ],
             sources: [SOURCES.moneyHelper],
           },
-          {
-            id: "money-safety",
-            title: { en: "Spot the scam before it costs you", ar: "اكتشف الاحتيال قبل أن يكلّفك" },
-            objective: {
-              en: "Recognise the three shapes almost every student-targeted scam takes.",
-              ar: "تعرّف على الأشكال الثلاثة التي تتخذها معظم عمليات الاحتيال على الطلاب.",
-            },
-            minutes: 7,
-            xp: 120,
-            relevance: {
-              en: "Students are targeted for money mule accounts and rental deposits because they are new to both banking and renting.",
-              ar: "الطلاب مستهدفون في حسابات تمرير الأموال وودائع الإيجار، لأنهم جدد على البنوك وعقود الإيجار معاً.",
-            },
-            steps: [
-              {
-                k: "idea",
-                title: { en: "Three shapes", ar: "ثلاثة أشكال" },
-                body: { en: "Almost every scam aimed at students is one of these three.", ar: "كل احتيال يستهدف الطلاب تقريباً يأخذ أحد هذه الأشكال الثلاثة." },
-                points: [
-                  { en: "Urgency. A deadline that stops you thinking.", ar: "الاستعجال. موعد نهائي يمنعك من التفكير." },
-                  { en: "A payment you must make first to unlock something bigger.", ar: "دفعة يجب أن تسبق للحصول على شيء أكبر." },
-                  { en: "Money passing through your account for someone else.", ar: "مال يمر عبر حسابك لشخص آخر." },
-                ],
-              },
-              {
-                k: "watchout",
-                title: { en: "The money mule trap", ar: "فخ تمرير الأموال" },
-                body: {
-                  en: "Someone offers you a cut for receiving money and sending it on. It looks like easy work. In law it is money laundering, the account gets closed, and the consequences stay on your record long after university.",
-                  ar: "يعرض عليك شخص نسبة مقابل استلام مال ثم تحويله. يبدو عملاً سهلاً. لكنه قانوناً تبييض أموال، ويُغلق الحساب، وتبقى التبعات في سجلك بعد الجامعة بزمن طويل.",
-                },
-              },
-              {
-                k: "categorise",
-                prompt: { en: "Which of these should make you stop?", ar: "أي من هذه يجب أن يوقفك؟" },
-                buckets: [
-                  {
-                    name: { en: "Red flag", ar: "إشارة خطر" },
-                    items: [{ en: "A landlord abroad who cannot show you the flat", ar: "مالك في الخارج لا يستطيع إراءتك الشقة" }, { en: "A deposit demanded within the hour", ar: "وديعة تُطلب خلال ساعة" }, { en: "A job that only needs your bank details", ar: "وظيفة تحتاج بياناتك البنكية فقط" }],
-                  },
-                  {
-                    name: { en: "Normal", ar: "أمر طبيعي" },
-                    items: [{ en: "A written tenancy agreement", ar: "عقد إيجار مكتوب" }, { en: "A deposit protected in a scheme", ar: "وديعة محفوظة في نظام حماية" }],
-                  },
-                ],
-              },
-              {
-                k: "choice",
-                prompt: { en: "A letting agent asks for a deposit before you have seen the flat, because it is in high demand. What is the correct move?", ar: "يطلب وكيل عقاري وديعة قبل أن ترى الشقة لأن الطلب عليها مرتفع. ما التصرّف الصحيح؟" },
-                options: [
-                  { en: "Refuse to pay before viewing and seeing a written agreement", ar: "امتنع عن الدفع قبل المعاينة ورؤية عقد مكتوب" },
-                  { en: "Pay a smaller holding deposit to secure it", ar: "ادفع وديعة حجز أصغر لتأمينها" },
-                  { en: "Pay, but ask for a receipt", ar: "ادفع واطلب إيصالاً" },
-                  { en: "Send the money to a friend to pay on your behalf", ar: "أرسل المال لصديق ليدفع بالنيابة عنك" },
-                ],
-                answer: 0,
-                why: {
-                  en: "Pressure plus payment before viewing is the classic rental scam. A genuine agent can show you the property and give you the agreement first.",
-                  ar: "الضغط مع الدفع قبل المعاينة هو أسلوب الاحتيال الكلاسيكي في الإيجار. الوكيل الحقيقي يستطيع إراءتك العقار وتسليمك العقد أولاً.",
-                },
-              },
-            ],
-            sources: [SOURCES.moneyHelper, SOURCES.mseStudents],
-          },
         ],
       },
     ],
@@ -802,10 +650,8 @@ export const tracks: Track[] = [
         lessons: [
           { id: "student-loan", title: { en: "Which loan plan are you on?", ar: "على أي خطة قرض أنت؟" }, objective: { en: "Identify your plan and what it means for repayments.", ar: "حدّد خطتك وما تعنيه للسداد." }, minutes: 6, xp: 100, relevance: { en: "Plan 5 changed the maths for everyone starting from 2023.", ar: "خطة 5 غيّرت الحساب لكل من بدأ من 2023." }, steps: [], sources: [SOURCES.mseStudents, SOURCES.govStudentFinance] },
           { id: "student-repay", title: { en: "Repayment is not a debt", ar: "السداد ليس دَيناً كالعادة" }, objective: { en: "Explain why a student loan behaves more like a graduate tax.", ar: "اشرح لماذا يشبه قرض الطالب ضريبة على الخريجين." }, minutes: 6, xp: 100, relevance: { en: "Overpaying can be the wrong move, unusual for debt.", ar: "السداد المبكر قد يكون خطأً, وهذا غريب في باب الديون." }, steps: [], sources: [SOURCES.mseStudents] },
-          { id: "student-maintenance", title: { en: "Where your maintenance loan goes", ar: "إلى أين تذهب دفعة المعيشة" }, objective: { en: "Plan a term around a three-payment income.", ar: "خطّط فصلاً كاملاً بميزانية ثلاث دفعات." }, minutes: 6, xp: 100, relevance: { en: "Deficit weeks are predictable and therefore avoidable.", ar: "أسابيع العجز متوقّعة وبالتالي يمكن تجنّبها." }, steps: [], sources: [SOURCES.mseStudents] },
           { id: "student-work", title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" }, objective: { en: "Read a payslip and check you were paid correctly.", ar: "اقرأ قسيمة راتبك وتحقّق من صحة أجرك." }, minutes: 7, xp: 110, relevance: { en: "Wrong tax codes are common for term-time workers.", ar: "رموز الضريبة الخاطئة شائعة للعاملين خلال الدراسة." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "student-rent", title: { en: "Rent, deposits, and deposits", ar: "الإيجار والودائع" }, objective: { en: "Know what a landlord can and cannot withhold.", ar: "اعرف ما يحق للمالك حجبه وما لا يحق." }, minutes: 7, xp: 110, relevance: { en: "Deposit protection is a legal requirement most students never verify.", ar: "حماية الوديعة إلزام قانوني لا يتحقّق منه معظم الطلاب." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "student-overdraft", title: { en: "The 0% overdraft trap", ar: "فخ السحب على المكشوف بلا فائدة" }, objective: { en: "Use an overdraft without letting it become your income.", ar: "استخدم السحب على المكشوف دون أن يصبح دخلك." }, minutes: 6, xp: 100, relevance: { en: "It is interest-free until it suddenly is not.", ar: "يبقى بلا فائدة حتى يتوقّف عن ذلك فجأة." }, steps: [], sources: [SOURCES.mseStudents] },
         ],
       },
     ],
@@ -823,8 +669,6 @@ export const tracks: Track[] = [
           { id: "building-buffer", title: { en: "Your first £500", ar: "أول 500 جنيه" }, objective: { en: "Build an emergency buffer before investing anything.", ar: "ابنِ احتياطياً للطوارئ قبل أي استثمار." }, minutes: 5, xp: 90, relevance: { en: "Without a buffer, one emergency becomes debt.", ar: "بلا احتياطي، تتحوّل أي طارئة إلى دَين." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "building-compound", title: { en: "Compounding, honestly", ar: "النمو التراكمي بلا مبالغة" }, objective: { en: "Calculate growth without being sold a fantasy.", ar: "احسب النمو دون أن تُباع لك أوهام." }, minutes: 7, xp: 120, relevance: { en: "Time in the market matters more than the amount at your age.", ar: "طول المدة في السوق أهم من المبلغ في عمرك." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "building-isa", title: { en: "ISA versus pension", ar: "الحساب المعفى مقابل التقاعد" }, objective: { en: "Choose the right wrapper for money you will not touch.", ar: "اختر الوعاء المناسب للمال الذي لن تلمسه." }, minutes: 7, xp: 110, relevance: { en: "Tax wrappers are dull and worth real money.", ar: "أوعية الضرائب مملّة لكنها تساوي مالاً حقيقياً." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "building-risk", title: { en: "Risk is not a feeling", ar: "الخطر ليس شعوراً" }, objective: { en: "Separate volatility from permanent loss.", ar: "افرق بين التقلّب والخسارة الدائمة." }, minutes: 7, xp: 120, relevance: { en: "The difference decides whether you sell at the bottom.", ar: "هذا الفرق يحدّد إن كنت ستبيع في القاع." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "building-diversify", title: { en: "Diversification in one screen", ar: "التنويع في شاشة واحدة" }, objective: { en: "Explain why one stock is not an investment plan.", ar: "اشرح لماذا سهم واحد ليس خطة استثمار." }, minutes: 6, xp: 110, relevance: { en: "Concentration is how students lose money fastest.", ar: "التركيز هو أسرع طريق لخسارة الطلاب أموالهم." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "building-hype", title: { en: "Crypto, tips, and hype cycles", ar: "العملات والنصائح ودورات الضجيج" }, objective: { en: "Test a tip before your money does.", ar: "اختبر أي نصيحة قبل أن يختبرها مالك." }, minutes: 7, xp: 130, relevance: { en: "FOMO peaks precisely when you can least afford it.", ar: "الخوف من فوات الفرصة يبلغ ذروته حين لا تحتمل الخسارة." }, steps: [], sources: [SOURCES.moneyHelper] },
         ],
       },
@@ -849,8 +693,6 @@ export const tracks: Track[] = [
           { id: "islamic-screening", title: { en: "Screening a stock properly", ar: "فحص سهم بعناية" }, objective: { en: "Apply the two financial screens and spot the awkward cases.", ar: "طبّق الفحصين الماليين وحدّد الحالات الملتبسة." }, minutes: 8, xp: 140, relevance: { en: "Screening is a calculation, not a feeling about the company.", ar: "الفحص حساب، لا شعور تجاه الشركة." }, steps: [], sources: [SOURCES.ifg] },
           { id: "islamic-zakat", title: { en: "Zakat on a student's assets", ar: "الزكاة على أموال الطالب" }, objective: { en: "Work out whether you owe Zakat at all, and on what.", ar: "حدّد إن كانت الزكاة تجب عليك، وعلى أي مال." }, minutes: 7, xp: 130, relevance: { en: "Students usually owe nothing, knowing that beats guessing.", ar: "الطلاب غالباً لا يجب عليهم شيء, والعلم بذلك أفضل من الظن." }, steps: [], sources: [SOURCES.ifg] },
           { id: "islamic-savings", title: { en: "Interest-free saving that still grows", ar: "ادخار بلا فائدة وينمو رغم ذلك" }, objective: { en: "Place spare cash without relying on interest.", ar: "وظّف مالك الفائض دون الاعتماد على الفائدة." }, minutes: 8, xp: 140, relevance: { en: "Keeping everything in cash loses to inflation.", ar: "إبقاء كل شيء نقداً يخسر أمام التضخم." }, steps: [], sources: [SOURCES.ifg] },
-          { id: "islamic-conventional", title: { en: "When your only option is conventional", ar: "حين لا يوجد بديل غير التقليدي" }, objective: { en: "Reason through genuinely constrained situations.", ar: "فكّر في الحالات المقيّدة فعلاً." }, minutes: 8, xp: 140, relevance: { en: "Real life includes employers' pensions and shared tenancies.", ar: "الواقع يشمل صناديق التقاعد ومساكن مشتركة." }, steps: [], sources: [SOURCES.ifg] },
-          { id: "islamic-crypto", title: { en: "Crypto and the screening question", ar: "العملات الرقمية وسؤال الفحص" }, objective: { en: "Understand why scholars disagree and where that leaves you.", ar: "افهم سبب اختلاف العلماء وماذا يعني ذلك لك." }, minutes: 8, xp: 140, relevance: { en: "Disagreement is a fact to navigate, not a loophole.", ar: "الخلاف أمر يُتعامل معه، وليس ثغرة." }, steps: [], sources: [SOURCES.ifg] },
         ],
       },
     ],

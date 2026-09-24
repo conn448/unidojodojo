@@ -19,7 +19,7 @@ export interface TrackSummary {
   icon: string;
   /** Optional branches are surfaced but never gated. */
   optional: boolean;
-  lessons: Array<{ id: string; title: Record<Locale, string>; minutes: number }>;
+  lessons: Array<{ id: string; title: Record<Locale, string>; minutes: number; locked: boolean }>;
 }
 
 export const tracks: TrackSummary[] = curriculumTracks.map((track) => ({
@@ -34,6 +34,9 @@ export const tracks: TrackSummary[] = curriculumTracks.map((track) => ({
       id: lesson.id,
       title: lesson.title,
       minutes: lesson.minutes,
+      // A lesson with no steps yet is shown locked and links to the track,
+      // so a learner can never tap into an empty lesson.
+      locked: lesson.steps.length === 0,
     })),
   ),
 }));
