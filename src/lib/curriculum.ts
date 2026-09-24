@@ -648,7 +648,222 @@ export const tracks: Track[] = [
         id: "student-u1",
         title: { en: "The UK student system", ar: "نظام الطالب في بريطانيا" },
         lessons: [
-          { id: "student-loan", title: { en: "Which loan plan are you on?", ar: "على أي خطة قرض أنت؟" }, objective: { en: "Identify your plan and what it means for repayments.", ar: "حدّد خطتك وما تعنيه للسداد." }, minutes: 6, xp: 100, relevance: { en: "Plan 5 changed the maths for everyone starting from 2023.", ar: "خطة 5 غيّرت الحساب لكل من بدأ من 2023." }, steps: [], sources: [SOURCES.mseStudents, SOURCES.govStudentFinance] },
+          {
+            id: "student-loan",
+            title: { en: "Which loan plan are you on?", ar: "على أي خطة قرض أنت؟" },
+            objective: {
+              en: "Identify your repayment plan, and know what it decides for you.",
+              ar: "حدّد خطة السداد الخاصة بك، واعرف ما الذي تحدّده لك.",
+            },
+            minutes: 7,
+            xp: 110,
+            relevance: {
+              en: "Your plan is not a choice and not a status symbol. It sets the income level at which you start repaying, and that level differs by thousands of pounds depending on which funding body you applied to.",
+              ar: "خطتك ليست اختياراً ولا ميزة. هي تحدّد مستوى الدخل الذي تبدأ عنده السداد، وهذا المستوى يختلف بآلاف الجنيهات حسب جهة التمويل التي تقدّمت إليها.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Your plan is decided, not chosen", ar: "خطتك تُحدَّد ولا تُختار" },
+                body: {
+                  en: "Your repayment plan is set by two things only: which funding body you applied to, and the year you started. You cannot pick it, and it has nothing to do with your subject, your university or your grades.",
+                  ar: "خطة السداد تُحدَّد بأمرين فقط: جهة التمويل التي تقدّمت إليها، وسنة بدايتك. لا يمكنك اختيارها، ولا علاقة لها بتخصصك أو جامعتك أو درجاتك.",
+                },
+                points: [
+                  {
+                    en: "Four separate systems run in parallel: England, Wales, Scotland and Northern Ireland. Which one you applied to decides your rules.",
+                    ar: "أربعة أنظمة تعمل بالتوازي: إنجلترا وويلز واسكتلندا وأيرلندا الشمالية. الجهة التي تقدّمت إليها هي التي تحدّد قواعدك.",
+                  },
+                  {
+                    en: "Start year matters as much as nation. The same funding body can put two students on different plans if they started a decade apart.",
+                    ar: "سنة البداية لا تقل أهمية عن الدولة. الجهة نفسها قد تضع طالبين على خطتين مختلفتين إذا بدأ أحدهما قبل الآخر بعشر سنوات.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What your plan actually decides", ar: "ما الذي تحدّده خطتك فعلاً" },
+                setup: {
+                  en: "Your plan sets how much you can earn before you repay a single pound. These are the current annual thresholds.",
+                  ar: "خطتك تحدّد المبلغ الذي يمكنك كسبه قبل أن تسدّد جنيهاً واحداً. هذه هي الحدود السنوية الحالية.",
+                },
+                rows: [
+                  { label: { en: "Plan 1", ar: "خطة 1" }, value: { en: "£26,900", ar: "£26,900" } },
+                  { label: { en: "Plan 2", ar: "خطة 2" }, value: { en: "£29,385", ar: "£29,385" } },
+                  { label: { en: "Plan 4", ar: "خطة 4" }, value: { en: "£33,795", ar: "£33,795" } },
+                  { label: { en: "Plan 5", ar: "خطة 5" }, value: { en: "£25,000", ar: "£25,000" } },
+                ],
+                takeaway: {
+                  en: "Above your threshold you repay 9% of whatever you earn over it. Plan 5 starts at £25,000 while Plan 4 starts at £33,795, so the same salary can repay in England and repay nothing in Scotland.",
+                  ar: "فوق حدّك تسدّد 9% من كل ما تكسبه زيادته. خطة 5 تبدأ من £25,000 وخطة 4 تبدأ من £33,795، لذا الراتب نفسه قد يُسدَّد منه في إنجلترا ولا يُسدَّد منه شيء في اسكتلندا.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "You can hold more than one plan", ar: "يمكن أن تحمل أكثر من خطة" },
+                body: {
+                  en: "If you borrowed at different times, or studied at both undergraduate and postgraduate level, you can be on more than one plan at once. Each keeps its own threshold, and your employer has to know about all of them.",
+                  ar: "إذا اقترضت في أوقات مختلفة، أو درست البكالوريوس والدراسات العليا، فقد تكون على أكثر من خطة في الوقت نفسه. لكل خطة حدّها الخاص، وعلى جهة عملك معرفتها جميعاً.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each funding body to the plan it puts most students on.",
+                  ar: "صِل كل جهة تمويل بالخطة التي تضع عليها معظم الطلاب.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Student Finance England, started 2023", ar: "تمويل الطلاب إنجلترا، بداية 2023" },
+                    right: { en: "Plan 5", ar: "خطة 5" },
+                  },
+                  {
+                    left: { en: "Student Finance Wales", ar: "تمويل الطلاب ويلز" },
+                    right: { en: "Plan 2", ar: "خطة 2" },
+                  },
+                  {
+                    left: { en: "Student Awards Agency Scotland", ar: "هيئة منح الطلاب اسكتلندا" },
+                    right: { en: "Plan 4", ar: "خطة 4" },
+                  },
+                  {
+                    left: { en: "Student Finance Northern Ireland", ar: "تمويل الطلاب أيرلندا الشمالية" },
+                    right: { en: "Plan 1", ar: "خطة 1" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                nations: ["england"],
+                prompt: {
+                  en: "You applied to Student Finance England and started your course in 2023. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في إنجلترا وبدأت دراستك عام 2023. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 3,
+                why: {
+                  en: "Anyone applying to Student Finance England who started on or after 1 August 2023 is on Plan 5.",
+                  ar: "كل من تقدّم إلى تمويل الطلاب في إنجلترا وبدأ في 1 أغسطس 2023 أو بعده على خطة 5.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You applied to the Student Awards Agency Scotland. Which plan are you on?",
+                  ar: "تقدّمت إلى هيئة منح الطلاب في اسكتلندا. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 2,
+                why: {
+                  en: "SAAS students are on Plan 4 whether they studied an undergraduate or a postgraduate course. It does not depend on your start year, which is why Scottish graduates repay from a higher income.",
+                  ar: "طلاب اسكتلندا على خطة 4 سواء درسوا البكالوريوس أو الدراسات العليا. لا تعتمد على سنة البداية، ولهذا يبدأ الخريجون في اسكتلندا السداد من دخل أعلى.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["wales"],
+                prompt: {
+                  en: "You applied to Student Finance Wales and started your course in 2023. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في ويلز وبدأت دراستك عام 2023. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Wales did not move to Plan 5. If you applied to Student Finance Wales and started on or after 1 September 2012, you stay on Plan 2, so your threshold is higher than an English student who started the same year.",
+                  ar: "ويلز لم تنتقل إلى خطة 5. إذا تقدّمت إلى تمويل الطلاب في ويلز وبدأت في 1 سبتمبر 2012 أو بعده، تبقى على خطة 2، وحدّك أعلى من طالب في إنجلترا بدأ في السنة نفسها.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You applied to Student Finance Northern Ireland. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في أيرلندا الشمالية. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Student Finance Northern Ireland puts students on Plan 1, whether undergraduate or postgraduate.",
+                  ar: "تمويل الطلاب في أيرلندا الشمالية يضع الطلاب على خطة 1، سواء في البكالوريوس أو الدراسات العليا.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which of these does not change how much you repay each month?",
+                  ar: "أي من هذه لا يغيّر المبلغ الذي تسدّده شهرياً؟",
+                },
+                options: [
+                  { en: "Your salary", ar: "راتبك" },
+                  { en: "Which plan you are on", ar: "الخطة التي أنت عليها" },
+                  { en: "The size of your outstanding balance", ar: "حجم الرصيد المتبقي عليك" },
+                  { en: "How often you are paid", ar: "عدد مرات استلامك للراتب" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Repayment is a percentage of income above your threshold. The total you owe does not enter the calculation at all, which is why a large balance is not the emergency it feels like.",
+                  ar: "السداد نسبة من الدخل فوق حدّك. إجمالي ما تدين به لا يدخل في الحساب إطلاقاً، ولهذا لا يُعد الرصيد الكبير أزمة كما يبدو.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Your payslip shows Plan 2 deductions, but the letter in your online account says Plan 4. What do you do?",
+                  ar: "قسيمة راتبك تُظهر خصماً على خطة 2، لكن الخطاب في حسابك الإلكتروني يقول خطة 4. ماذا تفعل؟",
+                },
+                options: [
+                  {
+                    label: { en: "Leave it, the difference is small", ar: "أتركه، الفرق بسيط" },
+                    outcome: {
+                      en: "You keep repaying from an income that should not be repaying at all, every month, until someone notices.",
+                      ar: "تستمر في السداد من دخل لا يجب أن يسدّد أصلاً، كل شهر، حتى ينتبه أحد.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Download your active plan type letter and show your employer",
+                      ar: "أنزّل خطاب نوع الخطة النشطة وأعرضه على جهة عملي",
+                    },
+                    outcome: {
+                      en: "Your employer corrects your payroll, and you can claim a refund for what you overpaid.",
+                      ar: "تصحّح جهة عملك كشف الرواتب، ويمكنك المطالبة باسترداد ما دفعته بالزيادة.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask payroll to stop the deductions", ar: "أطلب من قسم الرواتب إيقاف الخصم" },
+                    outcome: {
+                      en: "They cannot. Repayments come out of payroll automatically, so the fix is correcting the plan, not cancelling it.",
+                      ar: "لا يمكنهم ذلك. الخصم يخرج من الرواتب تلقائياً، والحل هو تصحيح الخطة لا إلغاؤها.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+            ],
+            sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
+          },
           { id: "student-repay", title: { en: "Repayment is not a debt", ar: "السداد ليس دَيناً كالعادة" }, objective: { en: "Explain why a student loan behaves more like a graduate tax.", ar: "اشرح لماذا يشبه قرض الطالب ضريبة على الخريجين." }, minutes: 6, xp: 100, relevance: { en: "Overpaying can be the wrong move, unusual for debt.", ar: "السداد المبكر قد يكون خطأً, وهذا غريب في باب الديون." }, steps: [], sources: [SOURCES.mseStudents] },
           { id: "student-work", title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" }, objective: { en: "Read a payslip and check you were paid correctly.", ar: "اقرأ قسيمة راتبك وتحقّق من صحة أجرك." }, minutes: 7, xp: 110, relevance: { en: "Wrong tax codes are common for term-time workers.", ar: "رموز الضريبة الخاطئة شائعة للعاملين خلال الدراسة." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "student-rent", title: { en: "Rent, deposits, and deposits", ar: "الإيجار والودائع" }, objective: { en: "Know what a landlord can and cannot withhold.", ar: "اعرف ما يحق للمالك حجبه وما لا يحق." }, minutes: 7, xp: 110, relevance: { en: "Deposit protection is a legal requirement most students never verify.", ar: "حماية الوديعة إلزام قانوني لا يتحقّق منه معظم الطلاب." }, steps: [], sources: [SOURCES.moneyHelper] },
