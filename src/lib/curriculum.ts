@@ -864,7 +864,255 @@ export const tracks: Track[] = [
             ],
             sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
           },
-          { id: "student-repay", title: { en: "Repayment is not a debt", ar: "السداد ليس دَيناً كالعادة" }, objective: { en: "Explain why a student loan behaves more like a graduate tax.", ar: "اشرح لماذا يشبه قرض الطالب ضريبة على الخريجين." }, minutes: 6, xp: 100, relevance: { en: "Overpaying can be the wrong move, unusual for debt.", ar: "السداد المبكر قد يكون خطأً, وهذا غريب في باب الديون." }, steps: [], sources: [SOURCES.mseStudents] },
+          {
+            id: "student-repay",
+            title: { en: "Repayment is not a debt", ar: "السداد ليس دَيناً كالعادة" },
+            objective: {
+              en: "Explain why repayment follows your income rather than your balance, and know when the balance disappears.",
+              ar: "اشرح لماذا يتبع السداد دخلك لا رصيدك، واعرف متى يسقط الرصيد.",
+            },
+            minutes: 7,
+            xp: 110,
+            relevance: {
+              en: "Every other debt you will meet demands a fixed instalment and punishes a missed payment. This one does not. That difference is why paying it off early is often the wrong move, which is the opposite of what instinct says.",
+              ar: "كل دَين آخر ستقابله يطلب قسطاً ثابتاً ويعاقب على التأخر في السداد. هذا القرض لا يفعل ذلك. هذا الفرق هو سبب أن السداد المبكر غالباً خطأ، وهو عكس ما يمليه الحدس.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A debt that does not behave like one", ar: "دَين لا يتصرّف كالدَّين" },
+                body: {
+                  en: "Legally your student loan is a debt. In behaviour it is closer to a tax on income, and that difference is not a technicality. It changes what you should do with spare money.",
+                  ar: "قرض الطالب قانونياً دَين. لكنه في سلوكه أقرب إلى ضريبة على الدخل، وهذا الفرق ليس تفصيلاً شكلياً. إنه يغيّر ما ينبغي أن تفعله بالمال الفائض.",
+                },
+                points: [
+                  {
+                    en: "Repayment is a percentage of income above a threshold, not an instalment agreed with a lender.",
+                    ar: "السداد نسبة من الدخل فوق حدّ معيّن، وليس قسطاً متفقاً عليه مع مُقرِض.",
+                  },
+                  {
+                    en: "If your income drops below your threshold, repayments simply stop. Nobody chases you and nothing is defaulted.",
+                    ar: "إذا نزل دخلك تحت حدّك، يتوقّف السداد ببساطة. لا أحد يطاردك ولا يقع أي تعثّر.",
+                  },
+                  {
+                    en: "The balance is cancelled on a set date whether or not you cleared it, which no ordinary lender would ever agree to.",
+                    ar: "يُلغى الرصيد في تاريخ محدّد سواء سدّدته أم لا، وهذا ما لا توافق عليه أي جهة إقراض عادية.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What 9% actually looks like", ar: "كيف تبدو نسبة 9% فعلاً" },
+                setup: {
+                  en: "On Plan 2 you repay 9% of everything you earn above £29,385 a year. Here is that rule applied at three salaries.",
+                  ar: "على خطة 2 تسدّد 9% من كل ما تكسبه فوق £29,385 سنوياً. هذه هي القاعدة مطبّقة على ثلاثة رواتب.",
+                },
+                rows: [
+                  {
+                    label: { en: "Earning £30,000 a year", ar: "دخل £30,000 سنوياً" },
+                    value: { en: "about £5 a month", ar: "حوالي £5 شهرياً" },
+                  },
+                  {
+                    label: { en: "Earning £35,000 a year", ar: "دخل £35,000 سنوياً" },
+                    value: { en: "about £42 a month", ar: "حوالي £42 شهرياً" },
+                  },
+                  {
+                    label: { en: "Earning £50,000 a year", ar: "دخل £50,000 سنوياً" },
+                    value: { en: "about £155 a month", ar: "حوالي £155 شهرياً" },
+                  },
+                ],
+                takeaway: {
+                  en: "Just above the threshold the payment is almost nothing. It grows with income and it is taken from your pay before you ever see it, so you never have to find the money.",
+                  ar: "فوق الحد بقليل يكون المبلغ شبه معدوم. ينمو مع الدخل ويُخصم من راتبك قبل أن تراه، فلا تضطر للبحث عن المال.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Overpaying is often money thrown away", ar: "السداد الزائد غالباً مال مهدور" },
+                body: {
+                  en: "Most borrowers never clear the balance, because it is cancelled first. If that is your situation, every extra pound you pay is a pound you did not owe. Extra payments only make sense if you are confident you will repay the whole balance before the write off date.",
+                  ar: "معظم المقترضين لا يسدّدون الرصيد كاملاً، لأن الرصيد يُلغى قبل ذلك. إذا كانت هذه حالتك، فكل جنيه إضافي تدفعه هو جنيه لم يكن مطلوباً منك. السداد الزائد منطقي فقط إذا كنت واثقاً من سداد الرصيد كاملاً قبل تاريخ الإلغاء.",
+                },
+              },
+              {
+                k: "fill",
+                prompt: { en: "Complete the rule.", ar: "أكمل القاعدة." },
+                before: { en: "If your income falls below your threshold, your repayments", ar: "إذا نزل دخلك تحت حدّك، فإن سدادك" },
+                after: { en: "until your income rises again.", ar: "حتى يرتفع دخلك مرة أخرى." },
+                bank: [
+                  { en: "stop", ar: "يتوقّف" },
+                  { en: "double", ar: "يتضاعف" },
+                  { en: "transfer", ar: "يُحوَّل" },
+                  { en: "continue", ar: "يستمر" },
+                ],
+                answer: ["stop"],
+                why: {
+                  en: "Repayment is taken out of income. Below the threshold there is nothing to take, so the balance simply waits, and interest is still applied while it waits.",
+                  ar: "السداد يُخصم من الدخل. تحت الحد لا يوجد ما يُخصم، فينتظر الرصيد، وتُضاف الفائدة أثناء انتظاره.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You earn £22,000 a year and you are on Plan 2. How much do you repay?",
+                  ar: "تكسب £22,000 سنوياً وأنت على خطة 2. كم تسدّد؟",
+                },
+                options: [
+                  { en: "Nothing", ar: "لا شيء" },
+                  { en: "About £15 a month", ar: "حوالي £15 شهرياً" },
+                  { en: "About £55 a month", ar: "حوالي £55 شهرياً" },
+                  { en: "9% of your salary", ar: "9% من راتبك" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£22,000 is below the Plan 2 threshold of £29,385, so nothing is due. This is the single most misunderstood thing about student loans in the first years after graduating.",
+                  ar: "£22,000 أقل من حد خطة 2 البالغ £29,385، فلا يجب عليك شيء. هذا أكثر ما يُفهم خطأً عن قروض الطلاب في السنوات الأولى بعد التخرّج.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each change to what it does to your repayments.",
+                  ar: "صِل كل تغيّر بما يفعله بسدادك.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Your income falls below the threshold", ar: "دخلك ينزل تحت الحد" },
+                    right: { en: "Repayments stop", ar: "يتوقّف السداد" },
+                  },
+                  {
+                    left: { en: "Your outstanding balance grows", ar: "رصيدك المتبقي يزداد" },
+                    right: { en: "Your monthly payment does not change", ar: "دفعتك الشهرية لا تتغيّر" },
+                  },
+                  {
+                    left: { en: "You reach the write off date", ar: "تصل إلى تاريخ الإلغاء" },
+                    right: { en: "The balance is cancelled", ar: "يُلغى الرصيد" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                nations: ["england"],
+                prompt: {
+                  en: "You are on Plan 5. How long until the balance is written off?",
+                  ar: "أنت على خطة 5. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Plan 5 is written off 40 years after the April you were first due to repay. That is the longest of any plan, and it is why most Plan 5 borrowers treat the payment as a contribution rather than a debt to clear.",
+                  ar: "تُلغى خطة 5 بعد 40 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه. هذه أطول مدة بين الخطط، ولهذا يعتبر معظم المقترضين على خطة 5 الدفعة مساهمة لا دَيناً يجب إغلاقه.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You are on Plan 4. How long until the balance is written off?",
+                  ar: "أنت على خطة 4. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Plan 4 is written off 30 years after the April you were first due to repay, and it starts from the highest threshold of the four plans. A Scottish graduate repays less than an English one on the same salary, and for a shorter period.",
+                  ar: "تُلغى خطة 4 بعد 30 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه، وتبدأ من أعلى حد بين الخطط الأربع. الخريج في اسكتلندا يسدّد أقل من نظيره في إنجلترا بالراتب نفسه، ولمدة أقصر.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["wales"],
+                prompt: {
+                  en: "You are on Plan 2. How long until the balance is written off?",
+                  ar: "أنت على خطة 2. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Plan 2 is written off 30 years after the April you were first due to repay. Wales also writes off £1,500 of the maintenance loan for full time students from Wales, on top of the standard terms.",
+                  ar: "تُلغى خطة 2 بعد 30 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه. وتلغي ويلز أيضاً £1,500 من قرض المعيشة للطلاب المتفرّغين من ويلز، إضافة إلى الشروط المعتادة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You are on Plan 1. How long until the balance is written off?",
+                  ar: "أنت على خطة 1. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Plan 1 is written off 25 years after the April you were first due to repay, the shortest period of any plan. Northern Irish graduates become free of the balance sooner than anyone else.",
+                  ar: "تُلغى خطة 1 بعد 25 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه، وهي أقصر مدة بين الخطط. خريجو أيرلندا الشمالية يتحرّرون من الرصيد أسرع من غيرهم.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You have £3,000 saved and you are on Plan 5, expecting to earn around £28,000 for the next few years. You are thinking about paying it against the loan. What is the strongest argument against?",
+                  ar: "لديك £3,000 مدّخرة وأنت على خطة 5، وتتوقّع أن تكسب حوالي £28,000 في السنوات القادمة. تفكّر في دفعها لإغلاق جزء من القرض. ما أقوى حجة ضد ذلك؟",
+                },
+                options: [
+                  {
+                    label: { en: "You should pay, clearing debt is always right", ar: "يجب أن تدفع، إغلاق الدَين صحيح دائماً" },
+                    outcome: {
+                      en: "On £28,000 you repay roughly £22 a month. £3,000 would take over eleven years off a loan that is cancelled in forty anyway, and you would have given up your only buffer.",
+                      ar: "على £28,000 تسدّد حوالي £22 شهرياً. إن £3,000 ستوفّر أكثر من إحدى عشرة سنة من قرض يُلغى في الأربعين على أي حال، وستكون قد فقدت احتياطك الوحيد.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "It would be spent on a balance that will be cancelled before you clear it",
+                      ar: "سيُصرف على رصيد سيُلغى قبل أن تسدّده",
+                    },
+                    outcome: {
+                      en: "Correct reasoning. The buffer protects you from borrowing at real interest, and the student loan would have disappeared on its own.",
+                      ar: "استدلال صحيح. الاحتياط يحميك من الاقتراض بفائدة حقيقية، وقرض الطالب كان سيسقط من تلقاء نفسه.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "You should pay because interest is added every month", ar: "يجب أن تدفع لأن الفائدة تُضاف كل شهر" },
+                    outcome: {
+                      en: "Interest grows the balance, but the balance is not what you pay. It is cancelled either way, so the interest figure is mostly irrelevant to what leaves your pay.",
+                      ar: "الفائدة تزيد الرصيد، لكن الرصيد ليس ما تدفعه. هو يُلغى في الحالتين، فرقم الفائدة لا أثر له تقريباً على ما يُخصم من راتبك.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "How to think about it", ar: "كيف تفكّر فيه" },
+                body: {
+                  en: "For most graduates the honest description is a contribution of 9% of income above a threshold, paid for a fixed number of years and then gone. Plan around your income, not around the balance, and you will make better decisions than someone worrying about the headline number.",
+                  ar: "بالنسبة لمعظم الخريجين، الوصف الصادق هو مساهمة بنسبة 9% من الدخل فوق حدّ معيّن، تُدفع لعدد محدّد من السنوات ثم تنتهي. خطّط حسب دخلك لا حسب الرصيد، وستتخذ قرارات أفضل من شخص يقلق من الرقم الكبير.",
+                },
+              },
+            ],
+            sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
+          },
           { id: "student-work", title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" }, objective: { en: "Read a payslip and check you were paid correctly.", ar: "اقرأ قسيمة راتبك وتحقّق من صحة أجرك." }, minutes: 7, xp: 110, relevance: { en: "Wrong tax codes are common for term-time workers.", ar: "رموز الضريبة الخاطئة شائعة للعاملين خلال الدراسة." }, steps: [], sources: [SOURCES.moneyHelper] },
           { id: "student-rent", title: { en: "Rent, deposits, and deposits", ar: "الإيجار والودائع" }, objective: { en: "Know what a landlord can and cannot withhold.", ar: "اعرف ما يحق للمالك حجبه وما لا يحق." }, minutes: 7, xp: 110, relevance: { en: "Deposit protection is a legal requirement most students never verify.", ar: "حماية الوديعة إلزام قانوني لا يتحقّق منه معظم الطلاب." }, steps: [], sources: [SOURCES.moneyHelper] },
         ],
