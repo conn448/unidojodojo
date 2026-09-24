@@ -1,1 +1,0 @@
-import{createFileRoute}from"@tanstack/react-router";import{FeedbackPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/feedback")({head:()=>pageMeta("Suggest a topic — UniDojo","Tell UniDojo what student money topic should come next."),component:FeedbackPage});

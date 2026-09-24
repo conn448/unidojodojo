@@ -1,1 +1,0 @@
-import{createFileRoute}from"@tanstack/react-router";import{SettingsPage}from"@/components/unidojo/pages";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/settings")({head:()=>pageMeta("Settings — UniDojo","Choose your language, text and motion preferences."),component:SettingsPage});
