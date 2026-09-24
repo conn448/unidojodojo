@@ -200,6 +200,31 @@ export const SOURCES = {
     url: "https://www.gov.uk/tenancy-deposit-protection",
     publisher: "GOV.UK",
   },
+  govISA: {
+    label: "Individual Savings Accounts, allowance and types",
+    url: "https://www.gov.uk/individual-savings-accounts",
+    publisher: "GOV.UK",
+  },
+  govLISA: {
+    label: "Lifetime ISA, bonus and withdrawal charge",
+    url: "https://www.gov.uk/lifetime-isa",
+    publisher: "GOV.UK",
+  },
+  govPensions: {
+    label: "Workplace pensions, automatic enrolment contributions",
+    url: "https://www.gov.uk/workplace-pensions/what-you-your-employer-and-the-government-pay",
+    publisher: "GOV.UK",
+  },
+  fscs: {
+    label: "FSCS protection for banks, building societies and credit unions",
+    url: "https://www.fscs.org.uk/what-we-cover/banks-building-societies-credit-unions/",
+    publisher: "Financial Services Compensation Scheme",
+  },
+  fcaScams: {
+    label: "Protect yourself from scams, warning signs and the firm checker",
+    url: "https://www.fca.org.uk/consumers/protect-yourself-scams",
+    publisher: "Financial Conduct Authority",
+  },
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -1542,10 +1567,747 @@ export const tracks: Track[] = [
         id: "build-u1",
         title: { en: "From buffer to compounding", ar: "من الاحتياط إلى النمو التراكمي" },
         lessons: [
-          { id: "building-buffer", title: { en: "Your first £500", ar: "أول 500 جنيه" }, objective: { en: "Build an emergency buffer before investing anything.", ar: "ابنِ احتياطياً للطوارئ قبل أي استثمار." }, minutes: 5, xp: 90, relevance: { en: "Without a buffer, one emergency becomes debt.", ar: "بلا احتياطي، تتحوّل أي طارئة إلى دَين." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "building-compound", title: { en: "Compounding, honestly", ar: "النمو التراكمي بلا مبالغة" }, objective: { en: "Calculate growth without being sold a fantasy.", ar: "احسب النمو دون أن تُباع لك أوهام." }, minutes: 7, xp: 120, relevance: { en: "Time in the market matters more than the amount at your age.", ar: "طول المدة في السوق أهم من المبلغ في عمرك." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "building-isa", title: { en: "ISA versus pension", ar: "الحساب المعفى مقابل التقاعد" }, objective: { en: "Choose the right wrapper for money you will not touch.", ar: "اختر الوعاء المناسب للمال الذي لن تلمسه." }, minutes: 7, xp: 110, relevance: { en: "Tax wrappers are dull and worth real money.", ar: "أوعية الضرائب مملّة لكنها تساوي مالاً حقيقياً." }, steps: [], sources: [SOURCES.moneyHelper] },
-          { id: "building-hype", title: { en: "Crypto, tips, and hype cycles", ar: "العملات والنصائح ودورات الضجيج" }, objective: { en: "Test a tip before your money does.", ar: "اختبر أي نصيحة قبل أن يختبرها مالك." }, minutes: 7, xp: 130, relevance: { en: "FOMO peaks precisely when you can least afford it.", ar: "الخوف من فوات الفرصة يبلغ ذروته حين لا تحتمل الخسارة." }, steps: [], sources: [SOURCES.moneyHelper] },
+          {
+            id: "building-buffer",
+            title: { en: "Your first £500", ar: "أول 500 جنيه" },
+            objective: {
+              en: "Build a cash buffer before you invest anything, and keep it somewhere protected.",
+              ar: "ابنِ احتياطياً نقدياً قبل أي استثمار، واحفظه في مكان محمي.",
+            },
+            minutes: 6,
+            xp: 100,
+            relevance: {
+              en: "A buffer is not a savings goal and it is not an investment. It is the thing that stops one bad week turning into a credit card balance that then costs you for years.",
+              ar: "الاحتياطي ليس هدف ادخار وليس استثماراً. إنه ما يمنع أسبوعاً سيئاً واحداً من أن يتحوّل إلى رصيد بطاقة ائتمان يكلّفك سنوات.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "The buffer comes first", ar: "الاحتياطي أولاً" },
+                body: {
+                  en: "A buffer is a small amount of cash you can reach in a day, held for the specific job of absorbing a surprise. It exists so that a broken laptop, a dental bill or a sudden train fare never has to be borrowed for.",
+                  ar: "الاحتياطي مبلغ نقدي صغير يمكنك الوصول إليه في يوم، موضوع لغرض واحد: امتصاص المفاجآت. وجوده يعني أن جهازاً تعطّل أو فاتورة طبيب أو تذكرة قطار مفاجئة لا تحتاج إلى اقتراض.",
+                },
+                points: [
+                  {
+                    en: "The size that matters first is small. A few hundred pounds covers most of what actually goes wrong for a student.",
+                    ar: "الحجم المهم في البداية صغير. بضع مئات من الجنيهات تغطي معظم ما يحدث فعلاً للطالب.",
+                  },
+                  {
+                    en: "Borrowing has a cost. Every emergency paid on credit instead of from cash is a purchase you are still paying for later.",
+                    ar: "الاقتراض له كلفة. كل طارئة تُدفع بالائتمان بدلاً من النقد هي شراء تستمر في دفع ثمنه لاحقاً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "Where your cash is protected", ar: "أين يكون نقدك محمياً" },
+                setup: {
+                  en: "If a bank fails and cannot return your money, the Financial Services Compensation Scheme pays you back automatically. The current limit is £120,000 per eligible person, per bank.",
+                  ar: "إذا تعثّر بنك ولم يستطع إعادة أموالك، يعوّضك نظام تعويض الخدمات المالية تلقائياً. الحد الحالي £120,000 لكل شخص مؤهل، لكل بنك.",
+                },
+                rows: [
+                  {
+                    label: { en: "One person, one bank", ar: "شخص واحد، بنك واحد" },
+                    value: { en: "£120,000 protected", ar: "£120,000 محمية" },
+                  },
+                  {
+                    label: { en: "Two banks sharing one licence", ar: "بنكان يتقاسمان ترخيصاً واحداً" },
+                    value: { en: "Still £120,000 in total, not each", ar: "£120,000 إجمالاً، لا لكل بنك" },
+                  },
+                  {
+                    label: { en: "A joint account", ar: "حساب مشترك" },
+                    value: { en: "£120,000 per person", ar: "£120,000 لكل شخص" },
+                  },
+                  {
+                    label: { en: "A large sum held briefly", ar: "مبلغ كبير يُحفظ مؤقتاً" },
+                    value: { en: "Up to £1.4 million for six months", ar: "حتى £1.4 مليون لمدة ستة أشهر" },
+                  },
+                ],
+                takeaway: {
+                  en: "Protection depends on a firm being authorised in the first place. If it is not, there is no scheme behind it at all.",
+                  ar: "الحماية تعتمد أولاً على أن تكون الجهة مرخّصة. وإن لم تكن، فلا يوجد أي نظام يحميها.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two brands can be one bank", ar: "علامتان قد تكونان بنكاً واحداً" },
+                body: {
+                  en: "Many banks operate several brands under a single banking licence. The £120,000 limit applies to everything you hold across all of those brands together, not to each app you happen to have. Check the licence before assuming two accounts means double the cover.",
+                  ar: "تشغّل بنوك كثيرة علامات متعددة بترخيص مصرفي واحد. حد £120,000 ينطبق على كل ما تحتفظ به في تلك العلامات مجتمعة، لا على كل تطبيق على حدة. تحقّق من الترخيص قبل أن تفترض أن حسابين يعنيان ضعف الحماية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "How much does the deposit scheme protect for one person at one bank?",
+                  ar: "كم يحمي نظام الودائع لشخص واحد في بنك واحد؟",
+                },
+                options: [
+                  { en: "£50,000", ar: "£50,000" },
+                  { en: "£85,000", ar: "£85,000" },
+                  { en: "£120,000", ar: "£120,000" },
+                  { en: "There is no limit", ar: "لا يوجد حد" },
+                ],
+                answer: 2,
+                why: {
+                  en: "The limit rose to £120,000 on 1 December 2025. £85,000 was the old figure, which is why it still appears in a lot of older advice.",
+                  ar: "ارتفع الحد إلى £120,000 في 1 ديسمبر 2025. وكان £85,000 هو الرقم السابق، ولهذا ما زال يظهر في كثير من النصائح القديمة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You have £80,000 in one bank and £60,000 in another brand that shares its licence. How much is protected?",
+                  ar: "لديك £80,000 في بنك، و£60,000 في علامة أخرى تتقاسم الترخيص نفسه. كم المبلغ المحمي؟",
+                },
+                options: [
+                  { en: "£120,000", ar: "£120,000" },
+                  { en: "£140,000", ar: "£140,000" },
+                  { en: "£240,000", ar: "£240,000" },
+                  { en: "Nothing, because there are two accounts", ar: "لا شيء، لأن هناك حسابين" },
+                ],
+                answer: 0,
+                why: {
+                  en: "One licence means one bank. Your £140,000 is treated as a single holding, so £20,000 of it sits outside the limit.",
+                  ar: "ترخيص واحد يعني بنكاً واحداً. يُعامل مجموع £140,000 كحيازة واحدة، فيبقى £20,000 منها خارج الحد.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Before trusting a savings provider with your money, what is the check that matters?",
+                  ar: "قبل أن تأتمن جهة ادخار على مالك، ما التحقّق المهم؟",
+                },
+                options: [
+                  { en: "The interest rate it advertises", ar: "سعر الفائدة الذي تعلنه" },
+                  { en: "Whether it appears on the Financial Services Register", ar: "هل تظهر في سجل الخدمات المالية" },
+                  { en: "How many reviews it has", ar: "عدد التقييمات التي لديها" },
+                  { en: "How long its website has existed", ar: "منذ متى يوجد موقعها" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The register shows whether a firm is authorised and what it is allowed to do. A provider that is not on it has no compensation scheme behind it, however convincing the website looks.",
+                  ar: "يُظهر السجل هل الجهة مرخّصة وما المسموح لها به. والجهة غير المدرجة فيه لا يقف خلفها أي نظام تعويض، مهما بدا موقعها مقنعاً.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You have £2,000 set aside and your laptop dies, needing a £600 repair. What is the best use of the buffer?",
+                  ar: "لديك £2,000 جانباً وتعطّل حاسوبك وتحتاج إصلاحاً بـ £600. ما أفضل استخدام للاحتياطي؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay the £600 from the buffer", ar: "ادفع £600 من الاحتياطي" },
+                    outcome: {
+                      en: "That is exactly the job it was built for. You keep £1,400 and you start rebuilding towards the original figure.",
+                      ar: "هذا بالضبط ما وُجد له. يتبقى لديك £1,400 وتبدأ في إعادة بناء المبلغ الأصلي.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Put it on a credit card and keep the £2,000 intact", ar: "ضعه على بطاقة ائتمان وأبقِ £2,000 كما هي" },
+                    outcome: {
+                      en: "The balance now costs you interest every month, so you pay more than £600 for the same repair. Keeping the buffer intact only looks tidy.",
+                      ar: "أصبح الرصيد يكلّفك فائدة شهرياً، فتدفع أكثر من £600 للإصلاح نفسه. والحفاظ على الاحتياطي كما هو مظهر مرتّب فقط.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Invest the £2,000 and borrow for the repair", ar: "استثمر £2,000 واقترض للإصلاح" },
+                    outcome: {
+                      en: "You take on guaranteed borrowing costs to chase uncertain returns, which is the wrong way round.",
+                      ar: "تتحمّل كلفة اقتراض مؤكدة سعياً وراء عوائد غير مؤكدة، وهذا هو الترتيب المعكوس.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "The order of operations", ar: "ترتيب الخطوات" },
+                body: {
+                  en: "Buffer first, then clear the expensive debt, then invest. Investing before you have a buffer means the first surprise forces you to sell at whatever price the market happens to be offering that week, which is how a temporary fall becomes a permanent loss.",
+                  ar: "الاحتياطي أولاً، ثم سداد الدَين المكلف، ثم الاستثمار. الاستثمار قبل وجود احتياطي يعني أن أول مفاجأة تجبرك على البيع بالسعر الذي يعرضه السوق ذلك الأسبوع، وهكذا يتحوّل الهبوط المؤقت إلى خسارة دائمة.",
+                },
+              },
+            ],
+            sources: [SOURCES.fscs, SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+          {
+            id: "building-compound",
+            title: { en: "Compounding, honestly", ar: "النمو التراكمي بلا مبالغة" },
+            objective: {
+              en: "Understand what compounding does over long periods, and what it cannot promise.",
+              ar: "افهم ما يفعله النمو التراكمي على المدى الطويل، وما لا يمكنه أن يعدك به.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Compounding is the one genuine advantage you have at twenty, and it is also the single most oversold idea in personal finance. The difference between the real effect and the sales version is entirely about the assumptions.",
+              ar: "النمو التراكمي هو الميزة الحقيقية الوحيدة التي تملكها في العشرين، وهو أيضاً أكثر فكرة مبالغ في بيعها في المال الشخصي. الفرق بين أثره الحقيقي ونسخته الدعائية كله في الافتراضات.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Growth applied to growth", ar: "نمو يُطبَّق على النمو" },
+                body: {
+                  en: "Compounding means the return you earn starts earning a return of its own. Nothing dramatic happens in any single year. The effect comes from the years stacking up, which is why the length of time matters more than the size of the amount when you are young.",
+                  ar: "النمو التراكمي يعني أن العائد الذي تكسبه يبدأ في كسب عائد خاص به. لا شيء مذهل يحدث في سنة واحدة. الأثر يأتي من تراكم السنوات، ولهذا تكون المدة أهم من المبلغ وأنت صغير.",
+                },
+                points: [
+                  {
+                    en: "Ten years of contributions does something that two years of twice the contributions cannot copy.",
+                    ar: "عشر سنوات من المساهمات تفعل ما لا تستطيع سنتان بضعف المساهمة تقليده.",
+                  },
+                  {
+                    en: "The same mechanism works in reverse. Losses also compound, and they compound faster.",
+                    ar: "الآلية نفسها تعمل في الاتجاه المعاكس. الخسائر تتراكم أيضاً، بل أسرع.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The arithmetic, not a forecast", ar: "الحساب، لا التنبؤ" },
+                setup: {
+                  en: "Here is £100 a month at an assumed 5% a year, reinvested and left alone. The rate is chosen to show the shape of the curve. It is not a prediction and no investment promises it.",
+                  ar: "هذا £100 شهرياً بمعدل افتراضي 5% سنوياً، يُعاد استثماره ويُترك. المعدل اختير لإظهار شكل المنحنى. وهو ليس تنبؤاً ولا يضمنه أي استثمار.",
+                },
+                rows: [
+                  {
+                    label: { en: "After 10 years", ar: "بعد 10 سنوات" },
+                    value: { en: "about £15,500, of which you paid in £12,000", ar: "حوالي £15,500، دفعت منها £12,000" },
+                  },
+                  {
+                    label: { en: "After 20 years", ar: "بعد 20 سنة" },
+                    value: { en: "about £41,100, of which you paid in £24,000", ar: "حوالي £41,100، دفعت منها £24,000" },
+                  },
+                  {
+                    label: { en: "After 30 years", ar: "بعد 30 سنة" },
+                    value: { en: "about £83,200, of which you paid in £36,000", ar: "حوالي £83,200، دفعت منها £36,000" },
+                  },
+                  {
+                    label: { en: "After 40 years", ar: "بعد 40 سنة" },
+                    value: { en: "about £152,600, of which you paid in £48,000", ar: "حوالي £152,600، دفعت منها £48,000" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice where the line crosses. By the end, the growth is more than twice everything you put in, and almost all of that comes from the last years. The early years look like nothing is happening.",
+                  ar: "لاحظ أين يتقاطع الخط. في النهاية يصبح النمو أكثر من ضعف كل ما دفعته، ومعظمه يأتي من السنوات الأخيرة. أما السنوات الأولى فتبدو كأن لا شيء يحدث فيها.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "A fall and a rise are not symmetric", ar: "الهبوط والصعود ليسا متماثلين" },
+                body: {
+                  en: "If £1,000 falls by half you have £500, and getting back to £1,000 needs a rise of 100%. A 50% loss needs a 100% gain to undo. This is why protecting against large losses matters more than chasing large gains, and it is the part compounding enthusiasts tend to leave out.",
+                  ar: "إذا هبط £1,000 إلى النصف يصبح لديك £500، والعودة إلى £1,000 تحتاج ارتفاعاً بنسبة 100%. خسارة 50% تحتاج مكسباً 100% لمحوها. ولهذا فإن الحماية من الخسائر الكبيرة أهم من مطاردة المكاسب الكبيرة، وهذا ما يميل المتحمّسون للنمو التراكمي إلى إغفاله.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "An investment of £1,000 falls by 50%. What rise does it need to get back to £1,000?",
+                  ar: "استثمار بـ £1,000 هبط بنسبة 50%. ما نسبة الارتفاع اللازمة للعودة إلى £1,000؟",
+                },
+                options: [
+                  { en: "50%", ar: "50%" },
+                  { en: "75%", ar: "75%" },
+                  { en: "100%", ar: "100%" },
+                  { en: "150%", ar: "150%" },
+                ],
+                answer: 2,
+                why: {
+                  en: "£500 has to double to reach £1,000, and doubling is a rise of 100%. Losses need proportionally larger gains to recover, which is the whole reason a buffer comes before investing.",
+                  ar: "على £500 أن يتضاعف ليصل إلى £1,000، والتضاعف ارتفاع بنسبة 100%. الخسائر تحتاج مكاسب أكبر نسبياً للتعافي، ولهذا يأتي الاحتياطي قبل الاستثمار.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each idea to what it actually means.",
+                  ar: "صِل كل فكرة بمعناها الفعلي.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Starting early", ar: "البدء مبكراً" },
+                    right: { en: "Matters more than the amount at your age", ar: "أهم من المبلغ في عمرك" },
+                  },
+                  {
+                    left: { en: "A 50% fall", ar: "هبوط بنسبة 50%" },
+                    right: { en: "Needs a 100% rise to undo", ar: "يحتاج ارتفاعاً 100% لمحوه" },
+                  },
+                  {
+                    left: { en: "Three good years", ar: "ثلاث سنوات جيدة" },
+                    right: { en: "Tell you nothing about the next three", ar: "لا تخبرك شيئاً عن الثلاث القادمة" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In the table, what does the forty year row show?",
+                  ar: "في الجدول، ماذا يُظهر صف الأربعين سنة؟",
+                },
+                options: [
+                  { en: "The growth is larger than everything you paid in", ar: "النمو أكبر من كل ما دفعته" },
+                  { en: "You paid in more than you earned", ar: "دفعت أكثر مما كسبت" },
+                  { en: "The growth is the same each year", ar: "النمو ثابت كل سنة" },
+                  { en: "It proves what will happen to your money", ar: "يُثبت ما سيحدث لمالك" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£48,000 paid in, about £152,600 at the end, so the growth is a little over £104,000. It is the clearest argument for starting early, and it still rests on an assumed rate.",
+                  ar: "دفعت £48,000 ووصل المبلغ إلى حوالي £152,600، أي نمو يزيد قليلاً عن £104,000. هذا أوضح حجة للبدء مبكراً، وهو مع ذلك مبني على معدل افتراضي.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "A friend shows you a chart where £1,000 became £4,000 in two years, and suggests you put your buffer in. What is the strongest response?",
+                  ar: "يعرض عليك صديق رسماً بيانياً تحوّل فيه £1,000 إلى £4,000 في سنتين، ويقترح أن تضع احتياطيك فيه. ما أقوى رد؟",
+                },
+                options: [
+                  {
+                    label: { en: "Ask which platform they used and copy it", ar: "اسأل عن المنصة التي استخدموها وقلّدها" },
+                    outcome: {
+                      en: "You are copying an outcome without the conditions that produced it, and the conditions are the part that mattered.",
+                      ar: "أنت تقلّد نتيجة دون الظروف التي أنتجتها، والظروف هي الجزء المهم.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Two years tells you nothing about the next two, and the buffer is not investable money",
+                      ar: "سنتان لا تخبرانك شيئاً عن السنتين القادمتين، والاحتياطي مال لا يُستثمر",
+                    },
+                    outcome: {
+                      en: "Two separate correct points. A short run of returns is not evidence, and money you might need at short notice should not be exposed to a fall at all.",
+                      ar: "نقطتان صحيحتان منفصلتان. سلسلة عوائد قصيرة ليست دليلاً، والمال الذي قد تحتاجه في وقت قصير لا ينبغي تعريضه للهبوط أصلاً.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Invest a small amount, then more if it keeps working", ar: "استثمر مبلغاً صغيراً، ثم زد إن استمر النجاح" },
+                    outcome: {
+                      en: "Adding after it works is buying after a rise, which is the opposite of a rule and just a way to feel safer while doing the same thing.",
+                      ar: "الإضافة بعد نجاحه شراء بعد ارتفاع، وهذا عكس القاعدة، وهو مجرد طريقة للشعور بالأمان مع فعل الشيء نفسه.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What you actually control", ar: "ما تتحكّم فيه فعلاً" },
+                body: {
+                  en: "You do not control returns, and anyone who says they do is selling something. You control how much goes in, how long it stays, what it costs you in fees, and whether you panic. Those four things decide most of the outcome.",
+                  ar: "أنت لا تتحكّم في العوائد، ومن يقول إنه يتحكّم فيها يبيع شيئاً. أنت تتحكّم في مقدار ما تدخله، وطول مدة بقائه، وكلفة الرسوم، وهل ستتصرّف بذعر. هذه الأمور الأربعة تحدّد معظم النتيجة.",
+                },
+              },
+            ],
+            sources: [SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+          {
+            id: "building-isa",
+            title: { en: "ISA versus pension", ar: "الحساب المعفى مقابل التقاعد" },
+            objective: {
+              en: "Choose the right tax wrapper for money based on when you need it.",
+              ar: "اختر الوعاء الضريبي المناسب للمال حسب موعد احتياجك إليه.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "An ISA and a pension are not two investments competing for your money. They are two containers with different rules about tax and access, and picking the wrong container for the wrong date is an expensive mistake to reverse.",
+              ar: "الحساب المعفى وصندوق التقاعد ليسا استثمارين يتنافسان على مالك. إنهما وعاءان بقواعد مختلفة في الضريبة والوصول، واختيار الوعاء الخطأ للموعد الخطأ خطأ مكلف يصعب تصحيحه.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A wrapper is not an investment", ar: "الوعاء ليس استثماراً" },
+                body: {
+                  en: "A tax wrapper is a container that decides how your money is taxed. What you put inside it, whether that is cash or investments, is a separate decision. Two people can hold identical investments and pay completely different tax on them, purely because of the wrapper.",
+                  ar: "الوعاء الضريبي حاوية تحدّد كيف يُفرض الضريبة على مالك. أما ما تضعه داخلها، نقداً كان أو استثمارات، فهو قرار منفصل. وقد يحمل شخصان الاستثمارات نفسها ويدفعان ضرائب مختلفة تماماً بسبب الوعاء فقط.",
+                },
+                points: [
+                  {
+                    en: "The ISA is the flexible wrapper. You can take money out whenever you like.",
+                    ar: "الحساب المعفى هو الوعاء المرن. يمكنك سحب المال متى شئت.",
+                  },
+                  {
+                    en: "The pension is the locked wrapper, and it is the only one where other people pay in alongside you.",
+                    ar: "التقاعد هو الوعاء المقفل، وهو الوحيد الذي يساهم فيه آخرون معك.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The two containers side by side", ar: "الوعاءان جنباً إلى جنب" },
+                setup: {
+                  en: "All figures are for the 2026 to 2027 tax year.",
+                  ar: "كل الأرقام تخص السنة الضريبية 2026 إلى 2027.",
+                },
+                rows: [
+                  {
+                    label: { en: "ISA allowance", ar: "حد الحساب المعفى" },
+                    value: {
+                      en: "£20,000 a year across all your ISAs, no tax on growth or withdrawal",
+                      ar: "£20,000 سنوياً في كل حساباتك المعفاة، بلا ضريبة على النمو أو السحب",
+                    },
+                  },
+                  {
+                    label: { en: "Lifetime ISA, part of that £20,000", ar: "حساب التقاعد المعفى، جزء من £20,000" },
+                    value: {
+                      en: "£4,000 a year, government adds 25% up to £1,000, first payment before 40, paid in until 50",
+                      ar: "£4,000 سنوياً، تضيف الحكومة 25% حتى £1,000، أول دفعة قبل 40، والمساهمة حتى 50",
+                    },
+                  },
+                  {
+                    label: { en: "Workplace pension, minimum", ar: "صندوق التقاعد، الحد الأدنى" },
+                    value: {
+                      en: "You pay 5% and your employer pays 3%, on earnings between £6,240 and £50,270",
+                      ar: "تدفع 5% ويدفع صاحب العمل 3%، على الدخل بين £6,240 و£50,270",
+                    },
+                  },
+                  {
+                    label: { en: "Tax relief on a pension", ar: "الإعفاء الضريبي على التقاعد" },
+                    value: {
+                      en: "The government tops it up, at your marginal rate of tax",
+                      ar: "تضيف الحكومة مبلغاً، بمعدلك الضريبي الحدّي",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "An ISA is money you can reach. A pension is money you cannot, and that is exactly why other people are willing to add to it.",
+                  ar: "الحساب المعفى مال يمكنك الوصول إليه. والتقاعد مال لا يمكنك الوصول إليه، ولهذا بالضبط يرغب آخرون في المساهمة فيه.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "The Lifetime ISA withdrawal trap", ar: "فخ السحب من حساب التقاعد المعفى" },
+                body: {
+                  en: "You can only take money out of a Lifetime ISA without charge to buy a first home, or from age 60, or if you are terminally ill. Any other withdrawal carries a 25% charge on the whole amount you take, including the government bonus. Put in £800, receive a £200 bonus, and withdraw the £1,000 early: the charge is £250 and you are left with £750, which is less than you paid in.",
+                  ar: "لا يمكنك سحب المال من حساب التقاعد المعفى بلا رسوم إلا لشراء أول منزل، أو من عمر 60، أو عند مرض عضال. وأي سحب آخر يحمل رسوماً 25% على كامل المبلغ المسحوب، بما في ذلك منحة الحكومة. أودع £800 واحصل على منحة £200 واسحب £1,000 مبكراً: الرسوم £250 ويتبقى لك £750، أي أقل مما دفعت.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What is the most you can pay into ISAs in one tax year?",
+                  ar: "ما أقصى مبلغ يمكنك دفعه في الحسابات المعفاة خلال سنة ضريبية واحدة؟",
+                },
+                options: [
+                  { en: "£4,000", ar: "£4,000" },
+                  { en: "£20,000", ar: "£20,000" },
+                  { en: "£50,000", ar: "£50,000" },
+                  { en: "There is no limit", ar: "لا يوجد حد" },
+                ],
+                answer: 1,
+                why: {
+                  en: "£20,000 across all your ISAs combined, and the Lifetime ISA allowance of £4,000 sits inside that total rather than on top of it.",
+                  ar: "£20,000 في كل حساباتك المعفاة مجتمعة، وحد حساب التقاعد المعفى البالغ £4,000 يقع داخل هذا الإجمالي لا فوقه.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You put £800 into a Lifetime ISA and get the £200 bonus. Next year you withdraw all £1,000 for something else. How much do you receive?",
+                  ar: "أودعت £800 في حساب التقاعد المعفى وحصلت على منحة £200. وفي السنة التالية سحبت £1,000 لسبب آخر. كم تستلم؟",
+                },
+                options: [
+                  { en: "£750", ar: "£750" },
+                  { en: "£800", ar: "£800" },
+                  { en: "£1,000", ar: "£1,000" },
+                  { en: "£1,200", ar: "£1,200" },
+                ],
+                answer: 0,
+                why: {
+                  en: "The 25% charge applies to the full £1,000, not just the bonus, so it takes £250. You end up with £750 having paid in £800, which is why the Lifetime ISA is only worth opening when you are confident about your plan.",
+                  ar: "تُطبَّق رسوم 25% على £1,000 كاملة لا على المنحة فقط، فتقتطع £250. ينتهي بك الأمر بـ £750 بعد أن دفعت £800، ولهذا لا يستحق فتح حساب التقاعد المعفى إلا عندما تكون واثقاً من خطتك.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You are automatically enrolled in a workplace pension. What is the minimum total contribution?",
+                  ar: "أنت مشمول تلقائياً في صندوق تقاعد. ما الحد الأدنى لإجمالي المساهمة؟",
+                },
+                options: [
+                  { en: "3% in total", ar: "3% إجمالاً" },
+                  { en: "5% in total", ar: "5% إجمالاً" },
+                  { en: "8% in total", ar: "8% إجمالاً" },
+                  { en: "15% in total", ar: "15% إجمالاً" },
+                ],
+                answer: 2,
+                why: {
+                  en: "8% in total, made up of 3% from your employer and 5% from you, on earnings between £6,240 and £50,270. The employer part is money you only receive if you join, which is why opting out is usually a poor trade.",
+                  ar: "8% إجمالاً، منها 3% من صاحب العمل و5% منك، على الدخل بين £6,240 و£50,270. أما حصة صاحب العمل فهي مال لا تحصل عليه إلا إذا انضممت، ولهذا يكون الانسحاب عادة صفقة سيئة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales", "northern-ireland"],
+                prompt: {
+                  en: "You earn £45,000 in England and pay into a pension. At which rate does tax relief apply to your top slice of income?",
+                  ar: "تكسب £45,000 في إنجلترا وتساهم في صندوق تقاعد. بأي معدل يُطبَّق الإعفاء الضريبي على الجزء الأعلى من دخلك؟",
+                },
+                options: [
+                  { en: "20%, the basic rate", ar: "20%، الشريحة الأساسية" },
+                  { en: "40%, the higher rate", ar: "40%، الشريحة العليا" },
+                  { en: "42%, the higher rate", ar: "42%، الشريحة العليا" },
+                  { en: "No relief at this income", ar: "لا إعفاء عند هذا الدخل" },
+                ],
+                answer: 0,
+                why: {
+                  en: "In England, Wales and Northern Ireland the higher rate begins at £50,271, so £45,000 is still inside the basic rate and relief is given at 20%. The rate of relief always follows your marginal rate.",
+                  ar: "في إنجلترا وويلز وأيرلندا الشمالية تبدأ الشريحة العليا عند £50,271، لذا يبقى £45,000 داخل الشريحة الأساسية ويكون الإعفاء بنسبة 20%. ومعدل الإعفاء يتبع دائماً معدلك الحدّي.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You earn £45,000 in Scotland and pay into a pension. At which rate does tax relief apply to your top slice of income?",
+                  ar: "تكسب £45,000 في اسكتلندا وتساهم في صندوق تقاعد. بأي معدل يُطبَّق الإعفاء الضريبي على الجزء الأعلى من دخلك؟",
+                },
+                options: [
+                  { en: "20%, the basic rate", ar: "20%، الشريحة الأساسية" },
+                  { en: "21%, the intermediate rate", ar: "21%، الشريحة الوسطى" },
+                  { en: "42%, the higher rate", ar: "42%، الشريحة العليا" },
+                  { en: "No relief at this income", ar: "لا إعفاء عند هذا الدخل" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland's higher rate starts at £43,663, so at £45,000 you are already in it and relief is given at 42%. Pension relief is worth more to a Scottish taxpayer at this salary than to someone on the same salary in England, purely because the higher band starts lower.",
+                  ar: "تبدأ الشريحة العليا في اسكتلندا عند £43,663، فأنت عند £45,000 داخلها والإعفاء بنسبة 42%. إعفاء التقاعد أكثر قيمة لدافع الضريبة في اسكتلندا بهذا الراتب من نظيره في إنجلترا، فقط لأن الشريحة العليا تبدأ أدنى.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are saving a house deposit and hope to buy in four years. The kind of flat you want costs around £480,000. Should the deposit go into a Lifetime ISA?",
+                  ar: "توفّر لدفعة منزل وتأمل الشراء بعد أربع سنوات. الشقة التي تريدها تكلّف حوالي £480,000. هل تضع الدفعة في حساب التقاعد المعفى؟",
+                },
+                options: [
+                  {
+                    label: { en: "Yes, the 25% bonus is free money", ar: "نعم، منحة 25% مال مجاني" },
+                    outcome: {
+                      en: "The bonus is real, but a Lifetime ISA can only be used on a first home costing £450,000 or less. At £480,000 you would face the 25% withdrawal charge and lose part of your own deposit.",
+                      ar: "المنحة حقيقية، لكن حساب التقاعد المعفى لا يُستخدم إلا لأول منزل بتكلفة £450,000 أو أقل. وعند £480,000 ستواجه رسوم سحب 25% وتخسر جزءاً من دفعتك.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "No, the price cap rules it out", ar: "لا، سقف السعر يستبعده" },
+                    outcome: {
+                      en: "Correct. A Lifetime ISA only helps if the property is £450,000 or less, the purchase is at least 12 months after your first payment, and you buy with a mortgage through a conveyancer. A plain stocks and shares ISA keeps the flexibility instead.",
+                      ar: "صحيح. حساب التقاعد المعفى لا ينفع إلا إذا كان العقار بـ £450,000 أو أقل، والشراء بعد 12 شهراً على الأقل من أول دفعة، وبتمويل عقاري عبر محامٍ. والحساب المعفى العادي يحفظ لك المرونة بدلاً من ذلك.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Yes, and buy a cheaper flat later", ar: "نعم، واشتر شقة أرخص لاحقاً" },
+                    outcome: {
+                      en: "You are letting a tax rule decide which home you buy, which is the wrong way round.",
+                      ar: "أنت تدع قاعدة ضريبية تقرّر أي منزل تشتري، وهذا ترتيب معكوس.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Match the wrapper to the date", ar: "طابق الوعاء مع الموعد" },
+                body: {
+                  en: "Ask when you need the money, then choose the container. Under five years, keep it accessible. For a first home under the price cap, the Lifetime ISA pays you to save. For retirement, the pension is hard to beat because an employer adds to it and tax relief is added on top.",
+                  ar: "اسأل متى تحتاج المال، ثم اختر الوعاء. أقل من خمس سنوات، أبقِه متاحاً. ولأول منزل تحت سقف السعر، يدفع لك حساب التقاعد المعفى مقابل الادخار. وللتقاعد، يصعب مجاراة الصندوق لأن صاحب العمل يساهم فيه ويُضاف الإعفاء الضريبي فوق ذلك.",
+                },
+              },
+            ],
+            sources: [SOURCES.govISA, SOURCES.govLISA, SOURCES.govPensions, SOURCES.moneyHelper],
+          },
+          {
+            id: "building-hype",
+            title: { en: "Crypto, tips, and hype cycles", ar: "العملات والنصائح ودورات الضجيج" },
+            objective: {
+              en: "Run a check on an opportunity before your money does it for you.",
+              ar: "افحص أي فرصة قبل أن يفحصها مالك بدلاً منك.",
+            },
+            minutes: 8,
+            xp: 140,
+            relevance: {
+              en: "The warning signs of a bad offer are not secret and they are not subtle. They are published by the regulator. The reason people still lose money is that the signs are designed to arrive at the moment you are most excited, and excitement is not a check.",
+              ar: "علامات التحذير من العرض السيئ ليست سراً وليست خفية، بل ينشرها الجهاز الرقابي. وسبب خسارة الناس أموالهم رغم ذلك أن هذه العلامات مصمّمة لتصل في اللحظة التي تكون فيها أكثر حماساً، والحماس ليس فحصاً.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "The signs are published", ar: "العلامات منشورة" },
+                body: {
+                  en: "The Financial Conduct Authority lists the warning signs of a scam, and they are worth memorising because they work across every product. An offer does not have to be a cryptocurrency to be a fraud.",
+                  ar: "تسرد هيئة السلوك المالي علامات التحذير من الاحتيال، وتستحق الحفظ لأنها تنطبق على كل المنتجات. فليس شرطاً أن يكون العرض عملة رقمية ليكون احتيالاً.",
+                },
+                points: [
+                  {
+                    en: "Was the contact unexpected? Fraudsters usually make the first move, out of the blue.",
+                    ar: "هل كان الاتصال مفاجئاً؟ المحتالون غالباً هم من يبدأ التواصل دون سابق معرفة.",
+                  },
+                  {
+                    en: "Are you being pushed to act quickly, or told the chance is only open for a short time?",
+                    ar: "هل يُدفعك أحد للتصرف بسرعة، أو يُقال إن الفرصة متاحة لفترة قصيرة فقط؟",
+                  },
+                  {
+                    en: "Is the offer kept secret, or claimed to be exclusively for you? Genuine investments are sold openly.",
+                    ar: "هل العرض سرّي، أو يُقال إنه لك وحدك؟ الاستثمارات الحقيقية تُطرح علناً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What each sign tells you", ar: "ما تخبرك به كل علامة" },
+                setup: {
+                  en: "These are the regulator's own warning signs, and what each one is really telling you.",
+                  ar: "هذه علامات التحذير التي أعلنها الجهاز الرقابي، وما تخبرك به كل واحدة فعلاً.",
+                },
+                rows: [
+                  {
+                    label: { en: "It sounds too good to be true", ar: "يبدو أجمل من أن يكون حقيقياً" },
+                    value: { en: "It probably is", ar: "غالباً هو كذلك" },
+                  },
+                  {
+                    label: { en: "You feel flattered or chosen", ar: "تشعر بالإطراء أو بأنك مختار" },
+                    value: { en: "That is a technique, not a compliment", ar: "هذا أسلوب إقناع، لا إطراء" },
+                  },
+                  {
+                    label: { en: "You feel excited or worried", ar: "تشعر بحماس أو قلق" },
+                    value: { en: "Strong emotion is the point, so slow down", ar: "المشاعر القوية هي الهدف، فتمهّل" },
+                  },
+                  {
+                    label: { en: "They speak with authority", ar: "يتحدثون بثقة وسلطة" },
+                    value: { en: "Knowing the vocabulary is not being authorised", ar: "معرفة المصطلحات ليست ترخيصاً" },
+                  },
+                ],
+                takeaway: {
+                  en: "If you answered yes to any of these, the answer is not to think harder. It is to stop and check, using a route that did not come from the person contacting you.",
+                  ar: "إذا أجبت بنعم على أي منها، فالحل ليس التفكير أكثر. الحل هو التوقّف والتحقّق عبر طريق لم يأتِ من الشخص الذي تواصل معك.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Clone firms use real registration numbers", ar: "الشركات المقلّدة تستخدم أرقاماً حقيقية" },
+                body: {
+                  en: "Some fraudsters copy the details of a genuinely authorised firm, including its name and reference number, so a register search appears to confirm them. The defence is to use the contact details listed on the register rather than the ones you were sent. If the number in the message does not match the number on the register, you are looking at a clone.",
+                  ar: "ينسخ بعض المحتالين بيانات شركة مرخّصة حقاً، بما في ذلك اسمها ورقم تسجيلها، فيبدو البحث في السجل مصدّقاً لهم. والدفاع هو استخدام بيانات التواصل المدرجة في السجل لا التي أُرسلت إليك. وإن لم يطابق الرقم الوارد في الرسالة الرقم المذكور في السجل، فأنت أمام شركة مقلّدة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which is the strongest single warning sign?",
+                  ar: "ما أقوى علامة تحذير واحدة؟",
+                },
+                options: [
+                  {
+                    en: "An unexpected approach combined with pressure to act quickly",
+                    ar: "تواصل مفاجئ مع ضغط للتصرف بسرعة",
+                  },
+                  { en: "An investment you have not heard of before", ar: "استثمار لم تسمع به من قبل" },
+                  { en: "A company with a modern website", ar: "شركة بموقع حديث" },
+                  { en: "A product that is hard to understand", ar: "منتج يصعب فهمه" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Being contacted unexpectedly is the first check, and urgency is what stops you running the others. Both together are the pattern the regulator puts at the top of its list.",
+                  ar: "التواصل المفاجئ هو أول ما تتحقّق منه، والاستعجال هو ما يمنعك من إجراء بقية الفحوص. واجتماعهما معاً هو النمط الذي يضعه الجهاز الرقابي في رأس قائمته.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "A website displays an FCA reference number. Is that enough to trust it?",
+                  ar: "يعرض موقع رقم تسجيل لدى هيئة السلوك المالي. هل يكفي ذلك للثقة به؟",
+                },
+                options: [
+                  { en: "Yes, the number cannot be faked", ar: "نعم، لا يمكن تزييف الرقم" },
+                  { en: "No, search the register yourself and use the contact details listed there", ar: "لا، ابحث في السجل بنفسك واستخدم بيانات التواصل المدرجة فيه" },
+                  { en: "Yes, if the website has been running a long time", ar: "نعم، إذا كان الموقع يعمل منذ مدة طويلة" },
+                  { en: "Only if a friend has used it", ar: "فقط إذا استخدمه صديق" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Numbers are copied from real firms all the time. The register tells you what a firm is actually permitted to do, and its listed contact details are the ones you can trust.",
+                  ar: "تُنسخ الأرقام من شركات حقيقية باستمرار. السجل يخبرك بما يُسمح للشركة فعلاً بمزاولته، وبيانات التواصل المدرجة فيه هي التي يمكنك الوثوق بها.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each situation to the right response.",
+                  ar: "صِل كل حالة بالاستجابة الصحيحة.",
+                },
+                pairs: [
+                  {
+                    left: { en: "They claim to be authorised", ar: "يدّعون أنهم مرخّصون" },
+                    right: { en: "Check the firm on the register, then call the number listed there", ar: "تحقّق من الشركة في السجل، ثم اتصل بالرقم المدرج فيه" },
+                  },
+                  {
+                    left: { en: "The email links to the regulator's website", ar: "البريد يحتوي رابطاً لموقع الجهاز الرقابي" },
+                    right: { en: "Do not click it, type the address yourself", ar: "لا تضغط عليه، اكتب العنوان بنفسك" },
+                  },
+                  {
+                    left: { en: "The offer closes today", ar: "العرض ينتهي اليوم" },
+                    right: { en: "Treat that as a warning sign, not a reason to hurry", ar: "اعتبره علامة تحذير، لا سبباً للاستعجال" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Someone from your course shows a large gain and invites you into a group that promises high fixed returns, saying the firm is authorised but the deal is kept quiet. What is the strongest move?",
+                  ar: "يعرض عليك أحد زملائك مكسباً كبيراً ويدعوك إلى مجموعة تَعِد بعوائد ثابتة مرتفعة، ويقول إن الشركة مرخّصة لكن الاتفاق سري. ما أقوى خطوة؟",
+                },
+                options: [
+                  {
+                    label: { en: "Join for a small amount to test it", ar: "انضم بمبلغ صغير لتجربته" },
+                    outcome: {
+                      en: "A first withdrawal is often allowed on purpose, because it buys trust for a much larger one. Testing with a small amount is exactly the move the structure is built for.",
+                      ar: "يُسمح أحياناً بأول سحب عمداً، لأنه يشتري ثقة تُمكّن من سحب أكبر بكثير. والتجربة بمبلغ صغير هي بالضبط الخطوة التي بُني الهيكل لأجلها.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Decline, because guaranteed high returns and secrecy are both warning signs",
+                      ar: "ارفض، لأن العوائد المرتفعة المضمونة والسرّية علامتا تحذير",
+                    },
+                    outcome: {
+                      en: "Correct, and two separate signs at once makes it stronger. The check is free: look the firm up on the register yourself and use the listed contact details, not theirs.",
+                      ar: "صحيح، واجتماع علامتين مستقلتين يزيد الأمر وضوحاً. والفحص مجاني: ابحث عن الشركة في السجل بنفسك واستخدم بيانات التواصل المدرجة فيه لا بياناتهم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask your friend to send proof of their gain first", ar: "اطلب من صديقك إثبات مكسبه أولاً" },
+                    outcome: {
+                      en: "A screenshot is not evidence, and someone whose own money is already in has a reason to want you in too.",
+                      ar: "لقطة الشاشة ليست دليلاً، ومن كان ماله داخل التجربة لديه سبب ليريد دخولك معه.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "If money is already gone", ar: "إذا ذهب المال بالفعل" },
+                body: {
+                  en: "Report it to the regulator and to the national fraud reporting service, and do it quickly because early reports help recover funds and warn others. Then expect a second approach, from someone offering to get your money back for an upfront fee. That is a known follow up fraud, and the people running it read the same lists you appear on.",
+                  ar: "أبلغ الجهاز الرقابي وخدمة الإبلاغ الوطنية عن الاحتيال، وبادر بذلك لأن الإبلاغ المبكر يساعد في استعادة الأموال وتحذير الآخرين. ثم توقّع تواصلاً ثانياً من شخص يعرض إعادة أموالك مقابل رسوم مقدّمة. هذا احتيال متابعة معروف، والقائمون عليه يقرؤون القوائم نفسها التي يظهر فيها اسمك.",
+                },
+              },
+            ],
+            sources: [SOURCES.fcaScams, SOURCES.fscs, SOURCES.moneyHelper],
+          },
         ],
       },
     ],
