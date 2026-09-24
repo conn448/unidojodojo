@@ -34,9 +34,9 @@ export const tracks: TrackSummary[] = curriculumTracks.map((track) => ({
       id: lesson.id,
       title: lesson.title,
       minutes: lesson.minutes,
-      // A lesson with no steps yet is shown locked and links to the track,
-      // so a learner can never tap into an empty lesson.
-      locked: lesson.steps.length === 0,
+      // Gating is switched off for now: every lesson is open. Kept as a
+      // field so a future release can lock behind progress without a refactor.
+      locked: false,
     })),
   ),
 }));
