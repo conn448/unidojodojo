@@ -148,7 +148,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           </div>
 
           <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(xp)} label="XP" />
+            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(Math.round(xp))} label="XP" />
             <Stat
               icon={<Check className="size-5 text-primary" />}
               value={`${accuracy}%`}
@@ -206,7 +206,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             {pick(entry.lesson.title, locale)}
           </h1>
           <div className="mt-8 grid grid-cols-2 gap-3">
-            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(xp)} label="XP" />
+            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(Math.round(xp))} label="XP" />
             <Stat
               icon={<Heart className="size-5 fill-current text-destructive" />}
               value={`${accuracy}%`}
@@ -251,7 +251,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const handleCheck = (correct: boolean) => {
     if (correct) {
       play("win");
-      setXp((v) => v + Math.round((entry.lesson.xp || 100) / Math.max(practice.length, 1)));
+      setXp((v) => v + (entry.lesson.xp || 100) / Math.max(practice.length, 1));
       setPhase("correct");
       return;
     }

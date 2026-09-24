@@ -988,7 +988,7 @@ export const tracks: Track[] = [
                   { en: "stop", ar: "يتوقّف" },
                   { en: "double", ar: "يتضاعف" },
                   { en: "transfer", ar: "يُحوَّل" },
-                  { en: "continue", ar: "يستمر" },
+                  { en: "grow", ar: "تزداد" },
                 ],
                 answer: ["stop"],
                 why: {
