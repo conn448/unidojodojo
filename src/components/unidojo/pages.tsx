@@ -587,7 +587,7 @@ export function AuthPage() {
     setBusy(false);
     setMsg(error ? error.message : t.sent);
   }
-  async function social(p: "google" | "apple") {
+  async function social(p: "google" | "github") {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: p,
       options: { redirectTo: window.location.origin + import.meta.env.BASE_URL + "auth" },
@@ -655,9 +655,9 @@ export function AuthPage() {
           <Button
             variant="outline"
             className="min-h-12 w-full rounded-button border-primary-foreground/25 bg-transparent text-primary-foreground"
-            onClick={() => social("apple")}
+            onClick={() => social("github")}
           >
-            {t.apple}
+            {t.github}
           </Button>
           {msg && (
             <p role="status" className="rounded-button bg-primary-foreground/10 p-3 text-sm">
