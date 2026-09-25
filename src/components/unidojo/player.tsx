@@ -2,7 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { Check, Heart, Info, Lightbulb, RotateCcw, Sparkles, Trophy, X } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Mascot, Page, useApp } from "@/components/unidojo/app";
-import { findLesson, stepPhase, stepsFor, type L, type Locale, type Step } from "@/lib/curriculum";
+import {
+  findLesson,
+  stepPhase,
+  stepsFor,
+  type L,
+  type Lesson,
+  type Locale,
+  type Step,
+} from "@/lib/curriculum";
 import { useNation } from "@/lib/use-nation";
 import { useAuth } from "@/lib/use-auth";
 import { saveAnswer, saveLessonResult } from "@/lib/use-progress";
@@ -37,11 +45,49 @@ type Answer =
   | { kind: "categorise"; placed: Record<string, number> }
   | { kind: "match"; matched: string[]; active: number | null };
 
-export function LessonPlayer({ lessonId }: { lessonId: string }) {
+/** What the player hands back when a lesson ends. Shared with the daily screen. */
+export interface LessonFinish {
+  correct: number;
+  total: number;
+  accuracy: number;
+  xp: number;
+}
+
+export function LessonPlayer({
+  lessonId,
+  lesson: given,
+  hud,
+  exitTo = "/home",
+  onAnswer,
+  onFinish,
+  renderFinish,
+}: {
+  lessonId: string;
+  /**
+   * A lesson that is not in the curriculum, which is how the daily challenge
+   * plays generated content. When set it replaces the `findLesson` lookup, so
+   * a generated lesson needs no registration step and no route parameter.
+   */
+  lesson?: Lesson;
+  /** Slot beside the progress bar. The daily combo meter lives here. */
+  hud?: ReactNode;
+  /** Where the quit button and the closing call to action lead. */
+  exitTo?: "/home" | "/daily";
+  onAnswer?: (correct: boolean) => void;
+  onFinish?: (result: LessonFinish) => void;
+  /** Replaces the built-in results screen, so a game can show its own. */
+  renderFinish?: (result: LessonFinish) => ReactNode;
+}) {
   const { locale, play, completeLesson } = useApp();
   const { user } = useAuth();
   const { nation, setNation, ready: nationReady } = useNation();
-  const entry = useMemo(() => findLesson(lessonId), [lessonId]);
+  // The track id is carried rather than the track itself, because a generated
+  // lesson belongs to no track.
+  const entry = useMemo(() => {
+    if (given) return { lesson: given, trackId: "daily" };
+    const found = findLesson(lessonId);
+    return found ? { lesson: found.lesson, trackId: found.track.id } : undefined;
+  }, [lessonId, given]);
 
   // Nation-specific steps are filtered out for other nations, so a lesson only
   // ever tells the student something true about their own system.
@@ -104,7 +150,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               : "The content is coming soon. Try another lesson from your path."}
           </p>
           <Link
-            to="/home"
+            to={exitTo}
             className="btn-3d mt-8 inline-flex min-h-12 items-center rounded-button bg-primary px-6 font-extrabold text-primary-foreground"
           >
             {locale === "ar" ? "عودة للمسار" : "Back to my path"}
@@ -205,6 +251,15 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
     const wrongCount = Math.min(missed.length, practiceCount);
     const correctCount = Math.max(practiceCount - wrongCount, 0);
     const accuracy = Math.round((correctCount / practiceCount) * 100);
+    // The daily challenge brings its own results screen, because a game has to
+    // show the combo and the bonus, not a generic end of lesson card.
+    if (renderFinish) {
+      return (
+        <>
+          {renderFinish({ correct: correctCount, total: practiceCount, accuracy, xp: Math.round(xp) })}
+        </>
+      );
+    }
     return (
       <Page nav={false}>
         <div className="mx-auto flex min-h-[80dvh] max-w-md flex-col justify-center text-center">
@@ -238,7 +293,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             </p>
           )}
           <Link
-            to="/home"
+            to={exitTo}
             className="btn-3d mt-8 inline-flex min-h-14 items-center justify-center rounded-button bg-primary px-6 font-extrabold text-primary-foreground"
           >
             {locale === "ar" ? "العودة للمسار" : "Back to my path"}
@@ -261,6 +316,9 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const isLast = index + 1 >= steps.length;
 
   const handleCheck = (correct: boolean) => {
+    // Lets the daily challenge keep its combo. Called before anything else so
+    // the game state is already right when the feedback renders.
+    onAnswer?.(correct);
     // Recorded whether right or wrong. Never awaited, because a dropped write
     // must not interrupt the lesson or cost the learner a heart.
     if (user && entry) {
@@ -291,20 +349,23 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const handleContinue = () => {
     if (isLast) {
       completeLesson();
+      // One set of sums for the stored score, the results screen and the daily
+      // challenge, so the three can never disagree.
+      const practiceCount = Math.max(practice.length, 1);
+      const wrongCount = Math.min(missed.length, practiceCount);
+      const correctCount = Math.max(practiceCount - wrongCount, 0);
+      const score = Math.round((correctCount / practiceCount) * 100);
       if (user && entry) {
-        // Same maths the results screen shows, so the stored score and the
-        // score on screen can never disagree.
-        const practiceCount = Math.max(practice.length, 1);
-        const wrongCount = Math.min(missed.length, practiceCount);
-        const score = Math.round((Math.max(practiceCount - wrongCount, 0) / practiceCount) * 100);
         void saveLessonResult({
           userId: user.id,
           lessonId: entry.lesson.id,
-          trackId: entry.track.id,
+          trackId: entry.trackId,
           completed: true,
           score,
         });
       }
+      // Fired here rather than from an effect so it runs exactly once.
+      onFinish?.({ correct: correctCount, total: practiceCount, accuracy: score, xp: Math.round(xp) });
       play("win");
       setOutcome("finished");
       return;
@@ -319,7 +380,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-2xl flex-col">
         <div className="flex items-center gap-3 pt-1">
           <Link
-            to="/home"
+            to={exitTo}
             aria-label={locale === "ar" ? "إغلاق" : "Quit lesson"}
             className="grid size-11 flex-none place-items-center rounded-full text-muted-foreground hover:bg-muted"
           >
@@ -331,6 +392,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               style={{ width: `${(index / steps.length) * 100}%` }}
             />
           </div>
+          {hud}
           {entry.lesson.sources.length > 0 && (
             <button
               type="button"

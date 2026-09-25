@@ -36,6 +36,8 @@ import {
 import { LanguageIntro } from "./language-intro";
 import { NationPicker } from "./nation-picker";
 import { dailyRunway, tracks } from "@/lib/unidojo-data";
+import { dailyTheme } from "@/lib/daily";
+import { useDaily } from "@/lib/use-daily";
 import { useAuth } from "@/lib/use-auth";
 import { useProfile } from "@/lib/use-profile";
 import { useProgress } from "@/lib/use-progress";
@@ -228,6 +230,12 @@ export function HomePage() {
   // Levels are earned, not granted. A new learner is level 1 with an empty bar.
   const level = Math.floor(points / 100) + 1;
   const levelProgress = points % 100;
+  // Today only exists after mount. `useDaily` returns a null day during the
+  // static prerender and on the first client render, so the markup matches and
+  // the theme fills in straight after. Reading the clock during render would
+  // break hydration on the prerendered build.
+  const daily = useDaily();
+  const theme = daily.day ? dailyTheme(daily.day) : null;
   return (
     <Page>
       <Header />
@@ -269,6 +277,43 @@ export function HomePage() {
             </div>
           </div>
         </div>
+        <Link to="/daily" className="daily-card mt-8">
+          <div className="flex items-center gap-4">
+            <span
+              className={cn(
+                "reward-link-icon flex-none",
+                daily.done ? "bg-muted text-muted-foreground" : "bg-accent-soft text-accent-foreground",
+              )}
+            >
+              {daily.done ? <Check /> : <Sparkles />}
+            </span>
+            <div className="min-w-0 grow">
+              <p className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+                {t.dailyTitle}
+              </p>
+              <strong className="block min-h-7 truncate font-display text-lg">
+                {theme ? theme.title[locale] : ""}
+              </strong>
+              <span className="text-sm text-muted-foreground">
+                {daily.done ? t.dailyDone : t.dailyStart}
+              </span>
+            </div>
+            <ChevronRight className="directional size-5 flex-none text-muted-foreground" />
+          </div>
+          <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <Flame className="size-4 text-accent" />
+            {daily.done ? (
+              <>
+                {t.dailyTomorrow}{" "}
+                <strong className="tabular-nums">{daily.reset}</strong>
+              </>
+            ) : (
+              <>
+                {t.dailyStreak}: <strong className="tabular-nums">{streak}</strong>
+              </>
+            )}
+          </p>
+        </Link>
         <section className="runway mt-8">
           <div className="runway-line" />
           {dailyRunway.map((node, i) => (

@@ -18,6 +18,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import en from "@/locales/en.json";
 import ar from "@/locales/ar.json";
 import { tracks, type Locale } from "@/lib/unidojo-data";
+import { dayKey } from "@/lib/day";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
@@ -34,6 +35,8 @@ type AppState = {
   hearts: number;
   points: number;
   puzzleDone: boolean;
+  /** Points outside the once-a-day gate, e.g. the daily challenge bonus. */
+  addPoints: (amount: number) => void;
   completeLesson: () => void;
   completePuzzle: () => void;
   play: (tone?: "tap" | "win" | "wrong") => void;
@@ -58,7 +61,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSoundState(localStorage.getItem("ud_sound") !== "off");
     setStreak(Number(localStorage.getItem("ud_streak") || 0));
     setPoints(Number(localStorage.getItem("ud_points") || 0));
-    setPuzzleDone(localStorage.getItem("ud_puzzle_day") === new Date().toISOString().slice(0, 10));
+    setPuzzleDone(localStorage.getItem("ud_puzzle_day") === dayKey());
   }, []);
   const setLocale = (v: Locale) => {
     setL(v);
@@ -104,8 +107,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     setTimeout(() => ctx.close(), 500);
   };
+  /**
+   * Points that bypass the once-a-day lesson gate, used by the daily
+   * challenge's combo bonus. Separate from `completeLesson` on purpose, so a
+   * bonus can never also advance the streak.
+   */
+  const addPoints = (amount: number) => {
+    if (!Number.isFinite(amount) || amount === 0) return;
+    setPoints((v) => {
+      localStorage.setItem("ud_points", String(v + amount));
+      return v + amount;
+    });
+  };
   const completeLesson = () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = dayKey();
     if (localStorage.getItem("ud_lesson_day") !== today) {
       localStorage.setItem("ud_lesson_day", today);
       setPoints((v) => {
@@ -120,7 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
   const completePuzzle = () => {
-    localStorage.setItem("ud_puzzle_day", new Date().toISOString().slice(0, 10));
+    localStorage.setItem("ud_puzzle_day", dayKey());
     setPuzzleDone(true);
     setPoints((v) => {
       localStorage.setItem("ud_points", String(v + 25));
@@ -140,6 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hearts,
         points,
         puzzleDone,
+        addPoints,
         completeLesson,
         completePuzzle,
         play,
