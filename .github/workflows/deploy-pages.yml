@@ -36,18 +36,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d .output/public ]; then
-            echo "Using .output/public"
-            mkdir -p pages-artifact
-            cp -R .output/public/. pages-artifact/
+          # vite build (SPA mode) emits the publishable site to dist/client.
+          if [ -d dist/client ]; then
+            echo "Using dist/client"
+            static_dir=dist/client
           elif [ -d dist ]; then
             echo "Using dist"
-            mkdir -p pages-artifact
-            cp -R dist/. pages-artifact/
+            static_dir=dist
+          elif [ -d .output/public ]; then
+            echo "Using .output/public"
+            static_dir=.output/public
           else
-            echo "No static build directory was produced (.output/public or dist)."
+            echo "No static build directory was produced (dist/client, dist or .output/public)."
             exit 1
           fi
+          mkdir -p pages-artifact
+          cp -R "$static_dir"/. pages-artifact/
           if [ ! -f pages-artifact/index.html ]; then
             echo "The build produced no index.html; check the SPA prerender in vite.config.ts."
             exit 1

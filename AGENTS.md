@@ -1,10 +1,16 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# UniDojo — agent notes
+
+This repository is self-hosted: it builds with plain Vite and deploys as a
+static site to GitHub Pages via `.github/workflows/deploy-pages.yml`.
+
+It is no longer connected to Lovable. Do not reintroduce `@lovable.dev/*`
+dependencies or Lovable-specific runtime hooks.
+
+## Deploy
+
+- `bun run build` emits the publishable site to `dist/client`.
+- Pushing to `main` triggers the Pages workflow, which copies that directory,
+  writes `index.html` to `404.html` so deep links resolve, and publishes.
+- Production assets are served from the `/unidojodojo/` base path, set in
+  `vite.config.ts`. Keep local development at `/`.
+

@@ -37,3 +37,6 @@ dist-ssr
 # Scratch files and the CI Pages staging directory
 tmp-*
 pages-artifact
+
+# Local portable toolchain (Node.js), machine-specific
+.tools/
