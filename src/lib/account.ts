@@ -1,10 +1,12 @@
 /**
  * Account level actions: feedback, data export and account deletion.
  *
- * Export and deletion read and write only the caller's own rows. That is not a
- * convenience, it is the only thing the database will permit: every table here
- * has row level security scoped to auth.uid(), so an unfiltered select returns
- * the learner's rows and nobody else's.
+ * Export and deletion read and write only the caller's own rows. Row level
+ * security already scopes every table here to auth.uid(), but the reads below
+ * also filter on the user id. That redundancy is deliberate: if a policy were
+ * ever dropped or applied wrongly, an unfiltered "download my data" would
+ * quietly hand one learner everybody else's progress in a file. Two independent
+ * gates is the right number for something that writes to disk.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,10 +31,12 @@ export async function submitFeedback(input: {
 export async function exportMyData(userId: string) {
   const [profile, progress, answers, feedback, memberships] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-    supabase.from("lesson_progress").select("*"),
-    supabase.from("quiz_answers").select("*"),
-    supabase.from("feedback").select("*"),
-    supabase.from("society_memberships").select("*"),
+    supabase.from("lesson_progress").select("*").eq("user_id", userId),
+    supabase.from("quiz_answers").select("*").eq("user_id", userId),
+    // Anonymous feedback has a null user_id and is intentionally not this
+    // learner's to export.
+    supabase.from("feedback").select("*").eq("user_id", userId),
+    supabase.from("society_memberships").select("*").eq("user_id", userId),
   ]);
 
   return {

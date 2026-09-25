@@ -13,6 +13,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
+import { blankFieldsPatch, takePendingOnboarding } from "@/lib/onboarding";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ProfilePatch = Database["public"]["Tables"]["profiles"]["Update"];
@@ -72,20 +73,31 @@ async function load(userId: string | null) {
     return;
   }
 
-  if (data) {
-    emit({ profile: data, ready: true, userId });
-    return;
+  let row = data;
+
+  if (!row) {
+    // The signup trigger creates this row. Accounts made before the trigger
+    // existed will not have one, so create it on first sight.
+    const { data: created } = await supabase
+      .from("profiles")
+      .insert({ id: userId })
+      .select()
+      .maybeSingle();
+    row = created;
   }
 
-  // The signup trigger creates this row. Accounts made before the trigger
-  // existed will not have one, so create it on first sight.
-  const { data: created } = await supabase
-    .from("profiles")
-    .insert({ id: userId })
-    .select()
-    .maybeSingle();
+  emit({ profile: row, ready: true, userId });
 
-  emit({ profile: created ?? null, ready: true, userId });
+  // Answers given during onboarding before the account existed are claimed here,
+  // once, and only into fields that are still blank. A profile that already holds
+  // real data is never overwritten, and because the slot is cleared by
+  // `takePendingOnboarding` the answers cannot be handed to a later account.
+  // When there is no row yet the slot is left alone, so a later sign-in can
+  // still claim it rather than losing it to a failed insert.
+  if (!row) return;
+
+  const patch = blankFieldsPatch(row, takePendingOnboarding());
+  if (Object.keys(patch).length > 0) void write(userId, patch);
 }
 
 async function write(userId: string, patch: ProfilePatch) {

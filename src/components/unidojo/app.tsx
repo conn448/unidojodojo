@@ -14,11 +14,20 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import en from "@/locales/en.json";
 import ar from "@/locales/ar.json";
 import { tracks, type Locale } from "@/lib/unidojo-data";
 import { dayKey } from "@/lib/day";
+import { reconcileOwner, switchAccount } from "@/lib/account-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
@@ -42,6 +51,22 @@ type AppState = {
   play: (tone?: "tap" | "win" | "wrong") => void;
 };
 const C = createContext<AppState | undefined>(undefined);
+
+/**
+ * The account-scoped values exactly as they sit in storage right now.
+ *
+ * Module scope on purpose: it is called from effects, so it must be stable and
+ * must not become a dependency.
+ */
+function readAccountValues() {
+  return {
+    name: localStorage.getItem("ud_name") || "Sam",
+    streak: Number(localStorage.getItem("ud_streak") || 0),
+    points: Number(localStorage.getItem("ud_points") || 0),
+    puzzleDone: localStorage.getItem("ud_puzzle_day") === dayKey(),
+  };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [locale, setL] = useState<Locale>("en");
   const [name, setN] = useState("Sam");
@@ -51,18 +76,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [points, setPoints] = useState(0);
   const [puzzleDone, setPuzzleDone] = useState(false);
   const { profile, ready: profileReady, save } = useProfile();
+  const { user, ready: authReady } = useAuth();
+  const activeUser = user?.id ?? null;
   useEffect(() => {
     const l = localStorage.getItem("ud_locale");
     const r = l === "ar" ? "ar" : "en";
     setL(r);
     document.documentElement.lang = r;
     document.documentElement.dir = r === "ar" ? "rtl" : "ltr";
-    setN(localStorage.getItem("ud_name") || "Sam");
     setSoundState(localStorage.getItem("ud_sound") !== "off");
-    setStreak(Number(localStorage.getItem("ud_streak") || 0));
-    setPoints(Number(localStorage.getItem("ud_points") || 0));
-    setPuzzleDone(localStorage.getItem("ud_puzzle_day") === dayKey());
+    const values = readAccountValues();
+    setN(values.name);
+    setStreak(values.streak);
+    setPoints(values.points);
+    setPuzzleDone(values.puzzleDone);
   }, []);
+
+  /**
+   * The account whose values are in storage, or undefined before the first
+   * reconciliation. Points, streak, name, nation and the daily gates all live in
+   * localStorage, which every account on this browser shares, so they have to be
+   * swapped when the account changes. Without this, account B signing in on
+   * account A's laptop is shown A's XP, A's streak and A's name. See
+   * `@/lib/account-state`.
+   */
+  const ownerRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    // Wait for the session: `activeUser` is null both when signed out and when
+    // the session has not loaded yet, and treating the second as "signed out"
+    // would file a signed-in learner's XP under the guest bucket.
+    if (!authReady) return;
+
+    const previous = ownerRef.current;
+    if (previous === undefined) reconcileOwner(activeUser);
+    else if (previous !== activeUser) switchAccount(previous, activeUser);
+    ownerRef.current = activeUser;
+
+    const values = readAccountValues();
+    setN(values.name);
+    setStreak(values.streak);
+    setPoints(values.points);
+    setPuzzleDone(values.puzzleDone);
+  }, [authReady, activeUser]);
   const setLocale = (v: Locale) => {
     setL(v);
     localStorage.setItem("ud_locale", v);

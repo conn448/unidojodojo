@@ -57,9 +57,12 @@ async function load(userId: string | null) {
     return;
   }
 
+  // Filtered on the user id as well as scoped by row level security. The second
+  // gate is the one that matters if a policy is ever changed by mistake.
   const { data, error } = await supabase
     .from("lesson_progress")
-    .select("lesson_id, score, completed");
+    .select("lesson_id, score, completed")
+    .eq("user_id", userId);
 
   emit({ rows: error ? [] : (data ?? []), ready: true, userId });
 }
