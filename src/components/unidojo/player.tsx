@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Check, Heart, Lightbulb, RotateCcw, Sparkles, Trophy, X } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { Check, Heart, Info, Lightbulb, RotateCcw, Sparkles, Trophy, X } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Mascot, Page, useApp } from "@/components/unidojo/app";
-import { findLesson, NATIONS, stepPhase, stepsFor, type L, type Locale, type Nation, type Step } from "@/lib/curriculum";
+import { findLesson, stepPhase, stepsFor, type L, type Locale, type Step } from "@/lib/curriculum";
 import { useNation } from "@/lib/use-nation";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +56,16 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const [hearts, setHearts] = useState(MAX_HEARTS);
   const [xp, setXp] = useState(0);
   const [outcome, setOutcome] = useState<"playing" | "finished" | "dead">("playing");
+  const [showSources, setShowSources] = useState(false);
+
+  useEffect(() => {
+    if (!showSources) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowSources(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showSources]);
 
   const restart = () => {
     setIndex(0);
@@ -75,10 +85,6 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
       </Page>
     );
   }
-  if (nation === null) {
-    return <NationGate locale={locale} onPick={setNation} />;
-  }
-
   /* ---------- lesson not written yet ---------- */
   if (!entry || steps.length === 0) {
     return (
@@ -294,6 +300,17 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               style={{ width: `${(index / steps.length) * 100}%` }}
             />
           </div>
+          {entry.lesson.sources.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowSources(true)}
+              aria-label={locale === "ar" ? "المصادر" : "Sources"}
+              title={locale === "ar" ? "المصادر" : "Sources"}
+              className="grid size-11 flex-none place-items-center rounded-full text-muted-foreground hover:bg-muted"
+            >
+              <Info className="size-5" />
+            </button>
+          )}
           <span className="flex flex-none items-center gap-1 font-extrabold text-destructive">
             <Heart className="size-5 fill-current" />
             {hearts}
@@ -321,40 +338,57 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           onContinue={handleContinue}
         />
       </div>
+      {showSources && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={locale === "ar" ? "المصادر" : "Sources"}
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4"
+        >
+          <div className="w-full max-w-md rounded-card border-2 border-border bg-card p-5">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-display text-xl font-extrabold">
+                {locale === "ar" ? "من أين جاءت هذه المعلومات" : "Where this comes from"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowSources(false)}
+                aria-label={locale === "ar" ? "إغلاق" : "Close"}
+                className="grid size-9 flex-none place-items-center rounded-full text-muted-foreground hover:bg-muted"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {locale === "ar"
+                ? "هذا الدرس مبني على مصادر منشورة. اضغط على أي منها لقراءته."
+                : "This lesson is built from published sources. Tap any of them to read it."}
+            </p>
+            <ul className="mt-4 space-y-3">
+              {entry.lesson.sources.map((source) => (
+                <li key={source.url}>
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="font-bold text-primary underline"
+                  >
+                    {source.publisher}
+                  </a>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
+                    {source.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </Page>
   );
 }
 
-function NationGate({ locale, onPick }: { locale: Locale; onPick: (nation: Nation) => void }) {
-  return (
-    <Page nav={false}>
-      <div className="mx-auto flex min-h-[85dvh] max-w-md flex-col justify-center">
-        <Mascot pose="wave" className="mb-8 scale-125" />
-        <p className="reward-kicker">{locale === "ar" ? "قبل أن نبدأ" : "Before you start"}</p>
-        <h1 className="mt-4 font-display text-3xl font-extrabold leading-tight">
-          {locale === "ar" ? "أين تدرس؟" : "Where do you study?"}
-        </h1>
-        <p className="mt-3 leading-relaxed text-muted-foreground">
-          {locale === "ar"
-            ? "قواعد المال تختلف بين إنجلترا واسكتلندا وويلز وأيرلندا الشمالية. سنعلّمك النظام الذي ينطبق عليك أنت."
-            : "Money rules differ across England, Scotland, Wales and Northern Ireland. We will teach the one that applies to you."}
-        </p>
-        <div className="mt-8 grid gap-3">
-          {NATIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => onPick(option.id)}
-              className="min-h-14 rounded-button border-2 border-border bg-card px-5 text-start text-lg font-bold transition hover:border-primary"
-            >
-              {option.label[locale]}
-            </button>
-          ))}
-        </div>
-      </div>
-    </Page>
-  );
-}
+/* The nation gate moved to onboarding. See components/unidojo/nation-picker.tsx. */
 
 function Stat({ icon, value, label }: { icon: ReactNode; value: string; label: string }) {
   return (
