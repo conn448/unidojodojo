@@ -225,6 +225,36 @@ export const SOURCES = {
     url: "https://www.fca.org.uk/consumers/protect-yourself-scams",
     publisher: "Financial Conduct Authority",
   },
+  darulFiqh: {
+    label: "Fatwas and research papers on Islamic finance and contemporary fiqh",
+    url: "https://darulfiqh.com/",
+    publisher: "Darul Fiqh (Mufti Faraz Adam)",
+  },
+  ifgPolicy: {
+    label: "Sharia policy: stated positions, minority views and the limits of the content",
+    url: "https://www.islamicfinanceguru.com/sharia-policy",
+    publisher: "Islamic Finance Guru",
+  },
+  aaoifi: {
+    label: "Shariah standards, including Standard 21 on equity screening",
+    url: "https://aaoifi.com/",
+    publisher: "Accounting and Auditing Organization for Islamic Financial Institutions",
+  },
+  nzf: {
+    label: "Nisab, the Zakat threshold calculated from gold and silver",
+    url: "https://nzf.org.uk/nisab/",
+    publisher: "National Zakat Foundation",
+  },
+  islamicRelief: {
+    label: "Nisab value and how the threshold is set",
+    url: "https://www.islamic-relief.org.uk/giving/islamic-giving/zakat/nisab/",
+    publisher: "Islamic Relief UK",
+  },
+  moneyfacts: {
+    label: "Shariah compliant savings accounts and how expected profit rates work",
+    url: "https://moneyfactscompare.co.uk/savings-accounts/shariah-compliant-savings-accounts/",
+    publisher: "Moneyfacts",
+  },
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -2327,10 +2357,784 @@ export const tracks: Track[] = [
         id: "islamic-u1",
         title: { en: "Applying it, not reciting it", ar: "التطبيق لا الترديد" },
         lessons: [
-          { id: "islamic-mortgage", title: { en: "Reading an Islamic mortgage", ar: "قراءة رهن إسلامي" }, objective: { en: "Compare a halal mortgage with a conventional one and know what to ask.", ar: "قارن رهناً إسلامياً بآخر تقليدي واعرف ما تسأل عنه." }, minutes: 8, xp: 140, relevance: { en: "Most students will meet this before any other Islamic finance product.", ar: "معظم الطلاب سيواجهون هذا قبل أي منتج تمويل إسلامي آخر." }, steps: [], sources: [SOURCES.ifg] },
-          { id: "islamic-screening", title: { en: "Screening a stock properly", ar: "فحص سهم بعناية" }, objective: { en: "Apply the two financial screens and spot the awkward cases.", ar: "طبّق الفحصين الماليين وحدّد الحالات الملتبسة." }, minutes: 8, xp: 140, relevance: { en: "Screening is a calculation, not a feeling about the company.", ar: "الفحص حساب، لا شعور تجاه الشركة." }, steps: [], sources: [SOURCES.ifg] },
-          { id: "islamic-zakat", title: { en: "Zakat on a student's assets", ar: "الزكاة على أموال الطالب" }, objective: { en: "Work out whether you owe Zakat at all, and on what.", ar: "حدّد إن كانت الزكاة تجب عليك، وعلى أي مال." }, minutes: 7, xp: 130, relevance: { en: "Students usually owe nothing, knowing that beats guessing.", ar: "الطلاب غالباً لا يجب عليهم شيء, والعلم بذلك أفضل من الظن." }, steps: [], sources: [SOURCES.ifg] },
-          { id: "islamic-savings", title: { en: "Interest-free saving that still grows", ar: "ادخار بلا فائدة وينمو رغم ذلك" }, objective: { en: "Place spare cash without relying on interest.", ar: "وظّف مالك الفائض دون الاعتماد على الفائدة." }, minutes: 8, xp: 140, relevance: { en: "Keeping everything in cash loses to inflation.", ar: "إبقاء كل شيء نقداً يخسر أمام التضخم." }, steps: [], sources: [SOURCES.ifg] },
+          {
+            id: "islamic-mortgage",
+            title: { en: "Reading an Islamic mortgage", ar: "قراءة رهن إسلامي" },
+            objective: {
+              en: "Tell the three main home finance structures apart, and know what to ask before signing.",
+              ar: "افرق بين هياكل التمويل العقاري الثلاثة الرئيسية، واعرف ما تسأل عنه قبل التوقيع.",
+            },
+            minutes: 9,
+            xp: 150,
+            relevance: {
+              en: "A house is the largest purchase most people ever make, and it is the point where the prohibition on interest stops being theoretical. Islamic home finance exists for this, but the products are not identical and the scholars are not unanimous about all of them.",
+              ar: "المنزل أكبر عملية شراء يقوم بها معظم الناس، وهو النقطة التي يتوقف عندها تحريم الربا عن كونه نظرياً. التمويل العقاري الإسلامي وُجد لهذا، لكن المنتجات ليست متطابقة والعلماء ليسوا متفقين على كل منها.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Lending money for interest is the thing being avoided", ar: "إقراض المال بفائدة هو ما يُتجنَّب" },
+                body: {
+                  en: "A conventional mortgage is a loan of money repaid with more money. Islamic finance reaches the same practical outcome, buying a home over time, by using a contract where the bank earns from trade, from rent, or from a share of ownership rather than from lending cash.",
+                  ar: "الرهن التقليدي قرض مال يُسدَّد بمال أكثر. التمويل الإسلامي يصل إلى النتيجة العملية نفسها، تملك منزل على مدى سنوات، عبر عقد يكسب فيه البنك من التجارة أو من الإيجار أو من حصة ملكية، لا من إقراض نقد.",
+                },
+                points: [
+                  {
+                    en: "The bank still makes money. The difference is what it is making money from.",
+                    ar: "البنك يربح في كل الأحوال. الفرق هو مصدر هذا الربح.",
+                  },
+                  {
+                    en: "Because a real asset or a real share is involved, the bank carries genuine risk, which interest on a loan does not require.",
+                    ar: "لأن هناك أصلاً حقيقياً أو حصة حقيقية، يتحمّل البنك مخاطرة حقيقية، وهو ما لا تتطلبه الفائدة على قرض.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The three structures you will meet", ar: "الهياكل الثلاثة التي ستقابلها" },
+                setup: {
+                  en: "Almost every UK Islamic home finance product is built on one of these. Knowing which one you are being offered is the first thing to establish.",
+                  ar: "كل منتج تمويل عقاري إسلامي في بريطانيا تقريباً يقوم على واحد من هذه. ومعرفة أيها يُعرض عليك هي أول ما يجب تحديده.",
+                },
+                rows: [
+                  {
+                    label: { en: "Murabaha, a cost plus sale", ar: "المرابحة، بيع بزيادة معلنة" },
+                    value: {
+                      en: "The bank buys the property and sells it to you at a disclosed markup, paid in instalments",
+                      ar: "يشتري البنك العقار ويبيعه لك بزيادة معلنة، تُسدَّد على أقساط",
+                    },
+                  },
+                  {
+                    label: { en: "Ijara, a lease", ar: "الإجارة، عقد إيجار" },
+                    value: {
+                      en: "The bank owns the property, you pay rent, and ownership usually transfers at the end",
+                      ar: "يملك البنك العقار وتدفع إيجاراً، وتنتقل الملكية عادة في النهاية",
+                    },
+                  },
+                  {
+                    label: { en: "Diminishing musharakah, a partnership", ar: "المشاركة المتناقصة، شراكة" },
+                    value: {
+                      en: "You and the bank own it together, you buy out the bank's share over time and pay rent on that share",
+                      ar: "تملكان العقار معاً، وتشتري حصة البنك تدريجياً وتدفع إيجاراً على تلك الحصة",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "In each case the money the bank receives is a profit on a sale, a rent on a lease, or a return on a share. Ask which structure you are being offered, because it changes what you actually own during the term.",
+                  ar: "في كل حالة يكون ما يستلمه البنك ربحاً على بيع، أو إيجاراً على عقد إيجار، أو عائداً على حصة. اسأل أي هيكل يُعرض عليك، لأنه يغيّر ما تملكه فعلاً خلال المدة.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Halal does not mean identical, and scholars differ", ar: "الحلال لا يعني التطابق، والعلماء يختلفون" },
+                body: {
+                  en: "Islamic Finance Guru, who have published a formal Sharia policy, describe Islamic mortgages as halal but with room for improvement and work still to be done on the products. Many UK products are priced by reference to a conventional interest benchmark, and scholars differ on how much that matters. Islamic Finance Guru state that where they hold a minority view they will flag it, and their policy is explicit that they do not issue rulings and that readers should consult their own scholars.",
+                  ar: "تصف منصة Islamic Finance Guru، التي نشرت سياسة شرعية رسمية، الرهون الإسلامية بأنها حلال لكن فيها مجالاً للتحسين وما زال هناك عمل يُنجز على المنتجات. كثير من المنتجات البريطانية يُسعَّر بالرجوع إلى مؤشر فائدة تقليدي، والعلماء يختلفون في مدى أهمية ذلك. وتنص سياسة المنصة صراحة على أنها لا تُصدر فتاوى، وأن على القارئ الرجوع إلى علمائه.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In a murabaha, what does the bank earn?",
+                  ar: "في المرابحة، من أين يكسب البنك؟",
+                },
+                options: [
+                  { en: "Interest on the money it lent you", ar: "فائدة على المال الذي أقرضك" },
+                  { en: "A markup on a sale, disclosed up front", ar: "زيادة على بيع، معلنة مقدماً" },
+                  { en: "A share of your salary", ar: "حصة من راتبك" },
+                  { en: "Nothing, it is a charity", ar: "لا شيء، فهو عمل خيري" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The bank's return comes from the sale price, not from a charge for the use of money. The markup is fixed and known when you sign, which is what separates it from a variable interest charge.",
+                  ar: "عائد البنك يأتي من ثمن البيع، لا من مقابل استخدام المال. والزيادة ثابتة ومعلومة عند التوقيع، وهذا ما يميزها عن فائدة متغيرة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In diminishing musharakah, what happens as you make payments?",
+                  ar: "في المشاركة المتناقصة، ماذا يحدث مع سدادك للدفعات؟",
+                },
+                options: [
+                  { en: "You repay a loan with interest", ar: "تسدّد قرضاً بفائدة" },
+                  { en: "You buy the bank's share until you own it all", ar: "تشتري حصة البنك حتى تملك العقار كاملاً" },
+                  { en: "The bank's share grows", ar: "تزداد حصة البنك" },
+                  { en: "Nothing changes until the end", ar: "لا شيء يتغير حتى النهاية" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Your ownership share rises and the bank's falls. Rent is paid on the portion the bank still owns, so the rent falls as your share grows, which is a different shape from a level interest payment.",
+                  ar: "ترتفع حصتك وتنخفض حصة البنك. ويُدفع الإيجار على الجزء الذي ما زال البنك يملكه، فيقل الإيجار مع نمو حصتك، وهذا شكل مختلف عن دفعة فائدة ثابتة.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each structure to how the bank earns.",
+                  ar: "صِل كل هيكل بطريقة كسب البنك فيه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Murabaha", ar: "مرابحة" },
+                    right: { en: "A disclosed markup on a sale", ar: "زيادة معلنة على بيع" },
+                  },
+                  {
+                    left: { en: "Ijara", ar: "إجارة" },
+                    right: { en: "Rent on a property it owns", ar: "إيجار على عقار يملكه" },
+                  },
+                  {
+                    left: { en: "Diminishing musharakah", ar: "مشاركة متناقصة" },
+                    right: { en: "A return on the share it still holds", ar: "عائد على الحصة التي ما زال يملكها" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Scholars do not agree on every structure. What is the right response?",
+                  ar: "لا يتفق العلماء على كل هيكل. ما التصرف الصحيح؟",
+                },
+                options: [
+                  {
+                    en: "Check the provider's Shariah board, then consult your own scholar and read the contract",
+                    ar: "تحقّق من هيئة الرقابة الشرعية للمزوّد، ثم استشر عالمك واقرأ العقد",
+                  },
+                  { en: "Assume the word halal settles it", ar: "افترض أن كلمة حلال تحسم الأمر" },
+                  { en: "Avoid home ownership entirely", ar: "تجنّب تملك المنزل تماماً" },
+                  { en: "Take whichever is cheapest", ar: "اختر الأرخص" },
+                ],
+                answer: 0,
+                why: {
+                  en: "A provider having its own Shariah board tells you the provider's position, not yours. Where credible scholars differ, the honest approach is to find out which view you are following and why.",
+                  ar: "وجود هيئة رقابة شرعية لدى المزوّد يخبرك بموقف المزوّد لا بموقفك. وحين يختلف علماء معتبرون، فالمنهج الصادق هو معرفة أي رأي تتبع ولماذا.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are offered a home finance plan and the rent or profit rate can be reviewed during the term. What is the most useful thing to establish before signing?",
+                  ar: "يُعرض عليك برنامج تمويل عقاري وقابلية مراجعة الإيجار أو معدل الربح خلال المدة. ما أنفع ما تحدّده قبل التوقيع؟",
+                },
+                options: [
+                  {
+                    label: { en: "Accept it, all mortgages do this", ar: "اقبله، فكل الرهون تفعل ذلك" },
+                    outcome: {
+                      en: "You may have taken on a cost that can move, without knowing how it is set or what it is tied to.",
+                      ar: "قد تكون تحمّلت كلفة قابلة للتغيّر دون أن تعرف كيف تُحدَّد أو بماذا ترتبط.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "How the rate is set, what it is linked to, and how the rent reflects the share still owned",
+                      ar: "كيف يُحدَّد المعدل، وبماذا يرتبط، وكيف يعكس الإيجار الحصة التي ما زال البنك يملكها",
+                    },
+                    outcome: {
+                      en: "That is the right question. The structure only means something if the rent tracks the bank's falling share rather than sitting at a fixed level.",
+                      ar: "هذا هو السؤال الصحيح. والهيكل لا يعني شيئاً إلا إذا تبع الإيجار حصة البنك المتناقصة بدلاً من الثبات عند مستوى واحد.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Compare only the headline percentage", ar: "قارن النسبة المعلنة فقط" },
+                    outcome: {
+                      en: "Two products can show the same number and behave quite differently, because one is a rent on a falling share and the other is a payment on a fixed amount.",
+                      ar: "قد يُظهر منتجان الرقم نفسه ويتصرفان بشكل مختلف تماماً، لأن أحدهما إيجار على حصة متناقصة والآخر دفعة على مبلغ ثابت.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What to take away", ar: "ما تأخذه معك" },
+                body: {
+                  en: "Learn which structure you are being offered, ask how the bank's return is calculated and whether it can change, check that the provider has its own Shariah board, and then take the contract to a scholar you trust before you sign. This lesson explains the mechanics. It does not rule on whether a particular product is permissible for you.",
+                  ar: "اعرف أي هيكل يُعرض عليك، واسأل كيف يُحسب عائد البنك وهل يمكن أن يتغيّر، وتحقّق من وجود هيئة رقابة شرعية لدى المزوّد، ثم اعرض العقد على عالم تثق به قبل التوقيع. هذا الدرس يشرح الآلية، ولا يحكم على جواز منتج بعينه لك.",
+                },
+              },
+            ],
+            sources: [SOURCES.ifg, SOURCES.ifgPolicy, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-screening",
+            title: { en: "Screening a stock properly", ar: "فحص سهم بعناية" },
+            objective: {
+              en: "Apply the business and financial screens, and understand why screeners disagree.",
+              ar: "طبّق الفحصين: النشاط والمالي، وافهم لماذا تختلف نتائج الفاحصين.",
+            },
+            minutes: 9,
+            xp: 150,
+            relevance: {
+              en: "Most large companies carry some debt and earn some interest somewhere. That is why a share is not judged only on what the company does, but also on how it is financed, and why the numbers matter as much as the business itself.",
+              ar: "معظم الشركات الكبيرة تحمل بعض الدَين وتكسب بعض الفائدة في مكان ما. ولهذا لا يُحكم على السهم بما تفعله الشركة فقط، بل أيضاً بكيفية تمويلها، ولهذا تكون الأرقام مهمة بقدر أهمية النشاط نفسه.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two screens, not one", ar: "فحصان لا فحص واحد" },
+                body: {
+                  en: "Screening a share means answering two separate questions. What does the company actually do, and how is it financed? A company can pass the first and fail the second.",
+                  ar: "فحص السهم يعني الإجابة على سؤالين منفصلين: ماذا تفعل الشركة فعلاً، وكيف تُموَّل؟ وقد تنجح الشركة في الأول وتفشل في الثاني.",
+                },
+                points: [
+                  {
+                    en: "The business screen looks at the activity itself, such as alcohol, gambling or conventional banking, and it allows no small percentage of that.",
+                    ar: "فحص النشاط ينظر إلى النشاط ذاته، كالخمر أو القمار أو البنوك التقليدية، ولا يسمح بنسبة صغيرة منه.",
+                  },
+                  {
+                    en: "The financial screen looks at the balance sheet, because interest-bearing debt and interest income can appear in an otherwise ordinary business.",
+                    ar: "الفحص المالي ينظر إلى الميزانية، لأن الدَين بفائدة ودخل الفائدة قد يظهران في شركة عادية في ما عدا ذلك.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "How the financial screen is applied", ar: "كيف يُطبَّق الفحص المالي" },
+                setup: {
+                  en: "AAOIFI, the Accounting and Auditing Organization for Islamic Financial Institutions, sets Shariah Standard 21. It was founded in 1991 and its standards are followed by institutions in over 45 countries. The financial screen is expressed as ratios.",
+                  ar: "وضعت هيئة المحاسبة والمراجعة للمؤسسات المالية الإسلامية (AAOIFI) المعيار الشرعي رقم 21. تأسست عام 1991 وتتبع معاييرها مؤسسات في أكثر من 45 دولة. ويُعبَّر عن الفحص المالي بنسب.",
+                },
+                rows: [
+                  {
+                    label: { en: "Interest-bearing debt", ar: "الدَين بفائدة" },
+                    value: { en: "under 30% of market capitalisation", ar: "أقل من 30% من القيمة السوقية" },
+                  },
+                  {
+                    label: { en: "Income from interest", ar: "الدخل من الفائدة" },
+                    value: { en: "under 5% of revenue", ar: "أقل من 5% من الإيرادات" },
+                  },
+                  {
+                    label: { en: "Cash and interest-bearing securities", ar: "النقد والأوراق المالية بفائدة" },
+                    value: { en: "under 30% of market capitalisation", ar: "أقل من 30% من القيمة السوقية" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice that these are small tolerances, not permissions. A company is not being blessed for earning interest, it is being judged as an acceptable investment despite a small unavoidable amount.",
+                  ar: "لاحظ أن هذه نسب سماح صغيرة، لا إباحات. فالشركة لا تُبارَك لأجل كسبها فائدة، بل تُقيَّم كاستثمار مقبول رغم مبلغ صغير لا يمكن تجنّبه.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two screeners can disagree about the same stock", ar: "قد يختلف فاحصان على السهم نفسه" },
+                body: {
+                  en: "Several standards are in use alongside AAOIFI, including the Dow Jones Islamic Market, FTSE and MSCI methodologies. They define the ratios differently and use different denominators, so a company can pass one screen and fail another. The answer you get depends on the standard being applied, and taking one app's verdict as final is a mistake.",
+                  ar: "تُستخدم إلى جانب AAOIFI معايير عدة، منها منهجيات داو جونز الإسلامية وفوتسي ومورجان ستانلي. وهي تعرّف النسب بشكل مختلف وتستخدم مقامات مختلفة، فقد تنجح شركة في فحص وتفشل في آخر. والجواب الذي تحصل عليه يعتمد على المعيار المطبَّق، واعتبار نتيجة تطبيق واحد نهائية خطأ.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which screen comes first?",
+                  ar: "أي فحص يأتي أولاً؟",
+                },
+                options: [
+                  { en: "The financial ratios", ar: "النسب المالية" },
+                  { en: "What the business actually does", ar: "ما تفعله الشركة فعلاً" },
+                  { en: "The share price", ar: "سعر السهم" },
+                  { en: "How long the company has existed", ar: "منذ متى توجد الشركة" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The business screen allows no tolerance at all. If the core activity is excluded, no ratio rescues it. Only if the activity is acceptable do the financial ratios come into play.",
+                  ar: "فحص النشاط لا يسمح بأي نسبة إطلاقاً. فإن كان النشاط الأساسي مستبعداً، لم تنفعه أي نسبة. ولا تدخل النسب المالية في الحساب إلا إذا كان النشاط مقبولاً.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "A company has interest-bearing debt equal to 40% of its market capitalisation. Does it pass the AAOIFI debt screen?",
+                  ar: "شركة دَينها بفائدة يساوي 40% من قيمتها السوقية. هل تنجح في فحص الدَين لدى AAOIFI؟",
+                },
+                options: [
+                  { en: "Yes, any amount is allowed", ar: "نعم، أي مبلغ مسموح" },
+                  { en: "No, the limit is under 30%", ar: "لا، الحد أقل من 30%" },
+                  { en: "Only if it pays no interest", ar: "فقط إن لم تدفع فائدة" },
+                  { en: "Only if its revenue is under 5%", ar: "فقط إن كانت إيراداتها أقل من 5%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "40% is above the 30% ceiling, so it fails. This is the kind of case where a company that looks perfectly ordinary can still be screened out, because of how it is financed rather than what it sells.",
+                  ar: "40% يتجاوز سقف 30%، فيفشل. وهذه هي الحالة التي قد تُستبعد فيها شركة تبدو عادية تماماً، بسبب طريقة تمويلها لا بسبب ما تبيعه.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each screen to what it measures.",
+                  ar: "صِل كل فحص بما يقيسه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Business activity screen", ar: "فحص النشاط" },
+                    right: { en: "What the company sells or does", ar: "ما تبيعه الشركة أو تفعله" },
+                  },
+                  {
+                    left: { en: "Debt ratio", ar: "نسبة الدَين" },
+                    right: { en: "How the company is financed", ar: "كيف تُموَّل الشركة" },
+                  },
+                  {
+                    left: { en: "Interest income ratio", ar: "نسبة دخل الفائدة" },
+                    right: { en: "How much it earns from interest", ar: "كم تكسب من الفائدة" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Why might two halal screeners give different answers on the same stock?",
+                  ar: "لماذا قد يعطي فاحصان مختلفان نتيجة مختلفة على السهم نفسه؟",
+                },
+                options: [
+                  { en: "One of them is wrong", ar: "أحدهما مخطئ" },
+                  { en: "They apply different standards, ratios and denominators", ar: "يطبّقان معايير ونسباً ومقامات مختلفة" },
+                  { en: "The share price changed", ar: "تغيّر سعر السهم" },
+                  { en: "It is random", ar: "الأمر عشوائي" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The standards genuinely differ. That is not a flaw to be resolved by picking the app that gives the answer you prefer, it is a reason to find out which standard you are following.",
+                  ar: "المعايير مختلفة فعلاً. وهذا ليس خللاً يُحل باختيار التطبيق الذي يعطي الجواب الذي تفضّله، بل سبب لمعرفة أي معيار تتبعه.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "A stock appears on one app's halal list and fails another. What is the most useful next step?",
+                  ar: "يظهر سهم في قائمة حلال لتطبيق ويفشل في آخر. ما أنفع خطوة تالية؟",
+                },
+                options: [
+                  {
+                    label: { en: "Use the app whose answer you prefer", ar: "استخدم التطبيق الذي تفضّل جوابه" },
+                    outcome: {
+                      en: "That is choosing the conclusion and then finding the method, which works in neither investing nor law.",
+                      ar: "هذا اختيار للنتيجة ثم البحث عن طريقة، وهو لا يصح في الاستثمار ولا في الفقه.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Find out which standard each app applies, and check the failing ratio against your own view",
+                      ar: "اعرف المعيار الذي يطبّقه كل تطبيق، وتحقّق من النسبة الراسبة مقابل رأيك",
+                    },
+                    outcome: {
+                      en: "Correct. The disagreement is usually traceable to one specific ratio crossing one specific threshold, and that is a question you can actually put to a scholar.",
+                      ar: "صحيح. الخلاف عادة يعود إلى نسبة محددة تتجاوز حداً محدداً، وهذا سؤال يمكنك فعلاً طرحه على عالم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Avoid all shares", ar: "تجنّب كل الأسهم" },
+                    outcome: {
+                      en: "That removes the question rather than answering it, and gives up a legitimate route to building wealth.",
+                      ar: "هذا يحذف السؤال بدلاً من الإجابة عليه، ويتخلى عن طريق مشروع لبناء الثروة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Screening is arithmetic, not a feeling", ar: "الفحص حساب لا شعور" },
+                body: {
+                  en: "You do not need to like a company for it to pass, and liking it will not make it pass. Learn which standard you are following, apply the ratios, and where the standards disagree, take the actual disagreement to a scholar rather than to the app. This lesson explains the method. It does not rule on any particular share.",
+                  ar: "لا يلزمك أن تحب الشركة لتنجح، ومحبتها لن تُنجحها. اعرف أي معيار تتبع، وطبّق النسب، وحين تختلف المعايير اعرض الخلاف الحقيقي على عالم لا على التطبيق. هذا الدرس يشرح الطريقة، ولا يحكم على سهم بعينه.",
+                },
+              },
+            ],
+            sources: [SOURCES.aaoifi, SOURCES.ifg, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-zakat",
+            title: { en: "Zakat on a student's assets", ar: "الزكاة على أموال الطالب" },
+            objective: {
+              en: "Work out whether Zakat applies to you at all, and on what.",
+              ar: "حدّد إن كانت الزكاة تجب عليك أصلاً، وعلى أي مال.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Students usually assume they owe nothing, and usually they are right, but the reasoning matters. Zakat falls on wealth that sits, not on income that arrives, and most student money is spent soon after it lands.",
+              ar: "يفترض الطلاب عادة أن لا شيء عليهم، وهم غالباً محقّون، لكن الاستدلال مهم. الزكاة تتعلق بالمال الذي يستقر، لا بالدخل الذي يصل، ومعظم أموال الطالب تُنفق بعد وصولها بقليل.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A charge on wealth, not on income", ar: "زكاة على المال لا على الدخل" },
+                body: {
+                  en: "Zakat is the third pillar and it works differently from the tax you already know. It is not taken from what you earn. It falls on wealth you already hold, once a lunar year has passed on it, and only if that wealth is above a threshold.",
+                  ar: "الزكاة هي الركن الثالث، وهي تعمل بشكل مختلف عن الضريبة التي تعرفها. فهي لا تؤخذ من دخلك، بل تتعلق بمال تملكه بالفعل، بعد مرور سنة قمرية عليه، وفقط إن تجاوز حداً معيناً.",
+                },
+                points: [
+                  {
+                    en: "Income that arrives and is spent leaves nothing behind to be charged.",
+                    ar: "الدخل الذي يصل ويُنفق لا يترك شيئاً لتجب فيه الزكاة.",
+                  },
+                  {
+                    en: "Most students hold little beyond a term's expenses, which is why the honest answer is often that nothing is due.",
+                    ar: "معظم الطلاب لا يحتفظون بأكثر من مصاريف فصل دراسي، ولهذا يكون الجواب الصادق غالباً أنه لا شيء عليهم.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The numbers that decide it", ar: "الأرقام التي تحسم الأمر" },
+                setup: {
+                  en: "The National Zakat Foundation, a UK zakat institution, publishes the nisab converted from the classical weights.",
+                  ar: "تنشر مؤسسة الزكاة الوطنية في بريطانيا حدّ النصاب محوَّلاً من الأوزان الفقهية.",
+                },
+                rows: [
+                  {
+                    label: { en: "Nisab by gold", ar: "النصاب بالذهب" },
+                    value: { en: "87.48 grams", ar: "87.48 غراماً" },
+                  },
+                  {
+                    label: { en: "Nisab by silver", ar: "النصاب بالفضة" },
+                    value: { en: "612.36 grams", ar: "612.36 غراماً" },
+                  },
+                  {
+                    label: { en: "Another opinion, also in use", ar: "رأي آخر معمول به أيضاً" },
+                    value: { en: "85 grams of gold, or 595 grams of silver", ar: "85 غراماً ذهباً أو 595 غراماً فضة" },
+                  },
+                  {
+                    label: { en: "The rate", ar: "المقدار" },
+                    value: { en: "2.5% of qualifying wealth", ar: "2.5% من المال الذي تجب فيه" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice that the nisab is a weight, not a sum of money. It has to be converted at the price of gold or silver on your own date, which means the figure changes every year, and the silver figure converts to a much lower amount than the gold one.",
+                  ar: "لاحظ أن النصاب وزن، لا مبلغ نقدي. ويجب تحويله بسعر الذهب أو الفضة في تاريخك أنت، ما يعني أن الرقم يتغير كل سنة، وأن رقم الفضة يعادل مبلغاً أقل بكثير من رقم الذهب.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "The choice of metal changes whether you owe", ar: "اختيار المعدن يغيّر وجوب الزكاة" },
+                body: {
+                  en: "Because silver is worth far less per gram, the silver nisab converts to a much smaller sum than the gold nisab in almost every market. Following the silver figure means more people reach the threshold. Islamic Finance Guru note that scholars hold credible but different views here. The practical point is to pick one, be consistent, and apply it to your own date rather than to whichever number looks kinder.",
+                  ar: "لأن قيمة الفضة لكل غرام أقل بكثير، فإن نصاب الفضة يعادل مبلغاً أصغر من نصاب الذهب في معظم الأسواق. واعتماد رقم الفضة يعني أن عدداً أكبر من الناس يبلغ الحد. وتشير منصة Islamic Finance Guru إلى أن للعلماء آراء معتبرة مختلفة هنا. والنقطة العملية أن تختار واحداً وتلتزم به وتطبّقه على تاريخك، لا على الرقم الأسهل.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What is the rate of Zakat on qualifying wealth?",
+                  ar: "ما مقدار الزكاة في المال الذي تجب فيه؟",
+                },
+                options: [
+                  { en: "1%", ar: "1%" },
+                  { en: "2.5%", ar: "2.5%" },
+                  { en: "5%", ar: "5%" },
+                  { en: "10%", ar: "10%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "2.5% of the qualifying wealth, once a lunar year has passed on it and it stands above the nisab. The rate is not banded and does not rise with the amount.",
+                  ar: "2.5% من المال الذي تجب فيه، بعد مرور سنة قمرية عليه وكونه فوق النصاب. والمقدار ليس متدرجاً ولا يرتفع مع زيادة المبلغ.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "When does Zakat become due again?",
+                  ar: "متى تجب الزكاة مرة أخرى؟",
+                },
+                options: [
+                  { en: "Every time you are paid", ar: "كل مرة تُستلم فيها راتباً" },
+                  { en: "Once each lunar year, on your own anniversary date", ar: "مرة كل سنة قمرية، في تاريخك السنوي" },
+                  { en: "Only in Ramadan", ar: "في رمضان فقط" },
+                  { en: "Whenever you choose", ar: "متى شئت" },
+                ],
+                answer: 1,
+                why: {
+                  en: "It falls due on the anniversary of the lunar date you last paid it. Many people deliberately pay in Ramadan for the reward, which is fine, but the obligation itself follows your own date rather than the month.",
+                  ar: "تجب في ذكرى التاريخ القمري الذي دفعت فيه آخر مرة. وكثيرون يتعمّدون الدفع في رمضان طلباً للأجر، وهذا حسن، لكن الوجوب نفسه يتبع تاريخك لا الشهر.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What does the nisab actually represent?",
+                  ar: "ما الذي يمثّله النصاب فعلاً؟",
+                },
+                options: [
+                  { en: "A fixed amount of pounds", ar: "مبلغ ثابت بالجنيه" },
+                  { en: "A weight of gold or silver, converted to money on your date", ar: "وزن من الذهب أو الفضة، يُحوَّل إلى مال في تاريخك" },
+                  { en: "A percentage of your salary", ar: "نسبة من راتبك" },
+                  { en: "Your total savings", ar: "إجمالي مدخراتك" },
+                ],
+                answer: 1,
+                why: {
+                  en: "It is a weight that has to be priced. That is exactly why the threshold moves each year and why the figure you see on one website may not match another.",
+                  ar: "هو وزن يجب تسعيره. ولهذا بالضبط يتحرك الحد كل سنة، ولهذا قد لا يطابق الرقم الذي تراه في موقع رقم موقع آخر.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each term to what it means.",
+                  ar: "صِل كل مصطلح بمعناه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Nisab", ar: "النصاب" },
+                    right: { en: "The threshold above which Zakat applies", ar: "الحد الذي تجب الزكاة فوقه" },
+                  },
+                  {
+                    left: { en: "2.5%", ar: "2.5%" },
+                    right: { en: "The amount taken from qualifying wealth", ar: "المقدار المأخوذ من المال الذي تجب فيه" },
+                  },
+                  {
+                    left: { en: "Your anniversary date", ar: "تاريخك السنوي" },
+                    right: { en: "When the year has passed and it falls due", ar: "متى مرّت السنة ووجبت" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are a student with £900 saved, no gold, no silver, no investments, and the money has been there for a year. What is the most sensible position?",
+                  ar: "أنت طالب لديك £900 مدّخرة، ولا ذهب ولا فضة ولا استثمارات، والمال باقٍ منذ سنة. ما الموقف الأسلم؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay 2.5% immediately because you have savings", ar: "ادفع 2.5% فوراً لأن لديك مدخرات" },
+                    outcome: {
+                      en: "You may be giving what is not due. Zakat is not triggered by having savings, it is triggered by being above the nisab.",
+                      ar: "قد تكون دفعت ما لا يجب. فوجوب الزكاة لا يتحقق بمجرد وجود مدخرات، بل بتجاوز النصاب.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Check the current nisab value, then decide, since £900 is probably below it",
+                      ar: "تحقّق من قيمة النصاب الحالية ثم قرّر، فـ £900 غالباً أقل منه",
+                    },
+                    outcome: {
+                      en: "Correct approach. Convert the nisab at the current price on your date, and if you are below it, nothing is due this year. Recheck next year, because prices move.",
+                      ar: "منهج صحيح. حوّل النصاب بسعر اليوم في تاريخك، وإن كنت دونه فلا شيء عليك هذه السنة. وأعد التحقق السنة القادمة لأن الأسعار تتغير.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Assume students never owe anything", ar: "افترض أن الطلاب لا يجب عليهم شيء أبداً" },
+                    outcome: {
+                      en: "The assumption often happens to be right, but arriving at it by accident means you will not notice the year it stops being true.",
+                      ar: "الافتراض يصح غالباً بالمصادفة، لكن الوصول إليه بالحظ يعني أنك لن تنتبه للسنة التي يتوقف فيها عن الصحة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Knowing beats guessing", ar: "العلم أفضل من الظن" },
+                body: {
+                  en: "Students usually owe little or nothing, and knowing that with reasons is worth more than assuming it. Convert your nisab on your own date, check whether a lunar year has passed, and if the answer is still unclear, a zakat calculator or your local scholar can settle it in minutes. This lesson explains how the calculation works. It does not give a ruling on your particular assets.",
+                  ar: "الطلاب غالباً لا يجب عليهم إلا القليل أو لا شيء، ومعرفة ذلك مع الأسباب أنفع من افتراضه. حوّل نصابك في تاريخك، وانظر هل مرّت سنة قمرية، وإن بقي الأمر غير واضح فحاسبة زكاة أو عالم في منطقتك يحسمه في دقائق. هذا الدرس يشرح كيف يعمل الحساب، ولا يفتي في أموالك بعينها.",
+                },
+              },
+            ],
+            sources: [SOURCES.nzf, SOURCES.islamicRelief, SOURCES.ifg, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-savings",
+            title: { en: "Interest-free saving that still grows", ar: "ادخار بلا فائدة وينمو رغم ذلك" },
+            objective: {
+              en: "Understand what an Islamic savings account pays, and what it does not promise.",
+              ar: "افهم ما يدفعه حساب ادخار إسلامي، وما لا يَعِد به.",
+            },
+            minutes: 8,
+            xp: 140,
+            relevance: {
+              en: "Keeping everything in a current account feels safe and quietly loses money, because prices rise while the balance does not. Islamic banks offer a way to hold savings without interest, but the return works on a different basis, and the difference is not just wording.",
+              ar: "إبقاء كل مالك في الحساب الجاري يبدو آمناً ويخسر بهدوء، لأن الأسعار ترتفع والرصيد لا يرتفع. وتقدّم البنوك الإسلامية طريقة لحفظ المدخرات دون فائدة، لكن العائد يقوم على أساس مختلف، والفرق ليس في الصياغة فقط.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Profit sharing instead of interest", ar: "مشاركة في الربح بدلاً من الفائدة" },
+                body: {
+                  en: "An Islamic savings account is not an interest account with a different label. You are not lending the bank money for a charge. Your money is put to work in the bank's halal activities, and you receive a share of the profit those activities produce.",
+                  ar: "حساب الادخار الإسلامي ليس حساب فائدة بمسمّى آخر. أنت لا تُقرض البنك مالاً مقابل مقابل مالي. بل يُشغَّل مالك في أنشطة البنك الحلال، وتستلم حصة من الربح الذي تنتجه تلك الأنشطة.",
+                },
+                points: [
+                  {
+                    en: "A conventional account pays interest, which is the thing being avoided.",
+                    ar: "الحساب التقليدي يدفع فائدة، وهي الأمر الذي يُتجنَّب.",
+                  },
+                  {
+                    en: "An Islamic account pays a profit share, and a share can be less than expected, because it depends on how the underlying activity performed.",
+                    ar: "الحساب الإسلامي يدفع حصة من الربح، والحصة قد تقل عن المتوقع، لأنها تعتمد على أداء النشاط الأساسي.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What the number on the page really is", ar: "ما هو الرقم المذكور فعلاً" },
+                setup: {
+                  en: "Moneyfacts, which tracks UK savings accounts, explains the difference plainly: where a conventional account pays interest, a Shariah compliant account pays what is called an expected profit rate.",
+                  ar: "توضّح مؤسسة Moneyfacts، التي تتابع حسابات الادخار في بريطانيا، الفرق ببساطة: حيث يدفع الحساب التقليدي فائدة، يدفع الحساب المتوافق مع الشريعة ما يسمى بمعدل الربح المتوقع.",
+                },
+                rows: [
+                  {
+                    label: { en: "What you are paid", ar: "ما يُدفع لك" },
+                    value: { en: "A share of profit, not interest", ar: "حصة من الربح، لا فائدة" },
+                  },
+                  {
+                    label: { en: "Is it promised?", ar: "هل هو مضمون؟" },
+                    value: {
+                      en: "It is targeted, not guaranteed, because it depends on the underlying assets",
+                      ar: "هو مستهدف لا مضمون، لأنه يعتمد على الأصول الأساسية",
+                    },
+                  },
+                  {
+                    label: { en: "Who reviews the structure?", ar: "من يراجع الهيكل؟" },
+                    value: { en: "The bank's Shariah board", ar: "هيئة الرقابة الشرعية في البنك" },
+                  },
+                  {
+                    label: { en: "Is it still protected if the bank fails?", ar: "هل يبقى محمياً إن تعثّر البنك؟" },
+                    value: {
+                      en: "Yes, the same deposit guarantee scheme as any authorised UK bank",
+                      ar: "نعم، النظام نفسه لضمان الودائع كما في أي بنك بريطاني مرخّص",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "An expected profit rate of 3.9% and a savings rate of 3.9% look identical on a comparison table and are not the same promise. One is a share of a result, the other is a contractual charge for the use of money.",
+                  ar: "معدل ربح متوقع 3.9% ومعدل ادخار 3.9% يبدوان متطابقين في جدول المقارنة، وهما ليسا الوعد نفسه. أحدهما حصة من نتيجة، والآخر مقابل تعاقدي على استخدام المال.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two things that are easy to miss", ar: "أمران يسهل تفويتهما" },
+                body: {
+                  en: "First, the word expected is doing real work. If the bank's underlying activity underperforms, the profit share can be lower, and that is a feature of the structure rather than a failure of it. Second, an Islamic account is still a bank account, so deposit protection applies per bank and not per account. Two accounts with brands that share a licence count as one for the guarantee limit.",
+                  ar: "أولاً، كلمة متوقع تؤدي دوراً حقيقياً. فإن ضعف أداء نشاط البنك الأساسي، قد تقل حصة الربح، وهذا من طبيعة الهيكل لا خلل فيه. وثانياً، الحساب الإسلامي يبقى حساباً بنكياً، فحماية الودائع تُحسب لكل بنك لا لكل حساب. وحسابان لعلامتين تتقاسمان ترخيصاً واحداً يُعدّان حساباً واحداً في حد الضمان.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What does an Islamic savings account pay you?",
+                  ar: "ما الذي يدفعه لك حساب الادخار الإسلامي؟",
+                },
+                options: [
+                  { en: "Interest", ar: "فائدة" },
+                  { en: "A share of profit", ar: "حصة من الربح" },
+                  { en: "A dividend", ar: "أرباح أسهم" },
+                  { en: "Nothing at all", ar: "لا شيء إطلاقاً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "A profit share from the bank's halal activity. That is why the rate is described as expected rather than as a rate you are owed.",
+                  ar: "حصة من الربح الناتج عن نشاط البنك الحلال. ولهذا يوصف المعدل بأنه متوقع لا بأنه مبلغ مستحق لك.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Is the expected profit rate guaranteed?",
+                  ar: "هل معدل الربح المتوقع مضمون؟",
+                },
+                options: [
+                  { en: "Yes, exactly like an interest rate", ar: "نعم، تماماً كسعر الفائدة" },
+                  { en: "No, it is targeted and depends on how the underlying assets perform", ar: "لا، هو مستهدف ويعتمد على أداء الأصول الأساسية" },
+                  { en: "Only in the first year", ar: "في السنة الأولى فقط" },
+                  { en: "Only above a certain balance", ar: "فقط فوق رصيد معيّن" },
+                ],
+                answer: 1,
+                why: {
+                  en: "That is the point of sharing profit rather than charging for money. The return is tied to a real result, which is also why the bank carries genuine risk.",
+                  ar: "هذا هو معنى مشاركة الربح بدلاً من أخذ مقابل على المال. فالعائد مرتبط بنتيجة حقيقية، ولهذا أيضاً يتحمّل البنك مخاطرة حقيقية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Why does leaving all your money in a current account lose value over time?",
+                  ar: "لماذا يفقد مالك قيمته إن تركته كله في الحساب الجاري؟",
+                },
+                options: [
+                  { en: "Because of bank charges", ar: "بسبب رسوم البنك" },
+                  { en: "Because prices rise while the balance does not", ar: "لأن الأسعار ترتفع والرصيد لا يرتفع" },
+                  { en: "Because of tax", ar: "بسبب الضريبة" },
+                  { en: "It does not lose value", ar: "لا يفقد قيمته" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The balance stays the same and buys less each year. Doing nothing is itself a decision, which is why leaving savings in cash is a real cost even though it never shows up on a statement.",
+                  ar: "يبقى الرصيد كما هو ويشتري أقل كل سنة. وعدم فعل شيء قرار بحد ذاته، ولهذا فإن ترك المدخرات نقداً كلفة حقيقية حتى إن لم تظهر في أي كشف.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each statement to the right account.",
+                  ar: "صِل كل عبارة بالحساب المناسب.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Pays interest", ar: "يدفع فائدة" },
+                    right: { en: "A conventional savings account", ar: "حساب ادخار تقليدي" },
+                  },
+                  {
+                    left: { en: "Pays an expected profit rate", ar: "يدفع معدل ربح متوقع" },
+                    right: { en: "An Islamic savings account", ar: "حساب ادخار إسلامي" },
+                  },
+                  {
+                    left: { en: "Covered by the deposit guarantee scheme", ar: "مشمول بنظام ضمان الودائع" },
+                    right: { en: "Both of them", ar: "كلاهما" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You need to park £300 for six months. A conventional easy access account offers 4.0% and an Islamic account offers 3.9%. What is the best way to think about it?",
+                  ar: "تحتاج إلى إيداع £300 لمدة ستة أشهر. حساب تقليدي سهل الوصول يعطي 4.0% وحساب إسلامي يعطي 3.9%. ما أفضل طريقة للتفكير؟",
+                },
+                options: [
+                  {
+                    label: { en: "Take the higher number, the difference is real money", ar: "خذ الرقم الأعلى، فالفرق مال حقيقي" },
+                    outcome: {
+                      en: "Over six months on £300 the gap is a matter of pence, while the question you are actually answering is about interest itself. The headline number is the smaller consideration here.",
+                      ar: "على £300 وستة أشهر يكون الفرق بضعة قروش، بينما السؤال الذي تجيب عليه فعلاً يتعلق بالفائدة نفسها. الرقم المعلن هو الاعتبار الأصغر هنا.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Recognise the 0.1% is not the deciding factor, and that both are protected by the same scheme",
+                      ar: "أدرك أن 0.1% ليست العامل الحاسم، وأن كليهما مشمول بالنظام نفسه",
+                    },
+                    outcome: {
+                      en: "Correct framing. The two accounts carry the same guarantee, so the decision is about whether you want to receive interest, not about the rate at all.",
+                      ar: "تأطير صحيح. الحسابان يحملان الضمان نفسه، فالقرار يتعلق بما إذا كنت تريد استلام فائدة، لا بالمعدل إطلاقاً.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Leave it in the current account to avoid deciding", ar: "اتركه في الحساب الجاري لتجنّب القرار" },
+                    outcome: {
+                      en: "Six months of doing nothing is still a decision, and it is the only option here that definitely loses value.",
+                      ar: "ستة أشهر من عدم الفعل قرار أيضاً، وهو الخيار الوحيد هنا الذي يخسر قيمة بالتأكيد.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What to check, and what else applies", ar: "ما تتحقق منه، وما ينطبق أيضاً" },
+                body: {
+                  en: "Look for an authorised UK bank, a stated basis for the profit share, and a Shariah board reviewing the structure. Remember that savings are part of what Zakat is calculated on, so the account is not outside that. And since providers and scholars differ on the details, ask your own scholar before moving a large amount. This lesson explains how the product works. It does not rule on any particular account.",
+                  ar: "ابحث عن بنك بريطاني مرخّص، وأساس معلن لتوزيع الربح، وهيئة رقابة شرعية تراجع الهيكل. وتذكّر أن المدخرات تدخل في حساب الزكاة، فالحساب ليس خارج ذلك. ولأن المزوّدين والعلماء يختلفون في التفاصيل، استشر عالمك قبل نقل مبلغ كبير. هذا الدرس يشرح كيف يعمل المنتج، ولا يفتي في حساب بعينه.",
+                },
+              },
+            ],
+            sources: [SOURCES.ifg, SOURCES.moneyfacts, SOURCES.nzf, SOURCES.fscs],
+          },
         ],
       },
     ],
