@@ -671,7 +671,10 @@ export function AuthPage() {
     setBusy(false);
     setMsg(error ? error.message : t.sent);
   }
-  async function social(p: "google" | "github") {
+  // Only GitHub is enabled on the project. Google and Apple get a button back
+  // only once their client id and secret exist, rather than showing the
+  // learner a button that fails.
+  async function social(p: "github") {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: p,
       options: { redirectTo: window.location.origin + import.meta.env.BASE_URL + "auth" },
@@ -729,13 +732,6 @@ export function AuthPage() {
             {t.magicLink}
           </Button>
           <div className="py-2 text-center text-sm opacity-50">or / أو</div>
-          <Button
-            variant="outline"
-            className="min-h-12 w-full rounded-button border-primary-foreground/25 bg-transparent text-primary-foreground"
-            onClick={() => social("google")}
-          >
-            {t.google}
-          </Button>
           <Button
             variant="outline"
             className="min-h-12 w-full rounded-button border-primary-foreground/25 bg-transparent text-primary-foreground"
