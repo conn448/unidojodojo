@@ -17,7 +17,6 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SocietyRouteImport } from './routes/society'
 import { Route as TopicsRouteImport } from './routes/topics'
 import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
 import { Route as TopicsIndexRouteImport } from './routes/topics.index'
@@ -63,11 +62,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SocietyRoute = SocietyRouteImport.update({
-  id: '/society',
-  path: '/society',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TopicsRoute = TopicsRouteImport.update({
   id: '/topics',
   path: '/topics',
@@ -98,7 +92,6 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -113,7 +106,6 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
   '/topics': typeof TopicsIndexRoute
@@ -128,7 +120,6 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -145,7 +136,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -160,7 +150,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/society'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
     | '/topics'
@@ -174,7 +163,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -190,7 +178,6 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
-  SocietyRoute: typeof SocietyRoute
   TopicsRoute: typeof TopicsRouteWithChildren
   LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
@@ -253,13 +240,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/society': {
-      id: '/society'
-      path: '/society'
-      fullPath: '/society'
-      preLoaderRoute: typeof SocietyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/topics': {
       id: '/topics'
       path: '/topics'
@@ -313,7 +293,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
-  SocietyRoute: SocietyRoute,
   TopicsRoute: TopicsRouteWithChildren,
   LessonLessonIdRoute: LessonLessonIdRoute,
 }
