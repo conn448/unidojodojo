@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Award,
@@ -39,6 +39,7 @@ import { NationPicker } from "./nation-picker";
 import { dailyRunway, tracks } from "@/lib/unidojo-data";
 import { useAuth } from "@/lib/use-auth";
 import { useProfile } from "@/lib/use-profile";
+import { submitFeedback, exportMyData, deleteMyAccount } from "@/lib/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -361,48 +362,150 @@ export function TopicsPage({ trackId }: { trackId?: string }) {
 export function SocietyPage() {
   const t = useCopy(),
     { locale } = useApp();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [society, setSociety] = useState<{ name: string; university: string } | null>(null);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [nonce, setNonce] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    async function check() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      // Row level security scopes this to the caller, so no filter is needed
+      // and nobody else's membership can be returned.
+      const { data: mine } = await supabase
+        .from("society_memberships")
+        .select("society_id")
+        .limit(1)
+        .maybeSingle();
+      if (!alive) return;
+      if (!mine) {
+        setSociety(null);
+        setLoading(false);
+        return;
+      }
+      const { data: found } = await supabase
+        .from("societies")
+        .select("name, university")
+        .eq("id", mine.society_id)
+        .maybeSingle();
+      if (!alive) return;
+      setSociety(found ?? null);
+      setLoading(false);
+    }
+    void check();
+    return () => {
+      alive = false;
+    };
+  }, [user, nonce]);
+
+  async function join() {
+    if (!user) return;
+    setBusy(true);
+    setError("");
+    const { data: found } = await supabase
+      .from("societies")
+      .select("id")
+      .eq("join_code", code.trim().toUpperCase())
+      .maybeSingle();
+    if (!found) {
+      setBusy(false);
+      setError(locale === "ar" ? "لا توجد جمعية بهذا الرمز." : "No society has that code.");
+      return;
+    }
+    const { error: joinError } = await supabase
+      .from("society_memberships")
+      .insert({ society_id: found.id, user_id: user.id });
+    setBusy(false);
+    if (joinError) {
+      setError(joinError.message);
+      return;
+    }
+    setCode("");
+    setNonce((n) => n + 1);
+  }
+
+  async function leave() {
+    if (!user) return;
+    setBusy(true);
+    await supabase.from("society_memberships").delete().eq("user_id", user.id);
+    setBusy(false);
+    setNonce((n) => n + 1);
+  }
+
   return (
     <Page>
       <Header title={t.society} />
-      <section className="overflow-hidden rounded-card bg-primary p-6 text-primary-foreground">
-        <div className="flex items-center gap-4">
-          <div className="grid size-16 place-items-center rounded-card bg-accent text-2xl font-bold text-accent-foreground">
-            SU
-          </div>
-          <div>
+      {loading ? (
+        <p className="text-muted-foreground">...</p>
+      ) : !user ? (
+        <div className="rounded-card border-2 border-border bg-card p-5">
+          <p className="font-semibold">
+            {locale === "ar" ? "سجّل الدخول للانضمام إلى جمعية." : "Sign in to join a society."}
+          </p>
+          <Link
+            to="/auth"
+            className="mt-4 grid min-h-12 place-items-center rounded-button bg-primary font-bold text-primary-foreground"
+          >
+            {locale === "ar" ? "تسجيل الدخول" : "Sign in"}
+          </Link>
+        </div>
+      ) : society ? (
+        <>
+          <section className="overflow-hidden rounded-card bg-primary p-6 text-primary-foreground">
             <p className="text-sm opacity-65">{locale === "ar" ? "جمعيتك" : "Your society"}</p>
-            <h1 className="font-display text-2xl font-bold">Students’ Union Money Circle</h1>
-          </div>
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-3">
-          <div>
-            <strong className="text-2xl">184</strong>
-            <p className="text-sm opacity-65">{locale === "ar" ? "عضواً" : "members"}</p>
-          </div>
-          <div>
-            <strong className="text-2xl">72%</strong>
-            <p className="text-sm opacity-65">
-              {locale === "ar" ? "تقدّم أسبوعي" : "weekly progress"}
+            <h1 className="mt-1 font-display text-2xl font-bold">{society.name}</h1>
+            <p className="mt-2 opacity-75">{society.university}</p>
+          </section>
+          <Button
+            variant="outline"
+            className="mt-4 min-h-12 w-full rounded-button"
+            disabled={busy}
+            onClick={leave}
+          >
+            {locale === "ar" ? "مغادرة الجمعية" : "Leave society"}
+          </Button>
+        </>
+      ) : (
+        <div className="mx-auto max-w-md">
+          <Mascot pose="reading" className="mb-6 scale-125" />
+          <h1 className="font-display text-2xl font-bold">
+            {locale === "ar" ? "انضم برمز الجمعية" : "Join with a society code"}
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            {locale === "ar"
+              ? "اطلب الرمز من منظّم جمعيتك."
+              : "Ask your society organiser for the code."}
+          </p>
+          <Input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="ABCD12"
+            className="mt-5 min-h-14 uppercase"
+          />
+          <Button
+            className="mt-3 min-h-12 w-full rounded-button"
+            disabled={busy || code.trim().length < 4}
+            onClick={join}
+          >
+            {locale === "ar" ? "انضم" : "Join"}
+          </Button>
+          {error ? (
+            <p
+              role="status"
+              className="mt-3 rounded-button bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {error}
             </p>
-          </div>
+          ) : null}
         </div>
-      </section>
-      <section className="mt-8">
-        <SectionTitle title={locale === "ar" ? "نتعلّم معاً" : "Learning together"} />
-        <div className="rounded-card border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">1. North Campus Finance Society</span>
-            <span className="rounded-full bg-accent px-3 py-1 text-sm font-bold">86%</span>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="font-semibold">2. Your society</span>
-            <span className="text-sm">72%</span>
-          </div>
-        </div>
-        <Button variant="outline" className="mt-4 min-h-12 w-full rounded-button">
-          <Share2 /> {locale === "ar" ? "مشاركة حزمة الجمعية" : "Share society kit"}
-        </Button>
-      </section>
+      )}
     </Page>
   );
 }
@@ -522,7 +625,33 @@ function Setting({ icon, title }: { icon: React.ReactNode; title: string }) {
 export function FeedbackPage() {
   const t = useCopy(),
     { locale } = useApp();
+  const { user } = useAuth();
+  const [topic, setTopic] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const ideas = ["Rent", "Credit scores", "Zakat", "Student loans"];
+
+  async function send() {
+    setBusy(true);
+    setError("");
+    const result = await submitFeedback({
+      userId: user?.id ?? null,
+      topic: topic || "General",
+      message: note,
+      locale,
+    });
+    setBusy(false);
+    if (result.ok) {
+      setTopic("");
+      setNote("");
+      setDone(true);
+      return;
+    }
+    setError(result.message ?? "Could not send that just now.");
+  }
+
   return (
     <Page>
       <Header title={t.feedback} back />
@@ -546,19 +675,39 @@ export function FeedbackPage() {
               : "Pick an idea or tell us what is on your mind."}
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
-            {["Rent", "Credit scores", "Zakat", "Student loans"].map((x) => (
-              <Button key={x} variant="outline" className="rounded-full">
+            {ideas.map((x) => (
+              <Button
+                key={x}
+                variant={topic === x ? "default" : "outline"}
+                className="rounded-full"
+                aria-pressed={topic === x}
+                onClick={() => setTopic(topic === x ? "" : x)}
+              >
                 {x}
               </Button>
             ))}
           </div>
           <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
             className="mt-5 min-h-36 w-full rounded-card border bg-card p-4 focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder={locale === "ar" ? "اكتب اقتراحك (اختياري)" : "Add a note (optional)"}
           />
-          <Button className="mt-4 min-h-12 w-full rounded-button" onClick={() => setDone(true)}>
+          <Button
+            className="mt-4 min-h-12 w-full rounded-button"
+            disabled={busy || (!topic && !note.trim())}
+            onClick={send}
+          >
             {locale === "ar" ? "أرسل الاقتراح" : "Send suggestion"}
           </Button>
+          {error ? (
+            <p
+              role="status"
+              className="mt-3 rounded-button bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {error}
+            </p>
+          ) : null}
         </div>
       )}
     </Page>
@@ -567,6 +716,44 @@ export function FeedbackPage() {
 export function PrivacyPage() {
   const t = useCopy(),
     { locale } = useApp();
+  const { user, signOut } = useAuth();
+  const [busy, setBusy] = useState<"export" | "delete" | null>(null);
+  const [status, setStatus] = useState("");
+
+  async function doExport() {
+    if (!user) return;
+    setBusy("export");
+    setStatus("");
+    const data = await exportMyData(user.id);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "unidojo-data.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setBusy(null);
+  }
+
+  async function doDelete() {
+    if (!user) return;
+    const sure = window.confirm(
+      locale === "ar"
+        ? "سيُحذف حسابك وتقدّمك نهائياً. لا يمكن التراجع."
+        : "This deletes your account and everything in it. It cannot be undone.",
+    );
+    if (!sure) return;
+    setBusy("delete");
+    setStatus("");
+    const result = await deleteMyAccount();
+    if (result.ok) {
+      await signOut();
+      return;
+    }
+    setBusy(null);
+    setStatus(result.message ?? "Could not delete that just now.");
+  }
+
   return (
     <Page>
       <Header title={t.privacy} back />
@@ -582,14 +769,39 @@ export function PrivacyPage() {
             ? "يمكنك تنزيل بياناتك أو حذف حسابك في أي وقت. لا توجد خطوات خفية."
             : "You can download your data or delete your account at any time. There are no hidden steps."}
         </p>
-        <Button variant="outline" className="mt-5 min-h-12 w-full rounded-button">
-          <Download />
-          {t.export}
-        </Button>
-        <Button variant="outline" className="mt-3 min-h-12 w-full rounded-button text-destructive">
-          <Trash2 />
-          {t.delete}
-        </Button>
+        {user ? (
+          <>
+            <Button
+              variant="outline"
+              className="mt-5 min-h-12 w-full rounded-button"
+              disabled={busy !== null}
+              onClick={doExport}
+            >
+              <Download />
+              {t.export}
+            </Button>
+            <Button
+              variant="outline"
+              className="mt-3 min-h-12 w-full rounded-button text-destructive"
+              disabled={busy !== null}
+              onClick={doDelete}
+            >
+              <Trash2 />
+              {t.delete}
+            </Button>
+          </>
+        ) : (
+          <p className="mt-5 rounded-card border-2 border-border bg-card p-4 text-sm">
+            {locale === "ar"
+              ? "سجّل الدخول لتنزيل بياناتك أو حذف حسابك."
+              : "Sign in to download your data or delete your account."}
+          </p>
+        )}
+        {status ? (
+          <p role="status" className="mt-3 text-sm text-destructive">
+            {status}
+          </p>
+        ) : null}
       </div>
     </Page>
   );
