@@ -43,9 +43,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [locale, setL] = useState<Locale>("en");
   const [name, setN] = useState("Sam");
   const [sound, setSoundState] = useState(true);
-  const [streak, setStreak] = useState(7);
+  const [streak, setStreak] = useState(0);
   const [hearts] = useState(5);
-  const [points, setPoints] = useState(540);
+  const [points, setPoints] = useState(0);
   const [puzzleDone, setPuzzleDone] = useState(false);
   const { profile, ready: profileReady, save } = useProfile();
   useEffect(() => {
@@ -56,8 +56,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = r === "ar" ? "rtl" : "ltr";
     setN(localStorage.getItem("ud_name") || "Sam");
     setSoundState(localStorage.getItem("ud_sound") !== "off");
-    setStreak(Number(localStorage.getItem("ud_streak") || 7));
-    setPoints(Number(localStorage.getItem("ud_points") || 540));
+    setStreak(Number(localStorage.getItem("ud_streak") || 0));
+    setPoints(Number(localStorage.getItem("ud_points") || 0));
     setPuzzleDone(localStorage.getItem("ud_puzzle_day") === new Date().toISOString().slice(0, 10));
   }, []);
   const setLocale = (v: Locale) => {

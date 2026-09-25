@@ -38,6 +38,7 @@ import { NationPicker } from "./nation-picker";
 import { dailyRunway, tracks } from "@/lib/unidojo-data";
 import { useAuth } from "@/lib/use-auth";
 import { useProfile } from "@/lib/use-profile";
+import { useProgress } from "@/lib/use-progress";
 import { submitFeedback, exportMyData, deleteMyAccount } from "@/lib/account";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -224,6 +225,9 @@ export function OnboardingPage() {
 export function HomePage() {
   const t = useCopy(),
     { name, locale, streak, hearts, points } = useApp();
+  // Levels are earned, not granted. A new learner is level 1 with an empty bar.
+  const level = Math.floor(points / 100) + 1;
+  const levelProgress = points % 100;
   return (
     <Page>
       <Header />
@@ -248,15 +252,20 @@ export function HomePage() {
         </section>
         <div className="mt-7 flex items-center gap-4 rounded-card border bg-card p-4">
           <div className="grid size-12 place-items-center rounded-full bg-primary font-display text-primary-foreground">
-            5
+            {level}
           </div>
           <div className="grow">
             <div className="flex justify-between text-sm">
-              <strong>{t.level} 5</strong>
+              <strong>
+                {t.level} {level}
+              </strong>
               <span>{points} pts</span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-[68%] rounded-full bg-accent" />
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${levelProgress}%` }}
+              />
             </div>
           </div>
         </div>
@@ -360,9 +369,10 @@ export function TopicsPage({ trackId }: { trackId?: string }) {
 }
 export function ProfilePage() {
   const t = useCopy(),
-    { name, locale } = useApp();
+    { name, locale, streak } = useApp();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { completed, accuracy } = useProgress();
   return (
     <Page>
       <Header title={t.profile} />
@@ -383,9 +393,12 @@ export function ProfilePage() {
       <section className="py-7">
         <SectionTitle title={locale === "ar" ? "تعلّمك" : "Your learning"} />
         <div className="grid grid-cols-3 gap-3 text-center">
-          <Stat n="7" l={locale === "ar" ? "دروس" : "Lessons"} />
-          <Stat n="84%" l={locale === "ar" ? "دقة" : "Accuracy"} />
-          <Stat n="46m" l={locale === "ar" ? "وقت" : "Time"} />
+          <Stat n={String(completed.length)} l={locale === "ar" ? "دروس" : "Lessons"} />
+          <Stat
+            n={accuracy === null ? "-" : `${accuracy}%`}
+            l={locale === "ar" ? "دقة" : "Accuracy"}
+          />
+          <Stat n={String(streak)} l={locale === "ar" ? "أيام" : "Day streak"} />
         </div>
       </section>
       <div className="space-y-2">

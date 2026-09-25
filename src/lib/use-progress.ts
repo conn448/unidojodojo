@@ -14,9 +14,15 @@ import type { Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 
-type ProgressState = { completed: string[]; ready: boolean; userId: string | null };
+export type ProgressRow = {
+  lesson_id: string;
+  score: number | null;
+  completed: boolean;
+};
 
-const EMPTY: ProgressState = { completed: [], ready: false, userId: null };
+type ProgressState = { rows: ProgressRow[]; ready: boolean; userId: string | null };
+
+const EMPTY: ProgressState = { rows: [], ready: false, userId: null };
 
 let snapshot: ProgressState = EMPTY;
 const listeners = new Set<() => void>();
@@ -47,20 +53,15 @@ async function load(userId: string | null) {
   loadedFor = userId;
 
   if (!userId) {
-    emit({ completed: [], ready: true, userId: null });
+    emit({ rows: [], ready: true, userId: null });
     return;
   }
 
   const { data, error } = await supabase
     .from("lesson_progress")
-    .select("lesson_id")
-    .eq("completed", true);
+    .select("lesson_id, score, completed");
 
-  emit({
-    completed: error ? [] : (data ?? []).map((row) => row.lesson_id),
-    ready: true,
-    userId,
-  });
+  emit({ rows: error ? [] : (data ?? []), ready: true, userId });
 }
 
 /** Upsert a result. `score` is 0 to 100 over practice steps only. */
@@ -115,5 +116,18 @@ export function useProgress() {
     void load(userId);
   }, [authReady, userId, state.userId]);
 
-  return { completed: state.completed, ready: state.ready, userId };
+  // Derived here so every caller agrees on what completed and accuracy mean.
+  const completed = state.rows.filter((row) => row.completed).map((row) => row.lesson_id);
+  const scored = state.rows.filter((row) => row.score !== null);
+
+  return {
+    rows: state.rows,
+    completed,
+    /** Mean of the stored scores, or null when nothing has been scored yet. */
+    accuracy: scored.length
+      ? Math.round(scored.reduce((sum, row) => sum + (row.score ?? 0), 0) / scored.length)
+      : null,
+    ready: state.ready,
+    userId,
+  };
 }
