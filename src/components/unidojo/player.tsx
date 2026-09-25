@@ -205,14 +205,16 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
       <Page nav={false}>
         <div className="mx-auto flex min-h-[80dvh] max-w-md flex-col justify-center text-center">
           <Mascot pose="success" className="mx-auto mb-6 scale-125" />
-          <p className="reward-kicker">
-            {locale === "ar" ? "أكملت الدرس" : "Lesson complete"}
-          </p>
+          <p className="reward-kicker">{locale === "ar" ? "أكملت الدرس" : "Lesson complete"}</p>
           <h1 className="mt-4 font-display text-3xl font-extrabold leading-tight">
             {pick(entry.lesson.title, locale)}
           </h1>
           <div className="mt-8 grid grid-cols-2 gap-3">
-            <Stat icon={<Sparkles className="size-5 text-gold" />} value={String(Math.round(xp))} label="XP" />
+            <Stat
+              icon={<Sparkles className="size-5 text-gold" />}
+              value={String(Math.round(xp))}
+              label="XP"
+            />
             <Stat
               icon={<Heart className="size-5 fill-current text-destructive" />}
               value={`${accuracy}%`}
@@ -625,15 +627,24 @@ function StepView({
   // Computed before any early return so hook order never changes between steps.
   const shuffledRights = useMemo(
     () =>
-      step.k === "match" ? shuffle(step.pairs.map((p) => p.right), step.pairs.length * 7919 + 13) : [],
+      step.k === "match"
+        ? shuffle(
+            step.pairs.map((p) => p.right),
+            step.pairs.length * 7919 + 13,
+          )
+        : [],
     [step],
   );
 
   if (step.k === "idea") {
     return (
       <div className="rounded-card border-2 border-border bg-card p-7">
-        <h1 className="font-display text-3xl font-extrabold leading-tight">{pick(step.title, locale)}</h1>
-        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{pick(step.body, locale)}</p>
+        <h1 className="font-display text-3xl font-extrabold leading-tight">
+          {pick(step.title, locale)}
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          {pick(step.body, locale)}
+        </p>
         {step.points && step.points.length > 0 && (
           <ul className="mt-5 grid gap-3">
             {step.points.map((point, i) => (
@@ -654,7 +665,9 @@ function StepView({
         <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
           {locale === "ar" ? "مثال محلول" : "Worked example"}
         </p>
-        <h1 className="font-display text-2xl font-extrabold leading-tight">{pick(step.title, locale)}</h1>
+        <h1 className="font-display text-2xl font-extrabold leading-tight">
+          {pick(step.title, locale)}
+        </h1>
         <p className="mt-3 leading-relaxed text-muted-foreground">{pick(step.setup, locale)}</p>
         <dl className="mt-5 overflow-hidden rounded-button border-2 border-border">
           {step.rows.map((row, i) => (
@@ -683,14 +696,18 @@ function StepView({
         <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-destructive">
           {locale === "ar" ? "انتبه" : "Watch out"}
         </p>
-        <h1 className="font-display text-2xl font-extrabold leading-tight">{pick(step.title, locale)}</h1>
+        <h1 className="font-display text-2xl font-extrabold leading-tight">
+          {pick(step.title, locale)}
+        </h1>
         <p className="mt-3 leading-relaxed">{pick(step.body, locale)}</p>
       </div>
     );
   }
 
   const heading = (
-    <h1 className="mb-6 font-display text-2xl font-extrabold leading-snug">{pick(step.prompt, locale)}</h1>
+    <h1 className="mb-6 font-display text-2xl font-extrabold leading-snug">
+      {pick(step.prompt, locale)}
+    </h1>
   );
 
   const optionClass = (selected: boolean) =>
@@ -764,7 +781,9 @@ function StepView({
           />
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          {locale === "ar" ? "قرّب لأقرب جنيه عند الحاجة." : "Round to the nearest pound if you need to."}
+          {locale === "ar"
+            ? "قرّب لأقرب جنيه عند الحاجة."
+            : "Round to the nearest pound if you need to."}
         </p>
       </div>
     );
@@ -829,10 +848,14 @@ function StepView({
               key={slot}
               type="button"
               disabled={locked || bankIndex === null}
-              onClick={() => setAnswer({ kind: "fill", picked: picked.filter((_, i) => i !== slot) })}
+              onClick={() =>
+                setAnswer({ kind: "fill", picked: picked.filter((_, i) => i !== slot) })
+              }
               className={cn(
                 "mx-1 inline-block min-w-24 rounded-button border-b-2 px-3 py-1 text-center font-bold",
-                bankIndex === null ? "border-border bg-muted text-muted-foreground" : "border-primary bg-success-soft",
+                bankIndex === null
+                  ? "border-border bg-muted text-muted-foreground"
+                  : "border-primary bg-success-soft",
               )}
             >
               {bankIndex === null ? "…" : pick(step.bank[bankIndex], locale)}
@@ -878,7 +901,10 @@ function StepView({
                 {bucket.items
                   .filter((item) => placed[item.en] === bucketIndex)
                   .map((item) => (
-                    <span key={item.en} className="rounded-pill bg-success-soft px-3 py-1 font-bold">
+                    <span
+                      key={item.en}
+                      className="rounded-pill bg-success-soft px-3 py-1 font-bold"
+                    >
                       {pick(item, locale)}
                     </span>
                   ))}
@@ -981,7 +1007,9 @@ function StepView({
         </div>
       </div>
       <p className="mt-4 text-sm text-muted-foreground">
-        {locale === "ar" ? "اختر من العمود الأول ثم ما يقابله." : "Pick a term, then tap its match."}
+        {locale === "ar"
+          ? "اختر من العمود الأول ثم ما يقابله."
+          : "Pick a term, then tap its match."}
       </p>
     </div>
   );
