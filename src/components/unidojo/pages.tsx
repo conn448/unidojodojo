@@ -626,7 +626,7 @@ export function AuthPage() {
           >
             {t.logout}
           </Button>
-          <p className="mt-6 text-sm opacity-60">{t.freeForever}</p>
+          <p className="mt-6 text-sm opacity-60">{t.noBankDetails}</p>
         </div>
       </Page>
     );
@@ -636,7 +636,7 @@ export function AuthPage() {
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-md flex-col justify-center">
         <Mascot className="mb-8 scale-150 origin-left rtl:origin-right" />
         <h1 className="font-display text-4xl font-bold">{t.authTitle}</h1>
-        <p className="mt-3 opacity-70">{t.freeForever}</p>
+        <p className="mt-3 opacity-70">{t.noBankDetails}</p>
         <div className="mt-8 space-y-3">
           <Input
             type="email"
