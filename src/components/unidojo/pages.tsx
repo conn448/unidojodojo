@@ -38,6 +38,7 @@ import { LanguageIntro } from "./language-intro";
 import { NationPicker } from "./nation-picker";
 import { dailyRunway, tracks } from "@/lib/unidojo-data";
 import { useAuth } from "@/lib/use-auth";
+import { useProfile } from "@/lib/use-profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -89,10 +90,12 @@ export function LanguagePage() {
 }
 export function OnboardingPage() {
   const t = useCopy(),
-    { name, setName, play } = useApp(),
+    { name, setName, play, locale } = useApp(),
     nav = useNavigate();
   const [step, setStep] = useState(0);
   const [choice, setChoice] = useState(0);
+  const [university, setUniversity] = useState("");
+  const { save } = useProfile();
   const levels = ["Starting fresh", "Know the basics", "Ready to level up"];
   const goals = ["Spend with confidence", "Build a safety buffer", "Understand investing"];
   return (
@@ -143,7 +146,12 @@ export function OnboardingPage() {
               </label>
               <label className="block font-semibold">
                 {t.university}
-                <Input placeholder="e.g. University of Manchester" className="mt-2 min-h-14" />
+                <Input
+                  value={university}
+                  onChange={(e) => setUniversity(e.target.value)}
+                  placeholder="e.g. University of Manchester"
+                  className="mt-2 min-h-14"
+                />
               </label>
             </div>
           )}
@@ -185,6 +193,9 @@ export function OnboardingPage() {
                 setChoice(0);
               } else {
                 localStorage.setItem("ud_onboarded", "yes");
+                // Saved only here, on the deliberate finish, not on every
+                // keystroke of the name field.
+                void save({ display_name: name, university, language: locale });
                 nav({ to: "/home" });
               }
             }}
@@ -399,6 +410,7 @@ export function ProfilePage() {
   const t = useCopy(),
     { name, locale } = useApp();
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   return (
     <Page>
       <Header title={t.profile} />
@@ -411,6 +423,9 @@ export function ProfilePage() {
           <p className="truncate text-muted-foreground">
             {user?.email ?? (locale === "ar" ? "طالب جامعي" : "University student")}
           </p>
+          {profile?.university ? (
+            <p className="truncate text-sm text-muted-foreground">{profile.university}</p>
+          ) : null}
         </div>
       </div>
       <section className="py-7">

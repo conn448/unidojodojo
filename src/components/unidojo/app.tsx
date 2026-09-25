@@ -21,6 +21,7 @@ import { tracks, type Locale } from "@/lib/unidojo-data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/use-auth";
+import { useProfile } from "@/lib/use-profile";
 
 type AppState = {
   locale: Locale;
@@ -46,6 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [hearts] = useState(5);
   const [points, setPoints] = useState(540);
   const [puzzleDone, setPuzzleDone] = useState(false);
+  const { profile, ready: profileReady, save } = useProfile();
   useEffect(() => {
     const l = localStorage.getItem("ud_locale");
     const r = l === "ar" ? "ar" : "en";
@@ -63,11 +65,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("ud_locale", v);
     document.documentElement.lang = v;
     document.documentElement.dir = v === "ar" ? "rtl" : "ltr";
+    void save({ language: v });
   };
   const setName = (v: string) => {
     setN(v);
     localStorage.setItem("ud_name", v);
   };
+  // A name saved to the account wins over the one in this browser, so it follows
+  // the learner onto a new device. Guarded on a non-empty value so an empty
+  // server value can never blank out the name in use locally.
+  useEffect(() => {
+    if (profileReady && profile?.display_name) setName(profile.display_name);
+  }, [profileReady, profile?.display_name]);
   const setSound = (v: boolean) => {
     setSoundState(v);
     localStorage.setItem("ud_sound", v ? "on" : "off");
