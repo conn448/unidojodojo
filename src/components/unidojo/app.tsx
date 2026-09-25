@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Share2,
   Sparkles,
+  UserRound,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import ar from "@/locales/ar.json";
 import { tracks, type Locale } from "@/lib/unidojo-data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/use-auth";
 
 type AppState = {
   locale: Locale;
@@ -212,7 +214,9 @@ function Nav({ to, icon, label }: { to: "/home" | "/topics"; icon: ReactNode; la
   );
 }
 export function Header({ title, back }: { title?: string; back?: boolean }) {
-  const { locale, sound, setSound, play } = useApp();
+  const { locale, sound, setSound, play, name } = useApp();
+  const { user } = useAuth();
+  const initial = (name.trim()[0] || "?").toUpperCase();
   return (
     <header className="mb-7 flex items-center gap-2">
       {back ? (
@@ -245,6 +249,14 @@ export function Header({ title, back }: { title?: string; back?: boolean }) {
         {sound ? <Volume2 /> : <VolumeX />}
       </Button>
       <LanguageToggle />
+      <Link
+        to="/profile"
+        aria-label={locale === "ar" ? "حسابك" : "Your account"}
+        title={user?.email ?? (locale === "ar" ? "حسابك" : "Your account")}
+        className="grid size-11 flex-none place-items-center rounded-full border-2 border-border bg-card text-sm font-extrabold text-primary"
+      >
+        {user ? initial : <UserRound className="size-5" />}
+      </Link>
     </header>
   );
 }

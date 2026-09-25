@@ -192,6 +192,14 @@ export function OnboardingPage() {
             {step < 2 ? t.continue : t.finishSetup}
             <ChevronRight className="directional" />
           </Button>
+          {step === 2 && (
+            <Link
+              to="/auth"
+              className="mt-3 grid min-h-12 w-full place-items-center rounded-button border-2 border-border bg-card font-bold"
+            >
+              {t.saveProgress}
+            </Link>
+          )}
           {step > 0 && (
             <Button variant="ghost" className="mt-2 w-full" onClick={() => setStep((x) => x - 1)}>
               {t.back}
