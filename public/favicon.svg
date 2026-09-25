@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56" role="img" aria-label="UniDojo">
+  <!-- Ears first so the face covers their lower halves, same order as the CSS mascot. -->
+  <circle cx="16.4" cy="14.8" r="10.8" fill="#ffc800" stroke="#6c5ce7" stroke-width="2" />
+  <circle cx="39.6" cy="14.8" r="10.8" fill="#ffc800" stroke="#6c5ce7" stroke-width="2" />
+  <rect x="4.8" y="8.8" width="46.4" height="44" rx="21" fill="#ffc800" stroke="#6c5ce7" stroke-width="2" />
+  <!-- Solid eyes, no highlight dots, matching the app mascot. -->
+  <ellipse cx="16.7" cy="27.6" rx="5.75" ry="4.4" fill="#131f24" transform="rotate(12 16.7 27.6)" />
+  <ellipse cx="39.3" cy="27.6" rx="5.75" ry="4.4" fill="#131f24" transform="rotate(-12 39.3 27.6)" />
+  <!-- Wide grin. -->
+  <path d="M19.6 38.5 Q28 47.8 36.4 38.5" fill="none" stroke="#131f24" stroke-width="3.4" stroke-linecap="round" />
+</svg>

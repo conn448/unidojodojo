@@ -145,37 +145,161 @@
 }
 
 @theme inline {
-  --font-sans: "Hind", "Noto Sans Arabic", sans-serif;
-  --font-display: "Archivo Black", "Noto Sans Arabic", sans-serif;
+  --font-sans: "Nunito", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Nunito", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-accent-soft: var(--accent-soft);
-  --radius-card: 0.5rem;
-  --radius-button: 0.375rem;
-  --shadow-soft: 0 14px 36px color-mix(in oklab, var(--foreground) 9%, transparent);
-  --shadow-reward: 0 7px 0 color-mix(in oklab, var(--accent) 68%, var(--primary));
+  /* The three brand colours, exposed as utilities (bg-brand, text-gold, ...) */
+  --color-brand: var(--brand);
+  --color-brand-shade: var(--brand-shade);
+  --color-gold: var(--gold);
+  --color-gold-shade: var(--gold-shade);
+  --color-ink: var(--ink);
+  --color-ink-deep: var(--ink-deep);
+  --radius-card: 1rem;
+  --radius-button: 0.75rem;
+  --radius-pill: 999px;
+  --shadow-soft: 0 8px 0 color-mix(in oklab, var(--ink) 8%, transparent);
+  --shadow-reward: 0 5px 0 var(--gold-shade);
+  /* Hard bottom shadow = the pressable "3D" button. Collapses on :active. */
+  --shadow-btn: 0 4px 0 var(--brand-shade);
+  --shadow-btn-gold: 0 4px 0 var(--gold-shade);
+  --shadow-btn-ink: 0 4px 0 var(--ink-deep);
 }
+
+/*
+ * UniDojo palette — exactly THREE brand colours.
+ *
+ *   VIOLET #6C5CE7   action, correct answers, progress, active state
+ *   GOLD  #FFC800   rewards ONLY: streaks, XP, gems, badges, celebration
+ *   INK   #131F24   text, outlines, dark surfaces
+ *
+ * Gold is deliberately reserved. If reward and action share a colour the
+ * "reward" signal stops meaning anything, which is the whole dopamine loop.
+ *
+ * Neutrals and one functional red are derived, not brand colours.
+ */
 :root {
-  --background: oklch(0.975 0.012 83);
-  --foreground: oklch(0.22 0.05 278);
-  --card: oklch(0.997 0.003 80);
-  --card-foreground: oklch(0.22 0.05 278);
-  --popover: oklch(0.997 0.003 80);
-  --popover-foreground: oklch(0.22 0.05 278);
-  --primary: oklch(0.27 0.075 278);
-  --primary-foreground: oklch(0.98 0.01 83);
-  --secondary: oklch(0.93 0.025 80);
-  --secondary-foreground: oklch(0.27 0.075 278);
-  --muted: oklch(0.94 0.018 83);
-  --muted-foreground: oklch(0.48 0.035 278);
-  --accent: oklch(0.75 0.16 71);
-  --accent-foreground: oklch(0.25 0.055 278);
-  --accent-soft: oklch(0.95 0.055 78);
-  --success: oklch(0.72 0.17 158);
-  --success-soft: oklch(0.95 0.055 158);
-  --border: oklch(0.85 0.025 80);
-  --input: oklch(0.85 0.025 80);
-  --ring: oklch(0.65 0.14 72);
+  /* ---- brand ---- */
+  --brand: #6c5ce7;
+  --brand-shade: #5448b4;
+  --brand-tint: #edeafd;
+  --gold: #ffc800;
+  --gold-shade: #d9a400;
+  --gold-tint: #fff4cc;
+  --ink: #131f24;
+  --ink-deep: #0b1418;
+
+  /* ---- neutrals ---- */
+  --white: #ffffff;
+  --paper: #f7f7f7;
+  --line: #e5e5e5;
+  --hush: #afafaf;
+  --slate: #6b7c85;
+
+  /* ---- mascot: a red panda, deliberately NOT the action violet ---- */
+  --panda: #e8590c;
+  --panda-deep: #b8460a;
+  --panda-cream: #fff7ed;
+
+  /* ---- functional ---- */
+  --red: #ff4b4b;
+  --red-shade: #ea2b2b;
+
+  /* ---- semantic tokens (consumed by components) ---- */
+  --radius: 1rem;
+  --background: var(--white);
+  --foreground: var(--ink);
+  --card: var(--white);
+  --card-foreground: var(--ink);
+  --popover: var(--white);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--white);
+  --secondary: var(--paper);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper);
+  --muted-foreground: var(--slate);
+  --accent: var(--gold);
+  --accent-foreground: var(--ink);
+  --accent-soft: var(--gold-tint);
+  --success: var(--brand);
+  --success-soft: var(--brand-tint);
+  --destructive: var(--red);
+  --destructive-foreground: var(--white);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
+  --chart-2: var(--gold);
+  --chart-3: var(--ink);
+  --chart-4: var(--brand-shade);
+  --chart-5: var(--gold-shade);
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--gold-tint);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand);
+}
+
+/* Dark surfaces are INK, never the brand colour, which stays reserved for actions. */
+.dark {
+  --background: var(--ink);
+  --foreground: var(--white);
+  --card: var(--ink-deep);
+  --card-foreground: var(--white);
+  --popover: var(--ink-deep);
+  --popover-foreground: var(--white);
+  --primary: var(--brand);
+  --primary-foreground: var(--white);
+  --secondary: #1e2d34;
+  --secondary-foreground: var(--white);
+  --muted: #1e2d34;
+  --muted-foreground: var(--hush);
+  --accent: var(--gold);
+  --accent-foreground: var(--ink);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: var(--brand);
+}
+
+/*
+ * Pressable button. Duolingo's core tactile trick: a hard bottom shadow in a
+ * darker shade of the same hue. Pressing collapses it and nudges the button
+ * down, so a tap feels physical rather than flat.
+ */
+.btn-3d {
+  box-shadow: var(--shadow-btn);
+  transition:
+    transform 0.06s ease-out,
+    box-shadow 0.06s ease-out;
+}
+.btn-3d:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--brand-shade);
+}
+.btn-3d-gold {
+  box-shadow: var(--shadow-btn-gold);
+}
+.btn-3d-gold:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--gold-shade);
+}
+.btn-3d-ink {
+  box-shadow: var(--shadow-btn-ink);
+}
+.btn-3d-ink:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink-deep);
+}
+/* Ink surface used by full-bleed hero screens (onboarding, auth, celebration). */
+.surface-ink {
+  background-color: var(--ink);
+  color: var(--white);
 }
 html { scrollbar-gutter: stable; }
 body { font-family: var(--font-sans); letter-spacing: 0; background:var(--background); }
@@ -190,13 +314,14 @@ button,a,input,textarea { letter-spacing: 0; }
 .lesson-jump button { display:grid; place-items:center; flex:0 0 2.25rem; height:2.25rem; border:1px solid var(--border); border-radius:999px; background:var(--card); font-size:.75rem; font-weight:700; }
 .lesson-jump button.on { background:var(--primary); color:var(--primary-foreground); border-color:var(--primary); }
 .lesson-jump button.done { background:var(--success-soft); color:var(--success); border-color:var(--success); }
-.lesson-jump svg { width:.9rem;height:.9rem; }
+.mascot .face { position:absolute; inset:.55rem .3rem .2rem; border-radius:48% 48% 44% 44%; background:var(--panda); border:2px solid var(--panda-deep); }
+.mascot .ear { position:absolute; top:.25rem; width:1.35rem; height:1.35rem; border-radius:50%; background:var(--panda); border:2px solid var(--panda-deep); }
 .directional { transform:rotate(0); }
 [dir="rtl"] .directional { transform:rotate(180deg); }
 .mascot { position:relative; width:3.5rem; height:3.5rem; flex:none; }
 .mascot .face { position:absolute; inset:.55rem .3rem .2rem; border-radius:48% 48% 44% 44%; background:var(--accent); border:2px solid var(--primary); }
 .mascot .ear { position:absolute; top:.25rem; width:1.35rem; height:1.35rem; border-radius:50%; background:var(--accent); border:2px solid var(--primary); }
-.mascot .ear-a{left:.35rem}.mascot .ear-b{right:.35rem}.mascot .mask{position:absolute;top:.75rem;width:1rem;height:.75rem;border-radius:60%;background:var(--primary)}.mascot .mask-a{left:.28rem;transform:rotate(15deg)}.mascot .mask-b{right:.28rem;transform:rotate(-15deg)}.mascot .eye{position:absolute;z-index:2;top:1rem;width:.16rem;height:.16rem;border-radius:50%;background:var(--primary-foreground)}.mascot .eye-a{left:.7rem}.mascot .eye-b{right:.7rem}.mascot .nose{position:absolute;left:50%;bottom:.45rem;width:.42rem;height:.3rem;transform:translateX(-50%);border-radius:50%;background:var(--primary)}
+.mascot .ear-a{left:.35rem}.mascot .ear-b{right:.35rem}.mascot .mask{position:absolute;top:.9rem;width:.72rem;height:.55rem;border-radius:60%;background:var(--ink)}.mascot .mask-a{left:.38rem;transform:rotate(12deg)}.mascot .mask-b{right:.38rem;transform:rotate(-12deg)}.mascot .mouth{position:absolute;left:50%;bottom:.4rem;width:1.05rem;height:.52rem;transform:translateX(-50%);border-bottom:.17rem solid var(--ink);border-radius:0 0 100% 100% / 0 0 100% 100%;background:transparent}
 .progress-ring{--progress:216deg;width:5.5rem;height:5.5rem;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) var(--progress),var(--muted) 0)}.progress-ring>div{width:4.25rem;height:4.25rem;border-radius:50%;display:grid;place-items:center;background:var(--card);grid-auto-flow:column}.progress-ring strong{font-size:1.4rem}.progress-ring span{color:var(--muted-foreground)}
 .prose-copy h1{font-family:var(--font-display);font-size:2rem;font-weight:700;line-height:1.15}.prose-copy p{margin-top:1rem;line-height:1.75;color:var(--muted-foreground)}
 .reward-kicker{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;background:var(--accent-soft);padding:.4rem .75rem;color:var(--accent-foreground);font-size:.75rem;font-weight:800;text-transform:uppercase}.reward-kicker svg{width:1rem;height:1rem}

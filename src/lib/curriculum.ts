@@ -1,0 +1,3163 @@
+/**
+ * UniDojo curriculum model.
+ *
+ * Design notes
+ * ------------
+ * Exercise types below mirror the mechanics that actually drive Duolingo's
+ * retention: short lessons (3-8 min), one decision per screen, immediate
+ * feedback on every tap, and a mix of recall styles rather than repeated
+ * multiple choice. `numeric` and `scenario` steps are what let this teach
+ * money at university level instead of staying trivial.
+ *
+ * Every lesson carries its own `sources` array. Content must be traceable to a
+ * real, checkable reference, no invented figures. Where a figure is
+ * UK-specific (student loans, ISAs) the lesson says so explicitly, because the
+ * audience is UK university students but the app may be read elsewhere.
+ */
+
+export type Locale = "en" | "ar";
+/** A string that exists in both shipping languages. */
+export type L = Record<Locale, string>;
+
+export interface Source {
+  /** Shown in-app, e.g. "MoneyHelper, Budgeting". */
+  label: string;
+  url: string;
+  /** Who publishes it, so students can judge how much to trust it. */
+  publisher: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Exercise types                                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A lesson is taught, then tested. Steps default to `teach`/`practice` based on
+ * their kind, so a lesson only has to declare `phase` when it wants to override
+ * that. Accuracy and XP are scored on practice steps only, being asked
+ * something you have not been taught yet is not a test, it is a guess.
+ */
+/**
+ * UK nation. This matters because the money rules genuinely differ: student
+ * loan payment frequency, deposit protection schemes and repayment plans are
+ * all nation-specific. Steps can be tagged with `nations` so a lesson can say
+ * different true things to different students instead of one wrong thing to
+ * everyone.
+ */
+export type Nation = "england" | "scotland" | "wales" | "northern-ireland";
+
+export const NATIONS: Array<{ id: Nation; label: L }> = [
+  { id: "england", label: { en: "England", ar: "إنجلترا" } },
+  { id: "scotland", label: { en: "Scotland", ar: "اسكتلندا" } },
+  { id: "wales", label: { en: "Wales", ar: "ويلز" } },
+  { id: "northern-ireland", label: { en: "Northern Ireland", ar: "أيرلندا الشمالية" } },
+];
+
+export type Phase = "teach" | "practice";
+
+export type StepBody =
+  /** Teaching beat: one idea, no interaction. */
+  | { k: "idea"; title: L; body: L; points?: L[] }
+  /** Worked example. Shows the numbers; asks nothing. */
+  | {
+      k: "example";
+      title: L;
+      setup: L;
+      rows: Array<{ label: L; value: L }>;
+      takeaway: L;
+    }
+  /** Common mistake, called out before the learner can make it. */
+  | { k: "watchout"; title: L; body: L }
+  /** Multiple choice with a single correct option. */
+  | { k: "choice"; prompt: L; options: L[]; answer: number; why: L }
+  /** Tap pairs to connect a term to its meaning. Good for vocabulary. */
+  | { k: "match"; prompt: L; pairs: Array<{ left: L; right: L }> }
+  /** Tap into the correct sequence. Order of `items` is the answer. */
+  | { k: "order"; prompt: L; items: L[]; why: L }
+  /** Complete the sentence by tapping words from a bank. */
+  | { k: "fill"; prompt: L; before: L; after: L; bank: L[]; answer: string[]; why: L }
+  /**
+   * Numeric input. Use ONLY where the number itself is the insight (a rate, a
+   * threshold). This is a financial literacy app, not a mental-arithmetic test:
+   * if the learner has to do multi-step arithmetic, the question is wrong.
+   */
+  | { k: "numeric"; prompt: L; unit?: string; answer: number; tolerance: number; why: L }
+  /** Sort items into buckets, e.g. need vs want, halal vs not. */
+  | { k: "categorise"; prompt: L; buckets: Array<{ name: L; items: L[] }> }
+  /** Branching real-world decision. */
+  | {
+      k: "scenario";
+      prompt: L;
+      options: Array<{ label: L; outcome: L; delta: number }>;
+    };
+
+export type Step = StepBody & {
+  phase?: Phase;
+  /** When set, this step is only shown to students in these nations. */
+  nations?: Nation[];
+};
+
+
+/**
+ * Untagged steps apply to everyone. Tagged steps apply only when the student's
+ * nation is known and matches. While nation is unknown we show untagged steps
+ * only, which is why lessons must not put nation-specific claims in untagged
+ * steps.
+ */
+export const stepApplies = (step: Step, nation: Nation | null): boolean =>
+  !step.nations || (nation !== null && step.nations.includes(nation));
+
+export const stepsFor = (steps: Step[], nation: Nation | null): Step[] =>
+  steps.filter((step) => stepApplies(step, nation));
+const TEACHING_KINDS = new Set(["idea", "example", "watchout"]);
+
+export const stepPhase = (step: Step): Phase =>
+  step.phase ?? (TEACHING_KINDS.has(step.k) ? "teach" : "practice");
+
+export interface Lesson {
+  id: string;
+  title: L;
+  /** One sentence: what the student can do afterwards. */
+  objective: L;
+  minutes: number;
+  xp: number;
+  /** Why this lesson exists at university level, not school level. */
+  relevance: L;
+  steps: Step[];
+  sources: Source[];
+}
+
+export interface Unit {
+  id: string;
+  title: L;
+  /** Units end with a checkpoint to force spaced retrieval. */
+  checkpoint?: boolean;
+  lessons: Lesson[];
+}
+
+export interface Track {
+  id: string;
+  title: L;
+  tagline: L;
+  icon: string;
+  /**
+   * Optional branches are surfaced but never gated. The Islamic finance track
+   * is optional by design: many students already know the rulings, and those
+   * who do not should not have it forced on them.
+   */
+  optional?: boolean;
+  audience?: L;
+  units: Unit[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Verified sources                                                    */
+/* ------------------------------------------------------------------ */
+
+export const SOURCES = {
+  moneyHelper: {
+    label: "Budgeting guides and free budget planner",
+    url: "https://www.moneyhelper.org.uk/en/everyday-money/budgeting",
+    publisher: "MoneyHelper (UK Money & Pensions Service)",
+  },
+  mseStudents: {
+    label: "Student money guides, loans, budgeting, bank accounts",
+    url: "https://www.moneysavingexpert.com/students/",
+    publisher: "MoneySavingExpert",
+  },
+  saasScotland: {
+    label: "Student funding in Scotland, including payment schedules",
+    url: "https://www.saas.gov.uk/",
+    publisher: "Student Awards Agency Scotland (SAAS)",
+  },
+  ifg: {
+    label: "Halal investing, Zakat and Islamic mortgage guides",
+    url: "https://www.islamicfinanceguru.com/",
+    publisher: "Islamic Finance Guru",
+  },
+  govStudentFinance: {
+    label: "Student finance: eligibility, loans and repayments",
+    url: "https://www.gov.uk/student-finance",
+    publisher: "GOV.UK",
+  },
+  govTax: {
+    label: "Income Tax rates and Personal Allowances",
+    url: "https://www.gov.uk/income-tax-rates",
+    publisher: "GOV.UK",
+  },
+  scottishTax: {
+    label: "Income Tax in Scotland, current rates and bands",
+    url: "https://www.gov.uk/scottish-income-tax",
+    publisher: "GOV.UK",
+  },
+  govNI: {
+    label: "National Insurance rates and categories",
+    url: "https://www.gov.uk/national-insurance-rates-letters",
+    publisher: "GOV.UK",
+  },
+  govDeposits: {
+    label: "Tenancy deposit protection",
+    url: "https://www.gov.uk/tenancy-deposit-protection",
+    publisher: "GOV.UK",
+  },
+  govISA: {
+    label: "Individual Savings Accounts, allowance and types",
+    url: "https://www.gov.uk/individual-savings-accounts",
+    publisher: "GOV.UK",
+  },
+  govLISA: {
+    label: "Lifetime ISA, bonus and withdrawal charge",
+    url: "https://www.gov.uk/lifetime-isa",
+    publisher: "GOV.UK",
+  },
+  govPensions: {
+    label: "Workplace pensions, automatic enrolment contributions",
+    url: "https://www.gov.uk/workplace-pensions/what-you-your-employer-and-the-government-pay",
+    publisher: "GOV.UK",
+  },
+  fscs: {
+    label: "FSCS protection for banks, building societies and credit unions",
+    url: "https://www.fscs.org.uk/what-we-cover/banks-building-societies-credit-unions/",
+    publisher: "Financial Services Compensation Scheme",
+  },
+  fcaScams: {
+    label: "Protect yourself from scams, warning signs and the firm checker",
+    url: "https://www.fca.org.uk/consumers/protect-yourself-scams",
+    publisher: "Financial Conduct Authority",
+  },
+  darulFiqh: {
+    label: "Fatwas and research papers on Islamic finance and contemporary fiqh",
+    url: "https://darulfiqh.com/",
+    publisher: "Darul Fiqh (Mufti Faraz Adam)",
+  },
+  ifgPolicy: {
+    label: "Sharia policy: stated positions, minority views and the limits of the content",
+    url: "https://www.islamicfinanceguru.com/sharia-policy",
+    publisher: "Islamic Finance Guru",
+  },
+  aaoifi: {
+    label: "Shariah standards, including Standard 21 on equity screening",
+    url: "https://aaoifi.com/",
+    publisher: "Accounting and Auditing Organization for Islamic Financial Institutions",
+  },
+  nzf: {
+    label: "Nisab, the Zakat threshold calculated from gold and silver",
+    url: "https://nzf.org.uk/nisab/",
+    publisher: "National Zakat Foundation",
+  },
+  islamicRelief: {
+    label: "Nisab value and how the threshold is set",
+    url: "https://www.islamic-relief.org.uk/giving/islamic-giving/zakat/nisab/",
+    publisher: "Islamic Relief UK",
+  },
+  moneyfacts: {
+    label: "Shariah compliant savings accounts and how expected profit rates work",
+    url: "https://moneyfactscompare.co.uk/savings-accounts/shariah-compliant-savings-accounts/",
+    publisher: "Moneyfacts",
+  },
+} as const;
+
+/* ------------------------------------------------------------------ */
+/* Tracks                                                              */
+/* ------------------------------------------------------------------ */
+
+export const tracks: Track[] = [
+  {
+    id: "money",
+    title: { en: "Money Basics", ar: "أساسيات المال" },
+    tagline: {
+      en: "Make your money behave before it runs out",
+      ar: "اجعل مالك منظماً قبل أن ينتهي",
+    },
+    icon: "£",
+    units: [
+      {
+        id: "money-u1",
+        title: { en: "Where it goes", ar: "إلى أين يذهب" },
+        lessons: [
+                              {
+            id: "money-plan",
+            title: { en: "Build a budget that bends", ar: "ابنِ ميزانية مرنة" },
+            objective: {
+              en: "Build a weekly plan you can keep for a whole term, and know what to do when a week goes over.",
+              ar: "ابنِ خطة أسبوعية تستمر عليها فصلاً كاملاً، واعرف ما تفعله حين يتجاوز أسبوع حدّه.",
+            },
+            minutes: 9,
+            xp: 150,
+            relevance: {
+              en: "How often your money arrives depends on where you are funded. Scottish students on SAAS are paid monthly, while students in England, Wales and Northern Ireland usually get theirs in a few larger instalments. Either way, spending happens daily and that gap is what you have to manage.",
+              ar: "وتيرة وصول مالك تعتمد على جهة تمويلك. الطلاب في اسكتلندا عبر SAAS يتلقون دفعات شهرية، بينما يتلقى الطلاب في إنجلترا وويلز وأيرلندا الشمالية مبالغ أكبر على دفعات أقل. وفي الحالتين، الإنفاق يومي، وهذه الفجوة هي ما عليك إدارته.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Money in bursts, spending in drips", ar: "المال دفعات والإنفاق قطرات" },
+                body: {
+                  en: "The timing of your money and the timing of your spending almost never match. That mismatch is the whole problem a budget solves.",
+                  ar: "توقيت وصول مالك وتوقيت إنفاقك لا يتطابقان إلا نادراً. هذا التباعد هو المشكلة التي تحلّها الميزانية.",
+                },
+                points: [
+                  { en: "Where you are paid monthly, rent leaving monthly is easy to line up.", ar: "إن كنت تُدفع شهرياً، فخروج الإيجار شهرياً أمر سهل الموازنة." },
+                  { en: "Where you are paid in a few large instalments, a big balance in October is not October's money. It is the whole term's.", ar: "إن كنت تتلقى دفعات كبيرة قليلة، فالرصيد الكبير في أكتوبر ليس مال أكتوبر، بل مال الفصل كله." },
+                  { en: "Food, travel and going out leave every day, in amounts small enough to ignore until they are not.", ar: "الطعام والتنقل والخروج تُصرف يومياً، بمبالغ صغيرة تتجاهلها حتى تصبح كبيرة." },
+                  { en: "Check your own provider's payment schedule before you budget. The number and timing of payments is not the same across the UK.", ar: "تحقّق من جدول الدفعات لدى جهة تمويلك قبل أن تضع الميزانية. عدد الدفعات وتوقيتها يختلفان بين أنحاء بريطانيا." },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "One term, one number", ar: "فصل واحد ورقم واحد" },
+                setup: {
+                  en: "You have rent and bills covered and £420 left for the term. Here is what that has to cover.",
+                  ar: "غطّيت الإيجار والفواتير وبقي لديك 420 جنيهاً للفصل. وهذا ما يجب أن تغطيه.",
+                },
+                rows: [
+                  { label: { en: "Term length", ar: "مدة الفصل" }, value: { en: "12 weeks", ar: "12 أسبوعاً" } },
+                  { label: { en: "Left after rent and bills", ar: "المتبقي بعد الإيجار والفواتير" }, value: { en: "£420", ar: "420 جنيهاً" } },
+                  { label: { en: "Books and course kit", ar: "الكتب ومستلزمات الدراسة" }, value: { en: "£40", ar: "40 جنيهاً" } },
+                  { label: { en: "Left to live on", ar: "المتبقي للمعيشة" }, value: { en: "£380", ar: "380 جنيهاً" } },
+                ],
+                takeaway: {
+                  en: "£380 over 12 weeks is your real weekly number. Notice it is not the £420 you first saw. Course costs are a real expense that students forget to plan for.",
+                  ar: "380 جنيهاً على 12 أسبوعاً هو رقمك الأسبوعي الحقيقي. لاحظ أنه ليس 420 جنيهاً الذي رأيته أولاً. تكاليف الدراسة مصروف حقيقي ينسى الطلاب التخطيط له.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "The monthly budget trap", ar: "فخ الميزانية الشهرية" },
+                body: {
+                  en: "Divide a term's money by months and you get a number that feels harmless. Then you try to live on it for a week and discover it was never weekly at all. Divide by the weeks you actually have, not the months a template assumes.",
+                  ar: "اقسم مال الفصل على الأشهر فتحصل على رقم يبدو هادئاً. ثم تحاول أن تعيش عليه أسبوعاً فتحتاج أن تفهم أنه لم يكن أسبوعياً أبداً. اقسم على الأسابيع التي لديك فعلاً، لا على الأشهر التي تفترضها النماذج.",
+                },
+              },
+              {
+                k: "idea",
+                title: { en: "Give every week a number", ar: "أعطِ كل أسبوع رقماً" },
+                body: {
+                  en: "A weekly number turns a scary total into a decision you make on Monday.",
+                  ar: "الرقم الأسبوعي يحوّل مبلغاً مخيفاً إلى قرار تتخذه يوم الاثنين.",
+                },
+                points: [
+                  { en: "You know what you can spend before you spend it.", ar: "تعرف ما يمكنك إنفاقه قبل أن تنفقه." },
+                  { en: "Overspending affects one week, not the whole term.", ar: "التجاوز يؤثر على أسبوع واحد، لا على الفصل كله." },
+                  { en: "A number you can hold in your head is a number you will actually use.", ar: "الرقم الذي تستطيع تذكّره هو الرقم الذي ستستخدمه فعلاً." },
+                ],
+              },
+              {
+                k: "categorise",
+                prompt: {
+                  en: "Sort these. Which leave your account no matter what you do, and which are yours to decide?",
+                  ar: "صنّف هذه. أيّها يخرج من حسابك مهما فعلت، وأيّها قرارك أنت؟",
+                },
+                buckets: [
+                  {
+                    name: { en: "Leaves anyway", ar: "يخرج على أي حال" },
+                    items: [{ en: "Rent", ar: "الإيجار" }, { en: "Phone contract", ar: "عقد الهاتف" }, { en: "Insurance", ar: "التأمين" }],
+                  },
+                  {
+                    name: { en: "Your call", ar: "قرارك أنت" },
+                    items: [{ en: "Food shop", ar: "تسوّق الطعام" }, { en: "Nights out", ar: "الخروج" }, { en: "New trainers", ar: "حذاء جديد" }],
+                  },
+                ],
+              },
+              {
+                k: "match",
+                prompt: { en: "Match each term to what it means.", ar: "طابق كل مصطلح مع معناه." },
+                pairs: [
+                  { left: { en: "Fixed cost", ar: "تكلفة ثابتة" }, right: { en: "Leaves whether or not you spend well", ar: "تخرج سواء أحسنت الإنفاق أم لا" } },
+                  { left: { en: "Variable cost", ar: "تكلفة متغيّرة" }, right: { en: "You control the amount each week", ar: "تتحكم في مبلغها كل أسبوع" } },
+                  { left: { en: "Sunk cost", ar: "تكلفة غارقة" }, right: { en: "Money already spent that you cannot recover", ar: "مال أُنفق ولا يمكن استرجاعه" } },
+                  { left: { en: "Opportunity cost", ar: "تكلفة الفرصة" }, right: { en: "The thing you gave up to afford it", ar: "الشيء الذي تنازلت عنه لتتحمّل ثمنه" } },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What does a weekly number actually protect you from?",
+                  ar: "من ماذا يحميك الرقم الأسبوعي فعلاً؟",
+                },
+                options: [
+                  { en: "Running out of money before the term ends", ar: "نفاد المال قبل انتهاء الفصل" },
+                  { en: "Spending money on things you enjoy", ar: "الإنفاق على أشياء تستمتع بها" },
+                  { en: "Needing to check your balance", ar: "الحاجة إلى تفقّد رصيدك" },
+                  { en: "Paying rent on time", ar: "دفع الإيجار في وقته" },
+                ],
+                answer: 0,
+                why: {
+                  en: "A weekly number spreads your money across the weeks you actually have. Rent being paid is a different problem, solved by setting rent money aside, not by budgeting.",
+                  ar: "الرقم الأسبوعي يوزّع مالك على الأسابيع التي لديك فعلاً. أما دفع الإيجار فمشكلة أخرى تُحل بحجز مال الإيجار جانباً، لا بالميزانية.",
+                },
+              },
+              {
+                k: "order",
+                prompt: {
+                  en: "Money arrives. Put the decisions in the right order.",
+                  ar: "وصل المال. رتّب القرارات بالترتيب الصحيح.",
+                },
+                items: [
+                  { en: "Set rent and bills aside first", ar: "اعزل الإيجار والفواتير أولاً" },
+                  { en: "Cover course costs you know are coming", ar: "غطِّ تكاليف الدراسة المعلومة مسبقاً" },
+                  { en: "Move something to savings", ar: "حوّل مبلغاً إلى المدخرات" },
+                  { en: "Divide what remains by weeks left", ar: "اقسم ما تبقّى على الأسابيع المتبقية" },
+                ],
+                why: {
+                  en: "Fixed commitments come out before anything else, because they are not optional. Savings go next, before you have a chance to absorb the money into ordinary spending.",
+                  ar: "الالتزامات الثابتة تخرج أولاً لأنها ليست اختيارية. ثم المدخرات، قبل أن يذوب المال في الإنفاق اليومي.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Week nine. You have £60 left and a close friend's birthday weekend will cost £45.",
+                  ar: "الأسبوع التاسع. بقي 60 جنيهاً وعطلة ميلاد صديق مقرّب ستكلّف 45 جنيهاً.",
+                },
+                options: [
+                  {
+                    label: { en: "Go, and eat cheaply for the week", ar: "اذهب، وقلّل الطعام هذا الأسبوع" },
+                    outcome: {
+                      en: "You stayed inside the term budget. It is a tight week, but you are not borrowing from the weeks after it.",
+                      ar: "بقيت داخل ميزانية الفصل. أسبوع ضاغط، لكنك لا تقترض من الأسابيع التالية.",
+                    },
+                    delta: 15,
+                  },
+                  {
+                    label: { en: "Go, and sort it out later", ar: "اذهب، ونرتّب الأمر لاحقاً" },
+                    outcome: {
+                      en: "£45 spent with £15 left for everything else. That gap is exactly how a student overdraft starts.",
+                      ar: "أُنفق 45 وبقي 15 لكل شيء آخر. هذه الفجوة بالضبط كيف يبدأ السحب على المكشوف.",
+                    },
+                    delta: -10,
+                  },
+                  {
+                    label: { en: "Skip it and keep the whole £45", ar: "لا تذهب واحتفظ بالـ 45 كاملة" },
+                    outcome: {
+                      en: "Your budget survives, but a plan that stops you seeing your friends is a plan you will abandon by week eleven.",
+                      ar: "ميزانيتك تنجو، لكن خطة تمنعك من رؤية أصدقائك هي خطة ستتركها بحلول الأسبوع الحادي عشر.",
+                    },
+                    delta: 5,
+                  },
+                ],
+              },
+            ],
+            sources: [SOURCES.moneyHelper, SOURCES.mseStudents, SOURCES.saasScotland],
+          },
+          {
+            id: "money-tracking",
+            title: { en: "Track without an app", ar: "تابع مصروفك بلا تطبيق" },
+            objective: {
+              en: "Know where your money went in under two minutes a week.",
+              ar: "اعرف أين ذهب مالك في أقل من دقيقتين أسبوعياً.",
+            },
+            minutes: 5,
+            xp: 90,
+            relevance: {
+              en: "Most budgets fail at data entry, not at maths. A rough number you keep beats a perfect one you abandon.",
+              ar: "معظم الميزانيات تفشل عند إدخال البيانات لا عند الحساب. رقم تقريبي تستمر عليه أفضل من رقم دقيق تتركه.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two minutes, weekly", ar: "دقيقتان كل أسبوع" },
+                body: {
+                  en: "A rough weekly total beats a perfect log you stop keeping. The goal is awareness, not accounting.",
+                  ar: "إجمالي أسبوعي تقريبي أفضل من سجل مثالي تتوقف عن كتابته. الهدف هو الوعي لا المحاسبة.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each term to what it actually means.",
+                  ar: "طابق كل مصطلح مع معناه الفعلي.",
+                },
+                pairs: [
+                  { left: { en: "Fixed cost", ar: "تكلفة ثابتة" }, right: { en: "Same every month", ar: "ثابتة شهرياً" } },
+                  { left: { en: "Variable cost", ar: "تكلفة متغيّرة" }, right: { en: "Moves week to week", ar: "تتغيّر أسبوعياً" } },
+                  { left: { en: "Sunk cost", ar: "تكلفة غارقة" }, right: { en: "Already spent, unrecoverable", ar: "أُنفقت ولا تُسترجع" } },
+                  { left: { en: "Opportunity cost", ar: "تكلفة الفرصة" }, right: { en: "What you gave up for it", ar: "ما تنازلت عنه لأجلها" } },
+                ],
+              },
+              {
+                k: "order",
+                prompt: {
+                  en: "Put the weekly check in the right order.",
+                  ar: "رتّب المراجعة الأسبوعية بالترتيب الصحيح.",
+                },
+                items: [
+                  { en: "Check your balance", ar: "تحقّق من رصيدك" },
+                  { en: "Note what left the account", ar: "سجّل ما خرج من الحساب" },
+                  { en: "Subtract the fixed costs", ar: "اخصم التكاليف الثابتة" },
+                  { en: "Divide what is left by weeks remaining", ar: "اقسم الباقي على الأسابيع المتبقية" },
+                ],
+                why: {
+                  en: "Fixed costs come out first because they are not negotiable. Only then can you see what is actually spendable.",
+                  ar: "تُخصم التكاليف الثابتة أولاً لأنها غير قابلة للتفاوض، وعندها فقط ترى ما يمكن إنفاقه فعلاً.",
+                },
+              },
+              {
+                k: "fill",
+                prompt: { en: "Complete the idea.", ar: "أكمل الفكرة." },
+                before: { en: "Money already spent is", ar: "المال الذي أُنفق بالفعل" },
+                after: {
+                  en: ",  the only question left is what it buys you next.",
+                  ar: ",  والسؤال الوحيد المتبقي هو ماذا يشتري لك لاحقاً.",
+                },
+                bank: [
+                  { en: "gone", ar: "قد ذهب" },
+                  { en: "invested", ar: "مُستثمر" },
+                  { en: "owed", ar: "مُستحق" },
+                  { en: "free", ar: "مجاني" },
+                ],
+                answer: ["gone"],
+                why: {
+                  en: "That is the sunk cost trap. A wasted £40 is wasted whether or not you sit through a bad film to justify it.",
+                  ar: "هذا هو فخ التكلفة الغارقة. الأربعون جنيهاً الضائعة ضائعة سواء أكملت الفيلم السيئ لتبريرها أم لا.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You have logged nothing for three weeks. What is the right move?",
+                  ar: "لم تسجّل شيئاً لثلاثة أسابيع. ما الخطوة الصحيحة؟",
+                },
+                options: [
+                  { en: "Start again from today", ar: "ابدأ من اليوم" },
+                  { en: "Reconstruct all three weeks", ar: "أعد بناء الأسابيع الثلاثة" },
+                  { en: "Give up on tracking", ar: "اترك التتبع" },
+                  { en: "Find a better app", ar: "ابحث عن تطبيق أفضل" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Reconstruction is exactly the chore that kills the habit. Starting from today keeps the streak and the awareness.",
+                  ar: "إعادة البناء هي العبء الذي يقتل العادة. البدء من اليوم يحفظ الاستمرارية والوعي.",
+                },
+              },
+              {
+                k: "idea",
+                title: { en: "The rule", ar: "القاعدة" },
+                body: {
+                  en: "A system you actually keep beats a better system you drop. Optimise for keeping it, not for precision.",
+                  ar: "نظام تلتزم به فعلاً أفضل من نظام أدقّ تتركه. حسّن استمراريتك لا دقّتك.",
+                },
+              },
+            ],
+            sources: [SOURCES.moneyHelper],
+          },
+          {
+            id: "money-cards",
+            title: { en: "Debit, credit, and what you owe", ar: "الخصم والائتمان وما تدين به" },
+            objective: {
+              en: "Explain the difference between money you have and money you are borrowing.",
+              ar: "اشرح الفرق بين مال تملكه ومال تستدينه.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Credit feels identical to cash at the till. The difference only appears later, which is exactly why it works on students.",
+              ar: "الائتمان يبدو كالنقد تماماً عند الدفع. والفرق يظهر لاحقاً فقط، ولهذا بالضبط يعمل مع الطلاب.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two numbers, not one", ar: "رقمان لا رقم واحد" },
+                body: {
+                  en: "A card has a balance and a limit. Confusing the two is how people spend money they do not have.",
+                  ar: "البطاقة لها رصيد وسقف. والخلط بينهما هو كيف يُنفق الناس مالاً لا يملكونه.",
+                },
+                points: [
+                  { en: "Balance is money that exists. It is yours.", ar: "الرصيد مال موجود، وهو لك." },
+                  { en: "Limit is money the bank will lend you. It is not yours.", ar: "السقف مال يقرضك البنك إياه، وليس لك." },
+                  { en: "A credit card spends the second number first, and the bill arrives later.", ar: "بطاقة الائتمان تنفق الرقم الثاني أولاً، والفاتورة تصل لاحقاً." },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "How a credit card actually behaves", ar: "كيف تتصرّف بطاقة الائتمان فعلاً" },
+                setup: { en: "A student spends £200 on a credit card with a £500 limit, and pays only the minimum.", ar: "ينفق طالب 200 جنيه على بطاقة ائتمان بسقف 500، ويسدد الحد الأدنى فقط." },
+                rows: [
+                  { label: { en: "Available credit afterwards", ar: "الائتمان المتاح بعدها" }, value: { en: "£300", ar: "300 جنيه" } },
+                  { label: { en: "Money in the account", ar: "المال في الحساب" }, value: { en: "Unchanged", ar: "لم يتغيّر" } },
+                  { label: { en: "Amount owed", ar: "المبلغ المستحق" }, value: { en: "£200", ar: "200 جنيه" } },
+                  { label: { en: "Interest if only the minimum is paid", ar: "الفائدة إن سُدّد الحد الأدنى فقط" }, value: { en: "Added monthly", ar: "تُضاف شهرياً" } },
+                ],
+                takeaway: {
+                  en: "The £300 is not extra money. It is the remainder of a loan you already took, and the interest runs while you decide what to do about it.",
+                  ar: "الـ 300 جنيه لا تعني مالاً إضافياً. إنها بقية قرض أخذته بالفعل، والفائدة تجري بينما تقرر ما ستفعله.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Minimum payments are designed to feel fine", ar: "الأقساط الدنيا مصممة لتبدو مريحة" },
+                body: {
+                  en: "Paying the minimum keeps your account healthy and keeps the debt alive. It is the option that most reliably turns a small balance into a long one.",
+                  ar: "سداد الحد الأدنى يُبقي حسابك سليماً ويُبقي الدين حياً. وهو الخيار الأكثر قدرة على تحويل رصيد صغير إلى دين طويل.",
+                },
+              },
+              {
+                k: "categorise",
+                prompt: { en: "Which of these are actually money you have?", ar: "أيّ من هذه مال تملكه فعلاً؟" },
+                buckets: [
+                  {
+                    name: { en: "Yours", ar: "ملكك" },
+                    items: [{ en: "Maintenance loan in your account", ar: "دفعة المعيشة في حسابك" }, { en: "Overdraft", ar: "السحب على المكشوف" }, { en: "Money from a part time job", ar: "مال من عمل جزئي" }],
+                  },
+                  {
+                    name: { en: "Borrowed", ar: "مقترض" },
+                    items: [{ en: "Credit card limit", ar: "سقف بطاقة الائتمان" }, { en: "Buy now pay later balance", ar: "رصيد الشراء الآجل" }],
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: { en: "A friend says their overdraft is free money because it has no interest. What is wrong with that?", ar: "يقول صديقك إن السحب على المكشوف مال مجاني لأنه بلا فائدة. ما الخطأ في ذلك؟" },
+                options: [
+                  { en: "It still has to be repaid, and the terms can change", ar: "يجب سداده، وقد تتغيّر شروطه" },
+                  { en: "It has interest and they are mistaken", ar: "عليه فائدة وهو مخطئ" },
+                  { en: "Nothing, if they are a student", ar: "لا شيء إن كان طالباً" },
+                  { en: "It affects their credit score only", ar: "يؤثر على سمعته الائتمانية فقط" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Student overdrafts are often interest free, but they are still a loan, usually repaid after graduation, and the bank sets the terms. Free of interest is not free.",
+                  ar: "كثيراً ما تكون حسابات الطلاب بلا فائدة، لكنها تبقى قرضاً يُسدَّد عادة بعد التخرّج، والبنك يضع الشروط. انتفاء الفائدة لا يعني المجانية.",
+                },
+              },
+            ],
+            sources: [SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+          {
+            id: "money-interest",
+            title: { en: "What interest is really doing", ar: "ما تفعله الفائدة حقاً" },
+            objective: {
+              en: "Recognise when a payment plan costs more than the price on the label.",
+              ar: "اعرف متى يكلّفك التقسيط أكثر من السعر المكتوب.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Buy now pay later is presented as the same price spread out. It is a credit agreement, and it behaves like one if anything goes wrong.",
+              ar: "الشراء الآجل يُقدَّم كسعر واحد موزّع على دفعات. لكنه عقد ائتمان، ويتصرّف كعقد ائتمان إن حدث أي خلل.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two numbers that decide everything", ar: "رقمان يحسمان كل شيء" },
+                body: { en: "The rate, and the length. The rate is how fast it grows. The length is how long it has to grow.", ar: "النسبة والمدة. النسبة تحدد سرعة النمو، والمدة تحدد الوقت المتاح له." },
+                points: [
+                  { en: "A low rate over a long time can cost more than a high rate over a short one.", ar: "نسبة منخفضة لمدة طويلة قد تكلّف أكثر من نسبة مرتفعة لمدة قصيرة." },
+                  { en: "The headline rate is rarely the whole cost.", ar: "النسبة المعلنة نادراً ما تكون التكلفة الكاملة." },
+                  { en: "Ask for the total repayable, not the monthly payment.", ar: "اسأل عن إجمالي السداد، لا عن القسط الشهري." },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "Same item, two ways to pay", ar: "نفس السلعة وطريقتان للدفع" },
+                setup: { en: "A laptop costs £600. The shop offers two options.", ar: "حاسوب ثمنه 600 جنيه، ويعرض المتجر خيارين." },
+                rows: [
+                  { label: { en: "Pay now", ar: "الدفع الآن" }, value: { en: "£600", ar: "600 جنيه" } },
+                  { label: { en: "Pay over 24 months", ar: "التقسيط على 24 شهراً" }, value: { en: "£32 per month", ar: "32 جنيهاً شهرياً" } },
+                  { label: { en: "Total on the plan", ar: "الإجمالي بالتقسيط" }, value: { en: "£768", ar: "768 جنيهاً" } },
+                  { label: { en: "Extra paid for the same laptop", ar: "الزيادة مقابل نفس الحاسوب" }, value: { en: "£168", ar: "168 جنيهاً" } },
+                ],
+                takeaway: {
+                  en: "The monthly figure felt small. The total is where the decision lives, and it is the number the shop is least likely to put in large print.",
+                  ar: "القسط الشهري بدا صغيراً. القرار كله في الإجمالي، وهو الرقم الأقل ظهوراً في إعلانات المتجر.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Zero percent has conditions", ar: "الـ 0% له شروط" },
+                body: {
+                  en: "Interest free offers usually depend on you paying on time every time. Miss one payment and the rate can apply from the start, not from the missed month. Always read what happens if you are late.",
+                  ar: "عروض بلا فائدة تشترط عادة السداد في الوقت كل مرة. وإن تأخرت دفعة واحدة فقد تُطبَّق النسبة من البداية، لا من الشهر المتأخر فقط. اقرأ دائماً ما يحدث عند التأخر.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: { en: "Which of these tells you what a payment plan really costs?", ar: "أي من هذه يخبرك بالتكلفة الحقيقية لخطة التقسيط؟" },
+                options: [
+                  { en: "The total repayable over the whole plan", ar: "إجمالي السداد على مدى الخطة" },
+                  { en: "The monthly payment", ar: "القسط الشهري" },
+                  { en: "The headline interest rate", ar: "نسبة الفائدة المعلنة" },
+                  { en: "The length of the plan", ar: "مدة الخطة" },
+                ],
+                answer: 0,
+                why: {
+                  en: "The total repayable already folds in the rate and the length, which is why it is the only figure you can compare across two different offers.",
+                  ar: "إجمالي السداد يجمع النسبة والمدة معاً، ولهذا هو الرقم الوحيد القابل للمقارنة بين عرضين مختلفين.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: { en: "You want a £480 phone. You can pay now, or spread it over 12 months at £46 per month.", ar: "تريد هاتفاً بـ 480 جنيهاً. يمكنك الدفع الآن أو تقسيطه على 12 شهراً بـ 46 جنيهاً شهرياً." },
+                options: [
+                  {
+                    label: { en: "Save for three months and pay in full", ar: "وفّر ثلاثة أشهر وادفع كاملاً" },
+                    outcome: { en: "You paid £480 and kept the £72 difference. Three months of waiting bought a pair of trainers.", ar: "دفعت 480 ووفّرت 72 جنيهاً فرقاً. ثلاثة أشهر انتظار اشترت لك حذاءً." },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Take the 12 month plan", ar: "اختر خطة الـ 12 شهراً" },
+                    outcome: { en: "You paid £552 for a £480 phone. That £72 was borrowed at a rate you never agreed to in those words.", ar: "دفعت 552 مقابل هاتف بـ 480. الـ 72 جنيهاً كانت قرضاً بنسبة لم توافق عليها بهذه الصياغة." },
+                    delta: -10,
+                  },
+                  {
+                    label: { en: "Buy a £250 phone outright", ar: "اشترِ هاتفاً بـ 250 نقداً" },
+                    outcome: { en: "You spent less than either option and got a working phone. Worth asking which features you actually use.", ar: "أنفقت أقل من الخيارين وحصلت على هاتف يعمل. يحسن أن تسأل أي الميزات تستخدمها فعلاً." },
+                    delta: 15,
+                  },
+                ],
+              },
+            ],
+            sources: [SOURCES.moneyHelper],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "student",
+    title: { en: "Student Life", ar: "الحياة الجامعية" },
+    tagline: { en: "Work the system you are actually inside", ar: "افهم النظام الذي تعيش داخله" },
+    icon: "⌂",
+    units: [
+      {
+        id: "student-u1",
+        title: { en: "The UK student system", ar: "نظام الطالب في بريطانيا" },
+        lessons: [
+          {
+            id: "student-loan",
+            title: { en: "Which loan plan are you on?", ar: "على أي خطة قرض أنت؟" },
+            objective: {
+              en: "Identify your repayment plan, and know what it decides for you.",
+              ar: "حدّد خطة السداد الخاصة بك، واعرف ما الذي تحدّده لك.",
+            },
+            minutes: 7,
+            xp: 110,
+            relevance: {
+              en: "Your plan is not a choice and not a status symbol. It sets the income level at which you start repaying, and that level differs by thousands of pounds depending on which funding body you applied to.",
+              ar: "خطتك ليست اختياراً ولا ميزة. هي تحدّد مستوى الدخل الذي تبدأ عنده السداد، وهذا المستوى يختلف بآلاف الجنيهات حسب جهة التمويل التي تقدّمت إليها.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Your plan is decided, not chosen", ar: "خطتك تُحدَّد ولا تُختار" },
+                body: {
+                  en: "Your repayment plan is set by two things only: which funding body you applied to, and the year you started. You cannot pick it, and it has nothing to do with your subject, your university or your grades.",
+                  ar: "خطة السداد تُحدَّد بأمرين فقط: جهة التمويل التي تقدّمت إليها، وسنة بدايتك. لا يمكنك اختيارها، ولا علاقة لها بتخصصك أو جامعتك أو درجاتك.",
+                },
+                points: [
+                  {
+                    en: "Four separate systems run in parallel: England, Wales, Scotland and Northern Ireland. Which one you applied to decides your rules.",
+                    ar: "أربعة أنظمة تعمل بالتوازي: إنجلترا وويلز واسكتلندا وأيرلندا الشمالية. الجهة التي تقدّمت إليها هي التي تحدّد قواعدك.",
+                  },
+                  {
+                    en: "Start year matters as much as nation. The same funding body can put two students on different plans if they started a decade apart.",
+                    ar: "سنة البداية لا تقل أهمية عن الدولة. الجهة نفسها قد تضع طالبين على خطتين مختلفتين إذا بدأ أحدهما قبل الآخر بعشر سنوات.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What your plan actually decides", ar: "ما الذي تحدّده خطتك فعلاً" },
+                setup: {
+                  en: "Your plan sets how much you can earn before you repay a single pound. These are the current annual thresholds.",
+                  ar: "خطتك تحدّد المبلغ الذي يمكنك كسبه قبل أن تسدّد جنيهاً واحداً. هذه هي الحدود السنوية الحالية.",
+                },
+                rows: [
+                  { label: { en: "Plan 1", ar: "خطة 1" }, value: { en: "£26,900", ar: "£26,900" } },
+                  { label: { en: "Plan 2", ar: "خطة 2" }, value: { en: "£29,385", ar: "£29,385" } },
+                  { label: { en: "Plan 4", ar: "خطة 4" }, value: { en: "£33,795", ar: "£33,795" } },
+                  { label: { en: "Plan 5", ar: "خطة 5" }, value: { en: "£25,000", ar: "£25,000" } },
+                ],
+                takeaway: {
+                  en: "Above your threshold you repay 9% of whatever you earn over it. Plan 5 starts at £25,000 while Plan 4 starts at £33,795, so the same salary can repay in England and repay nothing in Scotland.",
+                  ar: "فوق حدّك تسدّد 9% من كل ما تكسبه زيادته. خطة 5 تبدأ من £25,000 وخطة 4 تبدأ من £33,795، لذا الراتب نفسه قد يُسدَّد منه في إنجلترا ولا يُسدَّد منه شيء في اسكتلندا.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "You can hold more than one plan", ar: "يمكن أن تحمل أكثر من خطة" },
+                body: {
+                  en: "If you borrowed at different times, or studied at both undergraduate and postgraduate level, you can be on more than one plan at once. Each keeps its own threshold, and your employer has to know about all of them.",
+                  ar: "إذا اقترضت في أوقات مختلفة، أو درست البكالوريوس والدراسات العليا، فقد تكون على أكثر من خطة في الوقت نفسه. لكل خطة حدّها الخاص، وعلى جهة عملك معرفتها جميعاً.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each funding body to the plan it puts most students on.",
+                  ar: "صِل كل جهة تمويل بالخطة التي تضع عليها معظم الطلاب.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Student Finance England, started 2023", ar: "تمويل الطلاب إنجلترا، بداية 2023" },
+                    right: { en: "Plan 5", ar: "خطة 5" },
+                  },
+                  {
+                    left: { en: "Student Finance Wales", ar: "تمويل الطلاب ويلز" },
+                    right: { en: "Plan 2", ar: "خطة 2" },
+                  },
+                  {
+                    left: { en: "Student Awards Agency Scotland", ar: "هيئة منح الطلاب اسكتلندا" },
+                    right: { en: "Plan 4", ar: "خطة 4" },
+                  },
+                  {
+                    left: { en: "Student Finance Northern Ireland", ar: "تمويل الطلاب أيرلندا الشمالية" },
+                    right: { en: "Plan 1", ar: "خطة 1" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                nations: ["england"],
+                prompt: {
+                  en: "You applied to Student Finance England and started your course in 2023. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في إنجلترا وبدأت دراستك عام 2023. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 3,
+                why: {
+                  en: "Anyone applying to Student Finance England who started on or after 1 August 2023 is on Plan 5.",
+                  ar: "كل من تقدّم إلى تمويل الطلاب في إنجلترا وبدأ في 1 أغسطس 2023 أو بعده على خطة 5.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You applied to the Student Awards Agency Scotland. Which plan are you on?",
+                  ar: "تقدّمت إلى هيئة منح الطلاب في اسكتلندا. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 2,
+                why: {
+                  en: "SAAS students are on Plan 4 whether they studied an undergraduate or a postgraduate course. It does not depend on your start year, which is why Scottish graduates repay from a higher income.",
+                  ar: "طلاب اسكتلندا على خطة 4 سواء درسوا البكالوريوس أو الدراسات العليا. لا تعتمد على سنة البداية، ولهذا يبدأ الخريجون في اسكتلندا السداد من دخل أعلى.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["wales"],
+                prompt: {
+                  en: "You applied to Student Finance Wales and started your course in 2023. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في ويلز وبدأت دراستك عام 2023. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Wales did not move to Plan 5. If you applied to Student Finance Wales and started on or after 1 September 2012, you stay on Plan 2, so your threshold is higher than an English student who started the same year.",
+                  ar: "ويلز لم تنتقل إلى خطة 5. إذا تقدّمت إلى تمويل الطلاب في ويلز وبدأت في 1 سبتمبر 2012 أو بعده، تبقى على خطة 2، وحدّك أعلى من طالب في إنجلترا بدأ في السنة نفسها.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You applied to Student Finance Northern Ireland. Which plan are you on?",
+                  ar: "تقدّمت إلى تمويل الطلاب في أيرلندا الشمالية. على أي خطة أنت؟",
+                },
+                options: [
+                  { en: "Plan 1", ar: "خطة 1" },
+                  { en: "Plan 2", ar: "خطة 2" },
+                  { en: "Plan 4", ar: "خطة 4" },
+                  { en: "Plan 5", ar: "خطة 5" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Student Finance Northern Ireland puts students on Plan 1, whether undergraduate or postgraduate.",
+                  ar: "تمويل الطلاب في أيرلندا الشمالية يضع الطلاب على خطة 1، سواء في البكالوريوس أو الدراسات العليا.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which of these does not change how much you repay each month?",
+                  ar: "أي من هذه لا يغيّر المبلغ الذي تسدّده شهرياً؟",
+                },
+                options: [
+                  { en: "Your salary", ar: "راتبك" },
+                  { en: "Which plan you are on", ar: "الخطة التي أنت عليها" },
+                  { en: "The size of your outstanding balance", ar: "حجم الرصيد المتبقي عليك" },
+                  { en: "How often you are paid", ar: "عدد مرات استلامك للراتب" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Repayment is a percentage of income above your threshold. The total you owe does not enter the calculation at all, which is why a large balance is not the emergency it feels like.",
+                  ar: "السداد نسبة من الدخل فوق حدّك. إجمالي ما تدين به لا يدخل في الحساب إطلاقاً، ولهذا لا يُعد الرصيد الكبير أزمة كما يبدو.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Your payslip shows Plan 2 deductions, but the letter in your online account says Plan 4. What do you do?",
+                  ar: "قسيمة راتبك تُظهر خصماً على خطة 2، لكن الخطاب في حسابك الإلكتروني يقول خطة 4. ماذا تفعل؟",
+                },
+                options: [
+                  {
+                    label: { en: "Leave it, the difference is small", ar: "أتركه، الفرق بسيط" },
+                    outcome: {
+                      en: "You keep repaying from an income that should not be repaying at all, every month, until someone notices.",
+                      ar: "تستمر في السداد من دخل لا يجب أن يسدّد أصلاً، كل شهر، حتى ينتبه أحد.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Download your active plan type letter and show your employer",
+                      ar: "أنزّل خطاب نوع الخطة النشطة وأعرضه على جهة عملي",
+                    },
+                    outcome: {
+                      en: "Your employer corrects your payroll, and you can claim a refund for what you overpaid.",
+                      ar: "تصحّح جهة عملك كشف الرواتب، ويمكنك المطالبة باسترداد ما دفعته بالزيادة.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask payroll to stop the deductions", ar: "أطلب من قسم الرواتب إيقاف الخصم" },
+                    outcome: {
+                      en: "They cannot. Repayments come out of payroll automatically, so the fix is correcting the plan, not cancelling it.",
+                      ar: "لا يمكنهم ذلك. الخصم يخرج من الرواتب تلقائياً، والحل هو تصحيح الخطة لا إلغاؤها.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+            ],
+            sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
+          },
+          {
+            id: "student-repay",
+            title: { en: "Repayment is not a debt", ar: "السداد ليس دَيناً كالعادة" },
+            objective: {
+              en: "Explain why repayment follows your income rather than your balance, and know when the balance disappears.",
+              ar: "اشرح لماذا يتبع السداد دخلك لا رصيدك، واعرف متى يسقط الرصيد.",
+            },
+            minutes: 7,
+            xp: 110,
+            relevance: {
+              en: "Every other debt you will meet demands a fixed instalment and punishes a missed payment. This one does not. That difference is why paying it off early is often the wrong move, which is the opposite of what instinct says.",
+              ar: "كل دَين آخر ستقابله يطلب قسطاً ثابتاً ويعاقب على التأخر في السداد. هذا القرض لا يفعل ذلك. هذا الفرق هو سبب أن السداد المبكر غالباً خطأ، وهو عكس ما يمليه الحدس.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A debt that does not behave like one", ar: "دَين لا يتصرّف كالدَّين" },
+                body: {
+                  en: "Legally your student loan is a debt. In behaviour it is closer to a tax on income, and that difference is not a technicality. It changes what you should do with spare money.",
+                  ar: "قرض الطالب قانونياً دَين. لكنه في سلوكه أقرب إلى ضريبة على الدخل، وهذا الفرق ليس تفصيلاً شكلياً. إنه يغيّر ما ينبغي أن تفعله بالمال الفائض.",
+                },
+                points: [
+                  {
+                    en: "Repayment is a percentage of income above a threshold, not an instalment agreed with a lender.",
+                    ar: "السداد نسبة من الدخل فوق حدّ معيّن، وليس قسطاً متفقاً عليه مع مُقرِض.",
+                  },
+                  {
+                    en: "If your income drops below your threshold, repayments simply stop. Nobody chases you and nothing is defaulted.",
+                    ar: "إذا نزل دخلك تحت حدّك، يتوقّف السداد ببساطة. لا أحد يطاردك ولا يقع أي تعثّر.",
+                  },
+                  {
+                    en: "The balance is cancelled on a set date whether or not you cleared it, which no ordinary lender would ever agree to.",
+                    ar: "يُلغى الرصيد في تاريخ محدّد سواء سدّدته أم لا، وهذا ما لا توافق عليه أي جهة إقراض عادية.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What 9% actually looks like", ar: "كيف تبدو نسبة 9% فعلاً" },
+                setup: {
+                  en: "On Plan 2 you repay 9% of everything you earn above £29,385 a year. Here is that rule applied at three salaries.",
+                  ar: "على خطة 2 تسدّد 9% من كل ما تكسبه فوق £29,385 سنوياً. هذه هي القاعدة مطبّقة على ثلاثة رواتب.",
+                },
+                rows: [
+                  {
+                    label: { en: "Earning £30,000 a year", ar: "دخل £30,000 سنوياً" },
+                    value: { en: "about £5 a month", ar: "حوالي £5 شهرياً" },
+                  },
+                  {
+                    label: { en: "Earning £35,000 a year", ar: "دخل £35,000 سنوياً" },
+                    value: { en: "about £42 a month", ar: "حوالي £42 شهرياً" },
+                  },
+                  {
+                    label: { en: "Earning £50,000 a year", ar: "دخل £50,000 سنوياً" },
+                    value: { en: "about £155 a month", ar: "حوالي £155 شهرياً" },
+                  },
+                ],
+                takeaway: {
+                  en: "Just above the threshold the payment is almost nothing. It grows with income and it is taken from your pay before you ever see it, so you never have to find the money.",
+                  ar: "فوق الحد بقليل يكون المبلغ شبه معدوم. ينمو مع الدخل ويُخصم من راتبك قبل أن تراه، فلا تضطر للبحث عن المال.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Overpaying is often money thrown away", ar: "السداد الزائد غالباً مال مهدور" },
+                body: {
+                  en: "Most borrowers never clear the balance, because it is cancelled first. If that is your situation, every extra pound you pay is a pound you did not owe. Extra payments only make sense if you are confident you will repay the whole balance before the write off date.",
+                  ar: "معظم المقترضين لا يسدّدون الرصيد كاملاً، لأن الرصيد يُلغى قبل ذلك. إذا كانت هذه حالتك، فكل جنيه إضافي تدفعه هو جنيه لم يكن مطلوباً منك. السداد الزائد منطقي فقط إذا كنت واثقاً من سداد الرصيد كاملاً قبل تاريخ الإلغاء.",
+                },
+              },
+              {
+                k: "fill",
+                prompt: { en: "Complete the rule.", ar: "أكمل القاعدة." },
+                before: { en: "If your income falls below your threshold, your repayments", ar: "إذا نزل دخلك تحت حدّك، فإن سدادك" },
+                after: { en: "until your income rises again.", ar: "حتى يرتفع دخلك مرة أخرى." },
+                bank: [
+                  { en: "stop", ar: "يتوقّف" },
+                  { en: "double", ar: "يتضاعف" },
+                  { en: "transfer", ar: "يُحوَّل" },
+                  { en: "grow", ar: "تزداد" },
+                ],
+                answer: ["stop"],
+                why: {
+                  en: "Repayment is taken out of income. Below the threshold there is nothing to take, so the balance simply waits, and interest is still applied while it waits.",
+                  ar: "السداد يُخصم من الدخل. تحت الحد لا يوجد ما يُخصم، فينتظر الرصيد، وتُضاف الفائدة أثناء انتظاره.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You earn £22,000 a year and you are on Plan 2. How much do you repay?",
+                  ar: "تكسب £22,000 سنوياً وأنت على خطة 2. كم تسدّد؟",
+                },
+                options: [
+                  { en: "Nothing", ar: "لا شيء" },
+                  { en: "About £15 a month", ar: "حوالي £15 شهرياً" },
+                  { en: "About £55 a month", ar: "حوالي £55 شهرياً" },
+                  { en: "9% of your salary", ar: "9% من راتبك" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£22,000 is below the Plan 2 threshold of £29,385, so nothing is due. This is the single most misunderstood thing about student loans in the first years after graduating.",
+                  ar: "£22,000 أقل من حد خطة 2 البالغ £29,385، فلا يجب عليك شيء. هذا أكثر ما يُفهم خطأً عن قروض الطلاب في السنوات الأولى بعد التخرّج.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each change to what it does to your repayments.",
+                  ar: "صِل كل تغيّر بما يفعله بسدادك.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Your income falls below the threshold", ar: "دخلك ينزل تحت الحد" },
+                    right: { en: "Repayments stop", ar: "يتوقّف السداد" },
+                  },
+                  {
+                    left: { en: "Your outstanding balance grows", ar: "رصيدك المتبقي يزداد" },
+                    right: { en: "Your monthly payment does not change", ar: "دفعتك الشهرية لا تتغيّر" },
+                  },
+                  {
+                    left: { en: "You reach the write off date", ar: "تصل إلى تاريخ الإلغاء" },
+                    right: { en: "The balance is cancelled", ar: "يُلغى الرصيد" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                nations: ["england"],
+                prompt: {
+                  en: "You are on Plan 5. How long until the balance is written off?",
+                  ar: "أنت على خطة 5. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Plan 5 is written off 40 years after the April you were first due to repay. That is the longest of any plan, and it is why most Plan 5 borrowers treat the payment as a contribution rather than a debt to clear.",
+                  ar: "تُلغى خطة 5 بعد 40 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه. هذه أطول مدة بين الخطط، ولهذا يعتبر معظم المقترضين على خطة 5 الدفعة مساهمة لا دَيناً يجب إغلاقه.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You are on Plan 4. How long until the balance is written off?",
+                  ar: "أنت على خطة 4. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Plan 4 is written off 30 years after the April you were first due to repay, and it starts from the highest threshold of the four plans. A Scottish graduate repays less than an English one on the same salary, and for a shorter period.",
+                  ar: "تُلغى خطة 4 بعد 30 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه، وتبدأ من أعلى حد بين الخطط الأربع. الخريج في اسكتلندا يسدّد أقل من نظيره في إنجلترا بالراتب نفسه، ولمدة أقصر.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["wales"],
+                prompt: {
+                  en: "You are on Plan 2. How long until the balance is written off?",
+                  ar: "أنت على خطة 2. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Plan 2 is written off 30 years after the April you were first due to repay. Wales also writes off £1,500 of the maintenance loan for full time students from Wales, on top of the standard terms.",
+                  ar: "تُلغى خطة 2 بعد 30 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه. وتلغي ويلز أيضاً £1,500 من قرض المعيشة للطلاب المتفرّغين من ويلز، إضافة إلى الشروط المعتادة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You are on Plan 1. How long until the balance is written off?",
+                  ar: "أنت على خطة 1. كم من الوقت حتى يُلغى الرصيد؟",
+                },
+                options: [
+                  { en: "25 years", ar: "25 سنة" },
+                  { en: "30 years", ar: "30 سنة" },
+                  { en: "40 years", ar: "40 سنة" },
+                  { en: "It is never written off", ar: "لا يُلغى أبداً" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Plan 1 is written off 25 years after the April you were first due to repay, the shortest period of any plan. Northern Irish graduates become free of the balance sooner than anyone else.",
+                  ar: "تُلغى خطة 1 بعد 25 سنة من أبريل الذي كان يجب أن تبدأ السداد فيه، وهي أقصر مدة بين الخطط. خريجو أيرلندا الشمالية يتحرّرون من الرصيد أسرع من غيرهم.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You have £3,000 saved and you are on Plan 5, expecting to earn around £28,000 for the next few years. You are thinking about paying it against the loan. What is the strongest argument against?",
+                  ar: "لديك £3,000 مدّخرة وأنت على خطة 5، وتتوقّع أن تكسب حوالي £28,000 في السنوات القادمة. تفكّر في دفعها لإغلاق جزء من القرض. ما أقوى حجة ضد ذلك؟",
+                },
+                options: [
+                  {
+                    label: { en: "You should pay, clearing debt is always right", ar: "يجب أن تدفع، إغلاق الدَين صحيح دائماً" },
+                    outcome: {
+                      en: "On £28,000 you repay roughly £22 a month. £3,000 would take over eleven years off a loan that is cancelled in forty anyway, and you would have given up your only buffer.",
+                      ar: "على £28,000 تسدّد حوالي £22 شهرياً. إن £3,000 ستوفّر أكثر من إحدى عشرة سنة من قرض يُلغى في الأربعين على أي حال، وستكون قد فقدت احتياطك الوحيد.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "It would be spent on a balance that will be cancelled before you clear it",
+                      ar: "سيُصرف على رصيد سيُلغى قبل أن تسدّده",
+                    },
+                    outcome: {
+                      en: "Correct reasoning. The buffer protects you from borrowing at real interest, and the student loan would have disappeared on its own.",
+                      ar: "استدلال صحيح. الاحتياط يحميك من الاقتراض بفائدة حقيقية، وقرض الطالب كان سيسقط من تلقاء نفسه.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "You should pay because interest is added every month", ar: "يجب أن تدفع لأن الفائدة تُضاف كل شهر" },
+                    outcome: {
+                      en: "Interest grows the balance, but the balance is not what you pay. It is cancelled either way, so the interest figure is mostly irrelevant to what leaves your pay.",
+                      ar: "الفائدة تزيد الرصيد، لكن الرصيد ليس ما تدفعه. هو يُلغى في الحالتين، فرقم الفائدة لا أثر له تقريباً على ما يُخصم من راتبك.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "How to think about it", ar: "كيف تفكّر فيه" },
+                body: {
+                  en: "For most graduates the honest description is a contribution of 9% of income above a threshold, paid for a fixed number of years and then gone. Plan around your income, not around the balance, and you will make better decisions than someone worrying about the headline number.",
+                  ar: "بالنسبة لمعظم الخريجين، الوصف الصادق هو مساهمة بنسبة 9% من الدخل فوق حدّ معيّن، تُدفع لعدد محدّد من السنوات ثم تنتهي. خطّط حسب دخلك لا حسب الرصيد، وستتخذ قرارات أفضل من شخص يقلق من الرقم الكبير.",
+                },
+              },
+            ],
+            sources: [SOURCES.govStudentFinance, SOURCES.saasScotland, SOURCES.mseStudents],
+          },
+          {
+            id: "student-work",
+            title: { en: "Work, tax, and your payslip", ar: "العمل والضريبة وقسيمة الراتب" },
+            objective: {
+              en: "Read a payslip properly, and know which deductions should not be there.",
+              ar: "اقرأ قسيمة راتبك بوعي، واعرف أي خصم لا ينبغي أن يكون فيها.",
+            },
+            minutes: 8,
+            xp: 120,
+            relevance: {
+              en: "A term time job usually pays no income tax at all, because earnings sit under the personal allowance. Payroll systems do not always know that, and a first payslip with tax on it is one of the most common things a student never questions.",
+              ar: "العمل خلال الدراسة غالباً لا يخضع لضريبة الدخل أصلاً، لأن الدخل يقل عن الإعفاء الشخصي. لكن أنظمة الرواتب لا تعرف ذلك دائماً، وقسيمة أول راتب فيها ضريبة من أكثر ما لا يسأل عنه الطالب أبداً.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two deductions, not one", ar: "خصمان لا خصم واحد" },
+                body: {
+                  en: "Payroll takes two separate things off your pay, and they have separate thresholds. Income Tax starts above £12,570 a year. National Insurance starts above £242 a week. Both are annual limits, so a summer of full time work can cross them even if term time never does.",
+                  ar: "يُخصم من راتبك أمران منفصلان، ولكل منهما حدّه. ضريبة الدخل تبدأ فوق £12,570 سنوياً. والتأمين الوطني يبدأ فوق £242 أسبوعياً. وكلاهما حدود سنوية، لذا قد يتجاوزها عمل صيفي بدوام كامل حتى لو لم تتجاوزها أيام الدراسة.",
+                },
+                points: [
+                  {
+                    en: "The personal allowance of £12,570 applies across the whole UK, and it is what makes most student jobs tax free.",
+                    ar: "الإعفاء الشخصي البالغ £12,570 يُطبَّق في كل بريطانيا، وهو ما يجعل معظم أعمال الطلاب معفاة من الضريبة.",
+                  },
+                  {
+                    en: "National Insurance is not income tax. It can be taken even when your income tax is zero.",
+                    ar: "التأمين الوطني ليس ضريبة دخل. قد يُخصم حتى عندما تكون ضريبتك صفراً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "Where you live changes your rate", ar: "مكان إقامتك يغيّر نسبتك" },
+                setup: {
+                  en: "The personal allowance is the same everywhere, but the bands above it are not. Scotland has six bands, the rest of the UK has three.",
+                  ar: "الإعفاء الشخصي واحد في كل مكان، لكن الشرائح فوقه ليست كذلك. في اسكتلندا ست شرائح، وفي بقية بريطانيا ثلاث.",
+                },
+                rows: [
+                  {
+                    label: { en: "Starter, Scotland only", ar: "شريحة البداية، في اسكتلندا فقط" },
+                    value: { en: "19% from £12,571 to £16,537", ar: "19% من £12,571 إلى £16,537" },
+                  },
+                  {
+                    label: { en: "Basic", ar: "الشريحة الأساسية" },
+                    value: {
+                      en: "20% up to £50,270 in the rest of the UK, but only to £29,526 in Scotland",
+                      ar: "20% حتى £50,270 في بقية بريطانيا، لكن حتى £29,526 فقط في اسكتلندا",
+                    },
+                  },
+                  {
+                    label: { en: "Intermediate, Scotland only", ar: "الشريحة الوسطى، في اسكتلندا فقط" },
+                    value: { en: "21% from £29,527 to £43,662", ar: "21% من £29,527 إلى £43,662" },
+                  },
+                  {
+                    label: { en: "Higher", ar: "الشريحة العليا" },
+                    value: {
+                      en: "40% above £50,270 in the rest of the UK, but 42% above £43,663 in Scotland",
+                      ar: "40% فوق £50,270 في بقية بريطانيا، لكن 42% فوق £43,663 في اسكتلندا",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "The same salary can be taxed at a different rate depending on where you live. If you move between Scotland and the rest of the UK, your tax code changes with you.",
+                  ar: "قد يُفرض على الراتب نفسه معدل مختلف حسب مكان إقامتك. وإذا انتقلت بين اسكتلندا وبقية بريطانيا، يتغيّر رمزك الضريبي معك.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "An emergency tax code is not your tax code", ar: "الرمز الضريبي الطارئ ليس رمزك" },
+                body: {
+                  en: "Starting a first job without handing over a P45 can put you on an emergency code, which taxes you as though you had no personal allowance. If your first payslip takes tax out of a small wage, that is usually why. Give your employer a P45 or complete the starter checklist, and claim a refund for anything overpaid.",
+                  ar: "بدء أول عمل دون تسليم نموذج P45 قد يضعك على رمز طارئ يفرض عليك الضريبة كأنك بلا إعفاء شخصي. إذا خصمت أول قسيمة راتب ضريبة من أجر صغير، فهذا هو السبب عادة. سلّم جهة عملك نموذج P45 أو أكمل قائمة البداية، وطالب باسترداد ما دُفع بالزيادة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales", "northern-ireland"],
+                prompt: {
+                  en: "You earn £30,000 in England. Which rate applies to the income just above £29,527?",
+                  ar: "تكسب £30,000 في إنجلترا. أي معدل يُطبَّق على الدخل الذي يزيد قليلاً عن £29,527؟",
+                },
+                options: [
+                  { en: "0%, it is inside the allowance", ar: "0%، لأنه داخل الإعفاء" },
+                  { en: "20%", ar: "20%" },
+                  { en: "21%", ar: "21%" },
+                  { en: "40%", ar: "40%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "In England, Wales and Northern Ireland the basic rate of 20% runs all the way to £50,270, so £30,000 is still inside it. The same salary in Scotland would be one band higher.",
+                  ar: "في إنجلترا وويلز وأيرلندا الشمالية تمتد الشريحة الأساسية بمعدل 20% حتى £50,270، لذا يبقى £30,000 داخلها. الراتب نفسه في اسكتلندا يقع في شريحة أعلى.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You earn £30,000 in Scotland. Which rate applies to the income just above £29,527?",
+                  ar: "تكسب £30,000 في اسكتلندا. أي معدل يُطبَّق على الدخل الذي يزيد قليلاً عن £29,527؟",
+                },
+                options: [
+                  { en: "0%, it is inside the allowance", ar: "0%، لأنه داخل الإعفاء" },
+                  { en: "20%", ar: "20%" },
+                  { en: "21%", ar: "21%" },
+                  { en: "42%", ar: "42%" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland's basic rate stops at £29,526, and the intermediate rate of 21% takes over immediately above it. Scotland also has a starter rate of 19%, which the rest of the UK does not have at all.",
+                  ar: "تتوقف الشريحة الأساسية في اسكتلندا عند £29,526، وتبدأ الشريحة الوسطى بمعدل 21% فوراً فوقها. ولدى اسكتلندا أيضاً شريحة بداية بمعدل 19% لا وجود لها في بقية بريطانيا.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each deduction to the point at which it starts.",
+                  ar: "صِل كل خصم بالنقطة التي يبدأ منها.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Income Tax", ar: "ضريبة الدخل" },
+                    right: { en: "Above £12,570 a year", ar: "فوق £12,570 سنوياً" },
+                  },
+                  {
+                    left: { en: "National Insurance", ar: "التأمين الوطني" },
+                    right: { en: "Above £242 a week", ar: "فوق £242 أسبوعياً" },
+                  },
+                  {
+                    left: { en: "Student loan repayment", ar: "سداد قرض الطالب" },
+                    right: { en: "Above your plan threshold", ar: "فوق حدّ خطتك" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You earn £12,000 over the year from a part time job. What should be deducted?",
+                  ar: "تكسب £12,000 خلال السنة من عمل جزئي. ما الذي ينبغي خصمه؟",
+                },
+                options: [
+                  { en: "Nothing at all", ar: "لا شيء إطلاقاً" },
+                  { en: "Income Tax only", ar: "ضريبة الدخل فقط" },
+                  { en: "National Insurance only", ar: "التأمين الوطني فقط" },
+                  { en: "Both", ar: "كلاهما" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£12,000 is under the £12,570 personal allowance and under the £242 a week National Insurance threshold, so both come out at zero. If your payslip shows otherwise, your tax code is wrong.",
+                  ar: "£12,000 أقل من الإعفاء الشخصي البالغ £12,570 وأقل من حد التأمين الوطني البالغ £242 أسبوعياً، لذا يكون كلاهما صفراً. وإذا أظهرت قسيمتك غير ذلك، فرمزك الضريبي خاطئ.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Your first payslip shows £180 of tax taken from a £900 monthly wage. What is the most useful thing to do?",
+                  ar: "تُظهر أول قسيمة راتب خصم £180 ضريبة من أجر شهري قدره £900. ما أنفع خطوة تقوم بها؟",
+                },
+                options: [
+                  {
+                    label: { en: "Accept it, payroll knows best", ar: "أتقبّلها، قسم الرواتب أدرى" },
+                    outcome: {
+                      en: "You keep overpaying for the rest of the tax year. Payroll applies your tax code, it does not check whether the code suits you.",
+                      ar: "تستمر في الدفع بالزيادة لبقية السنة الضريبية. قسم الرواتب يطبّق رمزك الضريبي، ولا يتحقّق من ملاءمته لك.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Hand over a P45 or complete the starter checklist", ar: "سلّم نموذج P45 أو أكمل قائمة البداية" },
+                    outcome: {
+                      en: "Your code is corrected to include the personal allowance, and the tax already taken is refundable.",
+                      ar: "يُصحَّح رمزك ليشمل الإعفاء الشخصي، ويمكن استرداد الضريبة التي خُصمت بالفعل.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask for fewer hours to drop below the threshold", ar: "اطلب تقليل ساعاتك للنزول تحت الحد" },
+                    outcome: {
+                      en: "You reduce your income to solve a paperwork problem, and lose pay you were entitled to keep.",
+                      ar: "تقلّل دخلك لحل مشكلة ورقية، وتخسر أجراً كان من حقك الاحتفاظ به.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Read it once a month", ar: "اقرأها مرة كل شهر" },
+                body: {
+                  en: "Three numbers tell you whether a payslip is right: gross pay, total deductions and net pay. If net pay does not match the hours you worked, the tax code is the first thing to check and the payroll team is the first place to ask.",
+                  ar: "ثلاثة أرقام تخبرك إن كانت القسيمة صحيحة: الأجر الإجمالي، وإجمالي الخصومات، وصافي الأجر. وإذا لم يطابق صافي الأجر ساعات عملك، فرّمز الضريبة هو أول ما تتحقّق منه، وقسم الرواتب هو أول من تسأله.",
+                },
+              },
+            ],
+            sources: [SOURCES.govTax, SOURCES.scottishTax, SOURCES.govNI, SOURCES.moneyHelper],
+          },
+          {
+            id: "student-rent",
+            title: { en: "Rent and deposits", ar: "الإيجار والودائع" },
+            objective: {
+              en: "Know that your deposit is protected by law, and what a landlord cannot keep it for.",
+              ar: "اعرف أن وديعة إيجارك محمية قانوناً، وما لا يحق للمالك الاحتفاظ به منها.",
+            },
+            minutes: 8,
+            xp: 120,
+            relevance: {
+              en: "A deposit is often the largest single payment a student makes in the whole year, and it is the one payment most students never check was lodged anywhere. The protection is automatic only if somebody confirms it happened.",
+              ar: "الوديعة غالباً أكبر دفعة واحدة يقوم بها الطالب في السنة كلها، وهي الدفعة التي لا يتحقّق معظم الطلاب من إيداعها في أي مكان. الحماية لا تُطبَّق إلا إذا تأكّد أحد من وقوع الإيداع.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "It is your money, held by someone else", ar: "مالك، لكن في يد غيرك" },
+                body: {
+                  en: "A tenancy deposit is not rent paid early and it is not the landlord's money to spend. It stays yours, and the law requires it to be held in a government approved tenancy deposit scheme. Those schemes exist to return it to you if you meet the terms of the tenancy, do not damage the property, and pay your rent and bills.",
+                  ar: "وديعة الإيجار ليست إيجاراً مدفوعاً مقدماً وليست مالاً للمالك يتصرّف به. هي تبقى ملكك، ويلزم القانون بإيداعها في نظام ودائع معتمد من الحكومة. وهذه الأنظمة موجودة لإعادة المال إليك إذا التزمت بشروط العقد ولم تُتلف العقار ودفعت الإيجار والفواتير.",
+                },
+                points: [
+                  {
+                    en: "The deposit must be registered in a scheme. It is not enough for the landlord to promise to hold it separately.",
+                    ar: "يجب تسجيل الوديعة في نظام معتمد. ولا يكفي أن يَعِد المالك بالاحتفاظ بها منفصلة.",
+                  },
+                  {
+                    en: "The scheme matters more than the landlord's goodwill, because it is the scheme that decides who gets the money.",
+                    ar: "النظام المعتمد أهم من حسن نية المالك، لأنه هو من يقرّر من يستلم المال.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The timeline of a deposit", ar: "المسار الزمني للوديعة" },
+                setup: {
+                  en: "In England and Wales the law sets deadlines at both ends of the tenancy. Each one protects a different person.",
+                  ar: "في إنجلترا وويلز يحدّد القانون مواعيد في طرفي العقد. كل موعد يحمي طرفاً مختلفاً.",
+                },
+                rows: [
+                  {
+                    label: { en: "You pay the deposit", ar: "تدفع الوديعة" },
+                    value: { en: "Must be protected within 30 days", ar: "يجب إيداعها خلال 30 يوماً" },
+                  },
+                  {
+                    label: { en: "You both agree the amount to return", ar: "تتفقان على المبلغ المسترد" },
+                    value: { en: "Paid back within 10 days", ar: "تُرد خلال 10 أيام" },
+                  },
+                  {
+                    label: { en: "You disagree about the amount", ar: "تختلفان على المبلغ" },
+                    value: {
+                      en: "The scheme holds the money until it is resolved",
+                      ar: "يحتفظ النظام بالمال حتى تُحل المسألة",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "The deposit stays inside the scheme while a dispute runs, so a disagreement cannot be settled by one side simply keeping the money.",
+                  ar: "تبقى الوديعة داخل النظام أثناء أي نزاع، لذا لا يمكن حسم الخلاف بأن يحتفظ أحد الطرفين بالمال ببساطة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales"],
+                prompt: {
+                  en: "You rent in England. Where must your deposit be held?",
+                  ar: "تستأجر في إنجلترا. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In a government approved tenancy deposit scheme", ar: "في نظام ودائع معتمد من الحكومة" },
+                  { en: "With your university", ar: "لدى جامعتك" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 1,
+                why: {
+                  en: "England and Wales use three government approved schemes: the Deposit Protection Service, MyDeposits and the Tenancy Deposit Scheme. Your landlord must lodge it within 30 days of receiving it.",
+                  ar: "تستخدم إنجلترا وويلز ثلاثة أنظمة معتمدة: خدمة حماية الودائع، وماي ديبوزيتس، ونظام ودائع الإيجار. وعلى مالكك إيداعها خلال 30 يوماً من استلامها.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You rent in Scotland. Where must your deposit be held?",
+                  ar: "تستأجر في اسكتلندا. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In one of the England and Wales schemes", ar: "في أحد أنظمة إنجلترا وويلز" },
+                  { en: "In a separate Scottish tenancy deposit scheme", ar: "في نظام ودائع اسكتلندي مستقل" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland runs its own tenancy deposit schemes, separately from England and Wales. A landlord who only knows the English scheme names is a warning sign that the deposit may not have been lodged.",
+                  ar: "لدى اسكتلندا أنظمتها الخاصة للودائع، منفصلة عن إنجلترا وويلز. المالك الذي يعرف أسماء الأنظمة الإنجليزية فقط مؤشر على أن الوديعة قد لا تكون قد أُودعت.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["northern-ireland"],
+                prompt: {
+                  en: "You rent in Northern Ireland. Where must your deposit be held?",
+                  ar: "تستأجر في أيرلندا الشمالية. أين يجب إيداع وديعة إيجارك؟",
+                },
+                options: [
+                  { en: "In the landlord's own account", ar: "في حساب المالك الشخصي" },
+                  { en: "In one of the England and Wales schemes", ar: "في أحد أنظمة إنجلترا وويلز" },
+                  { en: "In a separate Northern Ireland tenancy deposit scheme", ar: "في نظام ودائع مستقل لأيرلندا الشمالية" },
+                  { en: "Nowhere in particular", ar: "في أي مكان، لا يهم" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Northern Ireland has its own tenancy deposit scheme, separate from the three used in England and Wales. Ask which scheme your deposit went into and get the name in writing.",
+                  ar: "لدى أيرلندا الشمالية نظام ودائع خاص بها، منفصل عن الأنظمة الثلاثة المستخدمة في إنجلترا وويلز. اسأل في أي نظام أُودعت وديعة إيجارك واحصل على الاسم كتابةً.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Your parents pay your deposit for you. Does it still need protecting?",
+                  ar: "والداك دفعا الوديعة عنك. هل تبقى بحاجة إلى حماية؟",
+                },
+                options: [
+                  { en: "No, because you did not pay it", ar: "لا، لأنك لم تدفعها" },
+                  { en: "Yes, the same rules apply", ar: "نعم، تنطبق القواعد نفسها" },
+                  { en: "Only if it is more than one month of rent", ar: "فقط إذا زادت عن إيجار شهر" },
+                  { en: "Only if they sign the tenancy too", ar: "فقط إذا وقّعا العقد أيضاً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The landlord must use a scheme even when the deposit comes from someone else, including a rent deposit scheme or a parent. Who paid it does not change the protection.",
+                  ar: "على المالك استخدام نظام معتمد حتى لو جاءت الوديعة من شخص آخر، بما في ذلك نظام ضمان الإيجار أو أحد الوالدين. من دفع لا يغيّر الحماية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You pay £200 to hold a property before the tenancy is signed. Does that need protecting?",
+                  ar: "تدفع £200 لحجز عقار قبل توقيع العقد. هل تحتاج إلى حماية؟",
+                },
+                options: [
+                  { en: "Yes, from the moment you pay it", ar: "نعم، من لحظة دفعها" },
+                  { en: "No, but it does once you become a tenant", ar: "لا، لكنها تحتاج إليها حين تصبح مستأجراً" },
+                  { en: "No, and never", ar: "لا، ولا تحتاج أبداً" },
+                  { en: "Only if the landlord keeps it", ar: "فقط إذا احتفظ بها المالك" },
+                ],
+                answer: 1,
+                why: {
+                  en: "A holding deposit does not have to be protected. Once you become a tenant it turns into a deposit, and from that point it must be lodged in a scheme.",
+                  ar: "وديعة الحجز لا يلزم حمايتها. وعندما تصبح مستأجراً تتحوّل إلى وديعة، ومن تلك اللحظة يجب إيداعها في نظام معتمد.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "At the end of the year your landlord wants to keep £300 for a carpet worn thin along the walkway. What is the strongest move?",
+                  ar: "في نهاية السنة يريد مالكك الاحتفاظ بـ £300 مقابل سجادة رقّت عند ممر المشي. ما أقوى خطوة؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay it, arguing will cost more than £300", ar: "ادفعها، الجدال سيكلّف أكثر من £300" },
+                    outcome: {
+                      en: "You fund a deduction you never tested. Disputes through the scheme are free and the money stays protected while they run.",
+                      ar: "تدفع خصماً لم تختبره قط. النزاع عبر النظام مجاني ويبقى المال محمياً أثناءه.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Raise it through the scheme and let it decide", ar: "اعرض الأمر على النظام واتركه يقرّر" },
+                    outcome: {
+                      en: "Correct move. The scheme holds the money until the dispute is settled, and ordinary wear from living in a property is the classic case where a deduction gets reduced.",
+                      ar: "خطوة صحيحة. يحتفظ النظام بالمال حتى يُحل النزاع، والاستهلاك الطبيعي من السكن هو الحالة الأشهر التي يُخفَّض فيها الخصم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Stop paying rent until it is returned", ar: "أوقف دفع الإيجار حتى تُرد" },
+                    outcome: {
+                      en: "This puts you in breach and gives the landlord a much stronger position than the carpet ever did.",
+                      ar: "هذا يضعك في إخلال بالعقد ويمنح المالك موقفاً أقوى بكثير من مسألة السجادة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Three things to do before you sign", ar: "ثلاث خطوات قبل التوقيع" },
+                body: {
+                  en: "Ask which scheme the deposit will go into. Get the scheme name and the deposit amount in writing. Photograph the whole property on the day you move in, with dates, because the condition you left it in is only ever compared against the condition you found it in.",
+                  ar: "اسأل في أي نظام ستُودع الوديعة. واحصل على اسم النظام ومبلغ الوديعة كتابةً. وصوّر العقار كاملاً يوم انتقالك مع التواريخ، لأن حالة العقار عند خروجك تُقارن دائماً بحالته عند دخولك.",
+                },
+              },
+            ],
+            sources: [SOURCES.govDeposits, SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "build",
+    title: { en: "Building Wealth", ar: "بناء الثروة" },
+    tagline: { en: "Turn a surplus into something that compounds", ar: "حوّل الفائض إلى شيء ينمو" },
+    icon: "▲",
+    units: [
+      {
+        id: "build-u1",
+        title: { en: "From buffer to compounding", ar: "من الاحتياط إلى النمو التراكمي" },
+        lessons: [
+          {
+            id: "building-buffer",
+            title: { en: "Your first £500", ar: "أول 500 جنيه" },
+            objective: {
+              en: "Build a cash buffer before you invest anything, and keep it somewhere protected.",
+              ar: "ابنِ احتياطياً نقدياً قبل أي استثمار، واحفظه في مكان محمي.",
+            },
+            minutes: 6,
+            xp: 100,
+            relevance: {
+              en: "A buffer is not a savings goal and it is not an investment. It is the thing that stops one bad week turning into a credit card balance that then costs you for years.",
+              ar: "الاحتياطي ليس هدف ادخار وليس استثماراً. إنه ما يمنع أسبوعاً سيئاً واحداً من أن يتحوّل إلى رصيد بطاقة ائتمان يكلّفك سنوات.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "The buffer comes first", ar: "الاحتياطي أولاً" },
+                body: {
+                  en: "A buffer is a small amount of cash you can reach in a day, held for the specific job of absorbing a surprise. It exists so that a broken laptop, a dental bill or a sudden train fare never has to be borrowed for.",
+                  ar: "الاحتياطي مبلغ نقدي صغير يمكنك الوصول إليه في يوم، موضوع لغرض واحد: امتصاص المفاجآت. وجوده يعني أن جهازاً تعطّل أو فاتورة طبيب أو تذكرة قطار مفاجئة لا تحتاج إلى اقتراض.",
+                },
+                points: [
+                  {
+                    en: "The size that matters first is small. A few hundred pounds covers most of what actually goes wrong for a student.",
+                    ar: "الحجم المهم في البداية صغير. بضع مئات من الجنيهات تغطي معظم ما يحدث فعلاً للطالب.",
+                  },
+                  {
+                    en: "Borrowing has a cost. Every emergency paid on credit instead of from cash is a purchase you are still paying for later.",
+                    ar: "الاقتراض له كلفة. كل طارئة تُدفع بالائتمان بدلاً من النقد هي شراء تستمر في دفع ثمنه لاحقاً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "Where your cash is protected", ar: "أين يكون نقدك محمياً" },
+                setup: {
+                  en: "If a bank fails and cannot return your money, the Financial Services Compensation Scheme pays you back automatically. The current limit is £120,000 per eligible person, per bank.",
+                  ar: "إذا تعثّر بنك ولم يستطع إعادة أموالك، يعوّضك نظام تعويض الخدمات المالية تلقائياً. الحد الحالي £120,000 لكل شخص مؤهل، لكل بنك.",
+                },
+                rows: [
+                  {
+                    label: { en: "One person, one bank", ar: "شخص واحد، بنك واحد" },
+                    value: { en: "£120,000 protected", ar: "£120,000 محمية" },
+                  },
+                  {
+                    label: { en: "Two banks sharing one licence", ar: "بنكان يتقاسمان ترخيصاً واحداً" },
+                    value: { en: "Still £120,000 in total, not each", ar: "£120,000 إجمالاً، لا لكل بنك" },
+                  },
+                  {
+                    label: { en: "A joint account", ar: "حساب مشترك" },
+                    value: { en: "£120,000 per person", ar: "£120,000 لكل شخص" },
+                  },
+                  {
+                    label: { en: "A large sum held briefly", ar: "مبلغ كبير يُحفظ مؤقتاً" },
+                    value: { en: "Up to £1.4 million for six months", ar: "حتى £1.4 مليون لمدة ستة أشهر" },
+                  },
+                ],
+                takeaway: {
+                  en: "Protection depends on a firm being authorised in the first place. If it is not, there is no scheme behind it at all.",
+                  ar: "الحماية تعتمد أولاً على أن تكون الجهة مرخّصة. وإن لم تكن، فلا يوجد أي نظام يحميها.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two brands can be one bank", ar: "علامتان قد تكونان بنكاً واحداً" },
+                body: {
+                  en: "Many banks operate several brands under a single banking licence. The £120,000 limit applies to everything you hold across all of those brands together, not to each app you happen to have. Check the licence before assuming two accounts means double the cover.",
+                  ar: "تشغّل بنوك كثيرة علامات متعددة بترخيص مصرفي واحد. حد £120,000 ينطبق على كل ما تحتفظ به في تلك العلامات مجتمعة، لا على كل تطبيق على حدة. تحقّق من الترخيص قبل أن تفترض أن حسابين يعنيان ضعف الحماية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "How much does the deposit scheme protect for one person at one bank?",
+                  ar: "كم يحمي نظام الودائع لشخص واحد في بنك واحد؟",
+                },
+                options: [
+                  { en: "£50,000", ar: "£50,000" },
+                  { en: "£85,000", ar: "£85,000" },
+                  { en: "£120,000", ar: "£120,000" },
+                  { en: "There is no limit", ar: "لا يوجد حد" },
+                ],
+                answer: 2,
+                why: {
+                  en: "The limit rose to £120,000 on 1 December 2025. £85,000 was the old figure, which is why it still appears in a lot of older advice.",
+                  ar: "ارتفع الحد إلى £120,000 في 1 ديسمبر 2025. وكان £85,000 هو الرقم السابق، ولهذا ما زال يظهر في كثير من النصائح القديمة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You have £80,000 in one bank and £60,000 in another brand that shares its licence. How much is protected?",
+                  ar: "لديك £80,000 في بنك، و£60,000 في علامة أخرى تتقاسم الترخيص نفسه. كم المبلغ المحمي؟",
+                },
+                options: [
+                  { en: "£120,000", ar: "£120,000" },
+                  { en: "£140,000", ar: "£140,000" },
+                  { en: "£240,000", ar: "£240,000" },
+                  { en: "Nothing, because there are two accounts", ar: "لا شيء، لأن هناك حسابين" },
+                ],
+                answer: 0,
+                why: {
+                  en: "One licence means one bank. Your £140,000 is treated as a single holding, so £20,000 of it sits outside the limit.",
+                  ar: "ترخيص واحد يعني بنكاً واحداً. يُعامل مجموع £140,000 كحيازة واحدة، فيبقى £20,000 منها خارج الحد.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Before trusting a savings provider with your money, what is the check that matters?",
+                  ar: "قبل أن تأتمن جهة ادخار على مالك، ما التحقّق المهم؟",
+                },
+                options: [
+                  { en: "The interest rate it advertises", ar: "سعر الفائدة الذي تعلنه" },
+                  { en: "Whether it appears on the Financial Services Register", ar: "هل تظهر في سجل الخدمات المالية" },
+                  { en: "How many reviews it has", ar: "عدد التقييمات التي لديها" },
+                  { en: "How long its website has existed", ar: "منذ متى يوجد موقعها" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The register shows whether a firm is authorised and what it is allowed to do. A provider that is not on it has no compensation scheme behind it, however convincing the website looks.",
+                  ar: "يُظهر السجل هل الجهة مرخّصة وما المسموح لها به. والجهة غير المدرجة فيه لا يقف خلفها أي نظام تعويض، مهما بدا موقعها مقنعاً.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You have £2,000 set aside and your laptop dies, needing a £600 repair. What is the best use of the buffer?",
+                  ar: "لديك £2,000 جانباً وتعطّل حاسوبك وتحتاج إصلاحاً بـ £600. ما أفضل استخدام للاحتياطي؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay the £600 from the buffer", ar: "ادفع £600 من الاحتياطي" },
+                    outcome: {
+                      en: "That is exactly the job it was built for. You keep £1,400 and you start rebuilding towards the original figure.",
+                      ar: "هذا بالضبط ما وُجد له. يتبقى لديك £1,400 وتبدأ في إعادة بناء المبلغ الأصلي.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Put it on a credit card and keep the £2,000 intact", ar: "ضعه على بطاقة ائتمان وأبقِ £2,000 كما هي" },
+                    outcome: {
+                      en: "The balance now costs you interest every month, so you pay more than £600 for the same repair. Keeping the buffer intact only looks tidy.",
+                      ar: "أصبح الرصيد يكلّفك فائدة شهرياً، فتدفع أكثر من £600 للإصلاح نفسه. والحفاظ على الاحتياطي كما هو مظهر مرتّب فقط.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "Invest the £2,000 and borrow for the repair", ar: "استثمر £2,000 واقترض للإصلاح" },
+                    outcome: {
+                      en: "You take on guaranteed borrowing costs to chase uncertain returns, which is the wrong way round.",
+                      ar: "تتحمّل كلفة اقتراض مؤكدة سعياً وراء عوائد غير مؤكدة، وهذا هو الترتيب المعكوس.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "The order of operations", ar: "ترتيب الخطوات" },
+                body: {
+                  en: "Buffer first, then clear the expensive debt, then invest. Investing before you have a buffer means the first surprise forces you to sell at whatever price the market happens to be offering that week, which is how a temporary fall becomes a permanent loss.",
+                  ar: "الاحتياطي أولاً، ثم سداد الدَين المكلف، ثم الاستثمار. الاستثمار قبل وجود احتياطي يعني أن أول مفاجأة تجبرك على البيع بالسعر الذي يعرضه السوق ذلك الأسبوع، وهكذا يتحوّل الهبوط المؤقت إلى خسارة دائمة.",
+                },
+              },
+            ],
+            sources: [SOURCES.fscs, SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+          {
+            id: "building-compound",
+            title: { en: "Compounding, honestly", ar: "النمو التراكمي بلا مبالغة" },
+            objective: {
+              en: "Understand what compounding does over long periods, and what it cannot promise.",
+              ar: "افهم ما يفعله النمو التراكمي على المدى الطويل، وما لا يمكنه أن يعدك به.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Compounding is the one genuine advantage you have at twenty, and it is also the single most oversold idea in personal finance. The difference between the real effect and the sales version is entirely about the assumptions.",
+              ar: "النمو التراكمي هو الميزة الحقيقية الوحيدة التي تملكها في العشرين، وهو أيضاً أكثر فكرة مبالغ في بيعها في المال الشخصي. الفرق بين أثره الحقيقي ونسخته الدعائية كله في الافتراضات.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Growth applied to growth", ar: "نمو يُطبَّق على النمو" },
+                body: {
+                  en: "Compounding means the return you earn starts earning a return of its own. Nothing dramatic happens in any single year. The effect comes from the years stacking up, which is why the length of time matters more than the size of the amount when you are young.",
+                  ar: "النمو التراكمي يعني أن العائد الذي تكسبه يبدأ في كسب عائد خاص به. لا شيء مذهل يحدث في سنة واحدة. الأثر يأتي من تراكم السنوات، ولهذا تكون المدة أهم من المبلغ وأنت صغير.",
+                },
+                points: [
+                  {
+                    en: "Ten years of contributions does something that two years of twice the contributions cannot copy.",
+                    ar: "عشر سنوات من المساهمات تفعل ما لا تستطيع سنتان بضعف المساهمة تقليده.",
+                  },
+                  {
+                    en: "The same mechanism works in reverse. Losses also compound, and they compound faster.",
+                    ar: "الآلية نفسها تعمل في الاتجاه المعاكس. الخسائر تتراكم أيضاً، بل أسرع.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The arithmetic, not a forecast", ar: "الحساب، لا التنبؤ" },
+                setup: {
+                  en: "Here is £100 a month at an assumed 5% a year, reinvested and left alone. The rate is chosen to show the shape of the curve. It is not a prediction and no investment promises it.",
+                  ar: "هذا £100 شهرياً بمعدل افتراضي 5% سنوياً، يُعاد استثماره ويُترك. المعدل اختير لإظهار شكل المنحنى. وهو ليس تنبؤاً ولا يضمنه أي استثمار.",
+                },
+                rows: [
+                  {
+                    label: { en: "After 10 years", ar: "بعد 10 سنوات" },
+                    value: { en: "about £15,500, of which you paid in £12,000", ar: "حوالي £15,500، دفعت منها £12,000" },
+                  },
+                  {
+                    label: { en: "After 20 years", ar: "بعد 20 سنة" },
+                    value: { en: "about £41,100, of which you paid in £24,000", ar: "حوالي £41,100، دفعت منها £24,000" },
+                  },
+                  {
+                    label: { en: "After 30 years", ar: "بعد 30 سنة" },
+                    value: { en: "about £83,200, of which you paid in £36,000", ar: "حوالي £83,200، دفعت منها £36,000" },
+                  },
+                  {
+                    label: { en: "After 40 years", ar: "بعد 40 سنة" },
+                    value: { en: "about £152,600, of which you paid in £48,000", ar: "حوالي £152,600، دفعت منها £48,000" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice where the line crosses. By the end, the growth is more than twice everything you put in, and almost all of that comes from the last years. The early years look like nothing is happening.",
+                  ar: "لاحظ أين يتقاطع الخط. في النهاية يصبح النمو أكثر من ضعف كل ما دفعته، ومعظمه يأتي من السنوات الأخيرة. أما السنوات الأولى فتبدو كأن لا شيء يحدث فيها.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "A fall and a rise are not symmetric", ar: "الهبوط والصعود ليسا متماثلين" },
+                body: {
+                  en: "If £1,000 falls by half you have £500, and getting back to £1,000 needs a rise of 100%. A 50% loss needs a 100% gain to undo. This is why protecting against large losses matters more than chasing large gains, and it is the part compounding enthusiasts tend to leave out.",
+                  ar: "إذا هبط £1,000 إلى النصف يصبح لديك £500، والعودة إلى £1,000 تحتاج ارتفاعاً بنسبة 100%. خسارة 50% تحتاج مكسباً 100% لمحوها. ولهذا فإن الحماية من الخسائر الكبيرة أهم من مطاردة المكاسب الكبيرة، وهذا ما يميل المتحمّسون للنمو التراكمي إلى إغفاله.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "An investment of £1,000 falls by 50%. What rise does it need to get back to £1,000?",
+                  ar: "استثمار بـ £1,000 هبط بنسبة 50%. ما نسبة الارتفاع اللازمة للعودة إلى £1,000؟",
+                },
+                options: [
+                  { en: "50%", ar: "50%" },
+                  { en: "75%", ar: "75%" },
+                  { en: "100%", ar: "100%" },
+                  { en: "150%", ar: "150%" },
+                ],
+                answer: 2,
+                why: {
+                  en: "£500 has to double to reach £1,000, and doubling is a rise of 100%. Losses need proportionally larger gains to recover, which is the whole reason a buffer comes before investing.",
+                  ar: "على £500 أن يتضاعف ليصل إلى £1,000، والتضاعف ارتفاع بنسبة 100%. الخسائر تحتاج مكاسب أكبر نسبياً للتعافي، ولهذا يأتي الاحتياطي قبل الاستثمار.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each idea to what it actually means.",
+                  ar: "صِل كل فكرة بمعناها الفعلي.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Starting early", ar: "البدء مبكراً" },
+                    right: { en: "Matters more than the amount at your age", ar: "أهم من المبلغ في عمرك" },
+                  },
+                  {
+                    left: { en: "A 50% fall", ar: "هبوط بنسبة 50%" },
+                    right: { en: "Needs a 100% rise to undo", ar: "يحتاج ارتفاعاً 100% لمحوه" },
+                  },
+                  {
+                    left: { en: "Three good years", ar: "ثلاث سنوات جيدة" },
+                    right: { en: "Tell you nothing about the next three", ar: "لا تخبرك شيئاً عن الثلاث القادمة" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In the table, what does the forty year row show?",
+                  ar: "في الجدول، ماذا يُظهر صف الأربعين سنة؟",
+                },
+                options: [
+                  { en: "The growth is larger than everything you paid in", ar: "النمو أكبر من كل ما دفعته" },
+                  { en: "You paid in more than you earned", ar: "دفعت أكثر مما كسبت" },
+                  { en: "The growth is the same each year", ar: "النمو ثابت كل سنة" },
+                  { en: "It proves what will happen to your money", ar: "يُثبت ما سيحدث لمالك" },
+                ],
+                answer: 0,
+                why: {
+                  en: "£48,000 paid in, about £152,600 at the end, so the growth is a little over £104,000. It is the clearest argument for starting early, and it still rests on an assumed rate.",
+                  ar: "دفعت £48,000 ووصل المبلغ إلى حوالي £152,600، أي نمو يزيد قليلاً عن £104,000. هذا أوضح حجة للبدء مبكراً، وهو مع ذلك مبني على معدل افتراضي.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "A friend shows you a chart where £1,000 became £4,000 in two years, and suggests you put your buffer in. What is the strongest response?",
+                  ar: "يعرض عليك صديق رسماً بيانياً تحوّل فيه £1,000 إلى £4,000 في سنتين، ويقترح أن تضع احتياطيك فيه. ما أقوى رد؟",
+                },
+                options: [
+                  {
+                    label: { en: "Ask which platform they used and copy it", ar: "اسأل عن المنصة التي استخدموها وقلّدها" },
+                    outcome: {
+                      en: "You are copying an outcome without the conditions that produced it, and the conditions are the part that mattered.",
+                      ar: "أنت تقلّد نتيجة دون الظروف التي أنتجتها، والظروف هي الجزء المهم.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Two years tells you nothing about the next two, and the buffer is not investable money",
+                      ar: "سنتان لا تخبرانك شيئاً عن السنتين القادمتين، والاحتياطي مال لا يُستثمر",
+                    },
+                    outcome: {
+                      en: "Two separate correct points. A short run of returns is not evidence, and money you might need at short notice should not be exposed to a fall at all.",
+                      ar: "نقطتان صحيحتان منفصلتان. سلسلة عوائد قصيرة ليست دليلاً، والمال الذي قد تحتاجه في وقت قصير لا ينبغي تعريضه للهبوط أصلاً.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Invest a small amount, then more if it keeps working", ar: "استثمر مبلغاً صغيراً، ثم زد إن استمر النجاح" },
+                    outcome: {
+                      en: "Adding after it works is buying after a rise, which is the opposite of a rule and just a way to feel safer while doing the same thing.",
+                      ar: "الإضافة بعد نجاحه شراء بعد ارتفاع، وهذا عكس القاعدة، وهو مجرد طريقة للشعور بالأمان مع فعل الشيء نفسه.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What you actually control", ar: "ما تتحكّم فيه فعلاً" },
+                body: {
+                  en: "You do not control returns, and anyone who says they do is selling something. You control how much goes in, how long it stays, what it costs you in fees, and whether you panic. Those four things decide most of the outcome.",
+                  ar: "أنت لا تتحكّم في العوائد، ومن يقول إنه يتحكّم فيها يبيع شيئاً. أنت تتحكّم في مقدار ما تدخله، وطول مدة بقائه، وكلفة الرسوم، وهل ستتصرّف بذعر. هذه الأمور الأربعة تحدّد معظم النتيجة.",
+                },
+              },
+            ],
+            sources: [SOURCES.moneyHelper, SOURCES.mseStudents],
+          },
+          {
+            id: "building-isa",
+            title: { en: "ISA versus pension", ar: "الحساب المعفى مقابل التقاعد" },
+            objective: {
+              en: "Choose the right tax wrapper for money based on when you need it.",
+              ar: "اختر الوعاء الضريبي المناسب للمال حسب موعد احتياجك إليه.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "An ISA and a pension are not two investments competing for your money. They are two containers with different rules about tax and access, and picking the wrong container for the wrong date is an expensive mistake to reverse.",
+              ar: "الحساب المعفى وصندوق التقاعد ليسا استثمارين يتنافسان على مالك. إنهما وعاءان بقواعد مختلفة في الضريبة والوصول، واختيار الوعاء الخطأ للموعد الخطأ خطأ مكلف يصعب تصحيحه.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A wrapper is not an investment", ar: "الوعاء ليس استثماراً" },
+                body: {
+                  en: "A tax wrapper is a container that decides how your money is taxed. What you put inside it, whether that is cash or investments, is a separate decision. Two people can hold identical investments and pay completely different tax on them, purely because of the wrapper.",
+                  ar: "الوعاء الضريبي حاوية تحدّد كيف يُفرض الضريبة على مالك. أما ما تضعه داخلها، نقداً كان أو استثمارات، فهو قرار منفصل. وقد يحمل شخصان الاستثمارات نفسها ويدفعان ضرائب مختلفة تماماً بسبب الوعاء فقط.",
+                },
+                points: [
+                  {
+                    en: "The ISA is the flexible wrapper. You can take money out whenever you like.",
+                    ar: "الحساب المعفى هو الوعاء المرن. يمكنك سحب المال متى شئت.",
+                  },
+                  {
+                    en: "The pension is the locked wrapper, and it is the only one where other people pay in alongside you.",
+                    ar: "التقاعد هو الوعاء المقفل، وهو الوحيد الذي يساهم فيه آخرون معك.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The two containers side by side", ar: "الوعاءان جنباً إلى جنب" },
+                setup: {
+                  en: "All figures are for the 2026 to 2027 tax year.",
+                  ar: "كل الأرقام تخص السنة الضريبية 2026 إلى 2027.",
+                },
+                rows: [
+                  {
+                    label: { en: "ISA allowance", ar: "حد الحساب المعفى" },
+                    value: {
+                      en: "£20,000 a year across all your ISAs, no tax on growth or withdrawal",
+                      ar: "£20,000 سنوياً في كل حساباتك المعفاة، بلا ضريبة على النمو أو السحب",
+                    },
+                  },
+                  {
+                    label: { en: "Lifetime ISA, part of that £20,000", ar: "حساب التقاعد المعفى، جزء من £20,000" },
+                    value: {
+                      en: "£4,000 a year, government adds 25% up to £1,000, first payment before 40, paid in until 50",
+                      ar: "£4,000 سنوياً، تضيف الحكومة 25% حتى £1,000، أول دفعة قبل 40، والمساهمة حتى 50",
+                    },
+                  },
+                  {
+                    label: { en: "Workplace pension, minimum", ar: "صندوق التقاعد، الحد الأدنى" },
+                    value: {
+                      en: "You pay 5% and your employer pays 3%, on earnings between £6,240 and £50,270",
+                      ar: "تدفع 5% ويدفع صاحب العمل 3%، على الدخل بين £6,240 و£50,270",
+                    },
+                  },
+                  {
+                    label: { en: "Tax relief on a pension", ar: "الإعفاء الضريبي على التقاعد" },
+                    value: {
+                      en: "The government tops it up, at your marginal rate of tax",
+                      ar: "تضيف الحكومة مبلغاً، بمعدلك الضريبي الحدّي",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "An ISA is money you can reach. A pension is money you cannot, and that is exactly why other people are willing to add to it.",
+                  ar: "الحساب المعفى مال يمكنك الوصول إليه. والتقاعد مال لا يمكنك الوصول إليه، ولهذا بالضبط يرغب آخرون في المساهمة فيه.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "The Lifetime ISA withdrawal trap", ar: "فخ السحب من حساب التقاعد المعفى" },
+                body: {
+                  en: "You can only take money out of a Lifetime ISA without charge to buy a first home, or from age 60, or if you are terminally ill. Any other withdrawal carries a 25% charge on the whole amount you take, including the government bonus. Put in £800, receive a £200 bonus, and withdraw the £1,000 early: the charge is £250 and you are left with £750, which is less than you paid in.",
+                  ar: "لا يمكنك سحب المال من حساب التقاعد المعفى بلا رسوم إلا لشراء أول منزل، أو من عمر 60، أو عند مرض عضال. وأي سحب آخر يحمل رسوماً 25% على كامل المبلغ المسحوب، بما في ذلك منحة الحكومة. أودع £800 واحصل على منحة £200 واسحب £1,000 مبكراً: الرسوم £250 ويتبقى لك £750، أي أقل مما دفعت.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What is the most you can pay into ISAs in one tax year?",
+                  ar: "ما أقصى مبلغ يمكنك دفعه في الحسابات المعفاة خلال سنة ضريبية واحدة؟",
+                },
+                options: [
+                  { en: "£4,000", ar: "£4,000" },
+                  { en: "£20,000", ar: "£20,000" },
+                  { en: "£50,000", ar: "£50,000" },
+                  { en: "There is no limit", ar: "لا يوجد حد" },
+                ],
+                answer: 1,
+                why: {
+                  en: "£20,000 across all your ISAs combined, and the Lifetime ISA allowance of £4,000 sits inside that total rather than on top of it.",
+                  ar: "£20,000 في كل حساباتك المعفاة مجتمعة، وحد حساب التقاعد المعفى البالغ £4,000 يقع داخل هذا الإجمالي لا فوقه.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You put £800 into a Lifetime ISA and get the £200 bonus. Next year you withdraw all £1,000 for something else. How much do you receive?",
+                  ar: "أودعت £800 في حساب التقاعد المعفى وحصلت على منحة £200. وفي السنة التالية سحبت £1,000 لسبب آخر. كم تستلم؟",
+                },
+                options: [
+                  { en: "£750", ar: "£750" },
+                  { en: "£800", ar: "£800" },
+                  { en: "£1,000", ar: "£1,000" },
+                  { en: "£1,200", ar: "£1,200" },
+                ],
+                answer: 0,
+                why: {
+                  en: "The 25% charge applies to the full £1,000, not just the bonus, so it takes £250. You end up with £750 having paid in £800, which is why the Lifetime ISA is only worth opening when you are confident about your plan.",
+                  ar: "تُطبَّق رسوم 25% على £1,000 كاملة لا على المنحة فقط، فتقتطع £250. ينتهي بك الأمر بـ £750 بعد أن دفعت £800، ولهذا لا يستحق فتح حساب التقاعد المعفى إلا عندما تكون واثقاً من خطتك.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "You are automatically enrolled in a workplace pension. What is the minimum total contribution?",
+                  ar: "أنت مشمول تلقائياً في صندوق تقاعد. ما الحد الأدنى لإجمالي المساهمة؟",
+                },
+                options: [
+                  { en: "3% in total", ar: "3% إجمالاً" },
+                  { en: "5% in total", ar: "5% إجمالاً" },
+                  { en: "8% in total", ar: "8% إجمالاً" },
+                  { en: "15% in total", ar: "15% إجمالاً" },
+                ],
+                answer: 2,
+                why: {
+                  en: "8% in total, made up of 3% from your employer and 5% from you, on earnings between £6,240 and £50,270. The employer part is money you only receive if you join, which is why opting out is usually a poor trade.",
+                  ar: "8% إجمالاً، منها 3% من صاحب العمل و5% منك، على الدخل بين £6,240 و£50,270. أما حصة صاحب العمل فهي مال لا تحصل عليه إلا إذا انضممت، ولهذا يكون الانسحاب عادة صفقة سيئة.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["england", "wales", "northern-ireland"],
+                prompt: {
+                  en: "You earn £45,000 in England and pay into a pension. At which rate does tax relief apply to your top slice of income?",
+                  ar: "تكسب £45,000 في إنجلترا وتساهم في صندوق تقاعد. بأي معدل يُطبَّق الإعفاء الضريبي على الجزء الأعلى من دخلك؟",
+                },
+                options: [
+                  { en: "20%, the basic rate", ar: "20%، الشريحة الأساسية" },
+                  { en: "40%, the higher rate", ar: "40%، الشريحة العليا" },
+                  { en: "42%, the higher rate", ar: "42%، الشريحة العليا" },
+                  { en: "No relief at this income", ar: "لا إعفاء عند هذا الدخل" },
+                ],
+                answer: 0,
+                why: {
+                  en: "In England, Wales and Northern Ireland the higher rate begins at £50,271, so £45,000 is still inside the basic rate and relief is given at 20%. The rate of relief always follows your marginal rate.",
+                  ar: "في إنجلترا وويلز وأيرلندا الشمالية تبدأ الشريحة العليا عند £50,271، لذا يبقى £45,000 داخل الشريحة الأساسية ويكون الإعفاء بنسبة 20%. ومعدل الإعفاء يتبع دائماً معدلك الحدّي.",
+                },
+              },
+              {
+                k: "choice",
+                nations: ["scotland"],
+                prompt: {
+                  en: "You earn £45,000 in Scotland and pay into a pension. At which rate does tax relief apply to your top slice of income?",
+                  ar: "تكسب £45,000 في اسكتلندا وتساهم في صندوق تقاعد. بأي معدل يُطبَّق الإعفاء الضريبي على الجزء الأعلى من دخلك؟",
+                },
+                options: [
+                  { en: "20%, the basic rate", ar: "20%، الشريحة الأساسية" },
+                  { en: "21%, the intermediate rate", ar: "21%، الشريحة الوسطى" },
+                  { en: "42%, the higher rate", ar: "42%، الشريحة العليا" },
+                  { en: "No relief at this income", ar: "لا إعفاء عند هذا الدخل" },
+                ],
+                answer: 2,
+                why: {
+                  en: "Scotland's higher rate starts at £43,663, so at £45,000 you are already in it and relief is given at 42%. Pension relief is worth more to a Scottish taxpayer at this salary than to someone on the same salary in England, purely because the higher band starts lower.",
+                  ar: "تبدأ الشريحة العليا في اسكتلندا عند £43,663، فأنت عند £45,000 داخلها والإعفاء بنسبة 42%. إعفاء التقاعد أكثر قيمة لدافع الضريبة في اسكتلندا بهذا الراتب من نظيره في إنجلترا، فقط لأن الشريحة العليا تبدأ أدنى.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are saving a house deposit and hope to buy in four years. The kind of flat you want costs around £480,000. Should the deposit go into a Lifetime ISA?",
+                  ar: "توفّر لدفعة منزل وتأمل الشراء بعد أربع سنوات. الشقة التي تريدها تكلّف حوالي £480,000. هل تضع الدفعة في حساب التقاعد المعفى؟",
+                },
+                options: [
+                  {
+                    label: { en: "Yes, the 25% bonus is free money", ar: "نعم، منحة 25% مال مجاني" },
+                    outcome: {
+                      en: "The bonus is real, but a Lifetime ISA can only be used on a first home costing £450,000 or less. At £480,000 you would face the 25% withdrawal charge and lose part of your own deposit.",
+                      ar: "المنحة حقيقية، لكن حساب التقاعد المعفى لا يُستخدم إلا لأول منزل بتكلفة £450,000 أو أقل. وعند £480,000 ستواجه رسوم سحب 25% وتخسر جزءاً من دفعتك.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: { en: "No, the price cap rules it out", ar: "لا، سقف السعر يستبعده" },
+                    outcome: {
+                      en: "Correct. A Lifetime ISA only helps if the property is £450,000 or less, the purchase is at least 12 months after your first payment, and you buy with a mortgage through a conveyancer. A plain stocks and shares ISA keeps the flexibility instead.",
+                      ar: "صحيح. حساب التقاعد المعفى لا ينفع إلا إذا كان العقار بـ £450,000 أو أقل، والشراء بعد 12 شهراً على الأقل من أول دفعة، وبتمويل عقاري عبر محامٍ. والحساب المعفى العادي يحفظ لك المرونة بدلاً من ذلك.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Yes, and buy a cheaper flat later", ar: "نعم، واشتر شقة أرخص لاحقاً" },
+                    outcome: {
+                      en: "You are letting a tax rule decide which home you buy, which is the wrong way round.",
+                      ar: "أنت تدع قاعدة ضريبية تقرّر أي منزل تشتري، وهذا ترتيب معكوس.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Match the wrapper to the date", ar: "طابق الوعاء مع الموعد" },
+                body: {
+                  en: "Ask when you need the money, then choose the container. Under five years, keep it accessible. For a first home under the price cap, the Lifetime ISA pays you to save. For retirement, the pension is hard to beat because an employer adds to it and tax relief is added on top.",
+                  ar: "اسأل متى تحتاج المال، ثم اختر الوعاء. أقل من خمس سنوات، أبقِه متاحاً. ولأول منزل تحت سقف السعر، يدفع لك حساب التقاعد المعفى مقابل الادخار. وللتقاعد، يصعب مجاراة الصندوق لأن صاحب العمل يساهم فيه ويُضاف الإعفاء الضريبي فوق ذلك.",
+                },
+              },
+            ],
+            sources: [SOURCES.govISA, SOURCES.govLISA, SOURCES.govPensions, SOURCES.moneyHelper],
+          },
+          {
+            id: "building-hype",
+            title: { en: "Crypto, tips, and hype cycles", ar: "العملات والنصائح ودورات الضجيج" },
+            objective: {
+              en: "Run a check on an opportunity before your money does it for you.",
+              ar: "افحص أي فرصة قبل أن يفحصها مالك بدلاً منك.",
+            },
+            minutes: 8,
+            xp: 140,
+            relevance: {
+              en: "The warning signs of a bad offer are not secret and they are not subtle. They are published by the regulator. The reason people still lose money is that the signs are designed to arrive at the moment you are most excited, and excitement is not a check.",
+              ar: "علامات التحذير من العرض السيئ ليست سراً وليست خفية، بل ينشرها الجهاز الرقابي. وسبب خسارة الناس أموالهم رغم ذلك أن هذه العلامات مصمّمة لتصل في اللحظة التي تكون فيها أكثر حماساً، والحماس ليس فحصاً.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "The signs are published", ar: "العلامات منشورة" },
+                body: {
+                  en: "The Financial Conduct Authority lists the warning signs of a scam, and they are worth memorising because they work across every product. An offer does not have to be a cryptocurrency to be a fraud.",
+                  ar: "تسرد هيئة السلوك المالي علامات التحذير من الاحتيال، وتستحق الحفظ لأنها تنطبق على كل المنتجات. فليس شرطاً أن يكون العرض عملة رقمية ليكون احتيالاً.",
+                },
+                points: [
+                  {
+                    en: "Was the contact unexpected? Fraudsters usually make the first move, out of the blue.",
+                    ar: "هل كان الاتصال مفاجئاً؟ المحتالون غالباً هم من يبدأ التواصل دون سابق معرفة.",
+                  },
+                  {
+                    en: "Are you being pushed to act quickly, or told the chance is only open for a short time?",
+                    ar: "هل يُدفعك أحد للتصرف بسرعة، أو يُقال إن الفرصة متاحة لفترة قصيرة فقط؟",
+                  },
+                  {
+                    en: "Is the offer kept secret, or claimed to be exclusively for you? Genuine investments are sold openly.",
+                    ar: "هل العرض سرّي، أو يُقال إنه لك وحدك؟ الاستثمارات الحقيقية تُطرح علناً.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What each sign tells you", ar: "ما تخبرك به كل علامة" },
+                setup: {
+                  en: "These are the regulator's own warning signs, and what each one is really telling you.",
+                  ar: "هذه علامات التحذير التي أعلنها الجهاز الرقابي، وما تخبرك به كل واحدة فعلاً.",
+                },
+                rows: [
+                  {
+                    label: { en: "It sounds too good to be true", ar: "يبدو أجمل من أن يكون حقيقياً" },
+                    value: { en: "It probably is", ar: "غالباً هو كذلك" },
+                  },
+                  {
+                    label: { en: "You feel flattered or chosen", ar: "تشعر بالإطراء أو بأنك مختار" },
+                    value: { en: "That is a technique, not a compliment", ar: "هذا أسلوب إقناع، لا إطراء" },
+                  },
+                  {
+                    label: { en: "You feel excited or worried", ar: "تشعر بحماس أو قلق" },
+                    value: { en: "Strong emotion is the point, so slow down", ar: "المشاعر القوية هي الهدف، فتمهّل" },
+                  },
+                  {
+                    label: { en: "They speak with authority", ar: "يتحدثون بثقة وسلطة" },
+                    value: { en: "Knowing the vocabulary is not being authorised", ar: "معرفة المصطلحات ليست ترخيصاً" },
+                  },
+                ],
+                takeaway: {
+                  en: "If you answered yes to any of these, the answer is not to think harder. It is to stop and check, using a route that did not come from the person contacting you.",
+                  ar: "إذا أجبت بنعم على أي منها، فالحل ليس التفكير أكثر. الحل هو التوقّف والتحقّق عبر طريق لم يأتِ من الشخص الذي تواصل معك.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Clone firms use real registration numbers", ar: "الشركات المقلّدة تستخدم أرقاماً حقيقية" },
+                body: {
+                  en: "Some fraudsters copy the details of a genuinely authorised firm, including its name and reference number, so a register search appears to confirm them. The defence is to use the contact details listed on the register rather than the ones you were sent. If the number in the message does not match the number on the register, you are looking at a clone.",
+                  ar: "ينسخ بعض المحتالين بيانات شركة مرخّصة حقاً، بما في ذلك اسمها ورقم تسجيلها، فيبدو البحث في السجل مصدّقاً لهم. والدفاع هو استخدام بيانات التواصل المدرجة في السجل لا التي أُرسلت إليك. وإن لم يطابق الرقم الوارد في الرسالة الرقم المذكور في السجل، فأنت أمام شركة مقلّدة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which is the strongest single warning sign?",
+                  ar: "ما أقوى علامة تحذير واحدة؟",
+                },
+                options: [
+                  {
+                    en: "An unexpected approach combined with pressure to act quickly",
+                    ar: "تواصل مفاجئ مع ضغط للتصرف بسرعة",
+                  },
+                  { en: "An investment you have not heard of before", ar: "استثمار لم تسمع به من قبل" },
+                  { en: "A company with a modern website", ar: "شركة بموقع حديث" },
+                  { en: "A product that is hard to understand", ar: "منتج يصعب فهمه" },
+                ],
+                answer: 0,
+                why: {
+                  en: "Being contacted unexpectedly is the first check, and urgency is what stops you running the others. Both together are the pattern the regulator puts at the top of its list.",
+                  ar: "التواصل المفاجئ هو أول ما تتحقّق منه، والاستعجال هو ما يمنعك من إجراء بقية الفحوص. واجتماعهما معاً هو النمط الذي يضعه الجهاز الرقابي في رأس قائمته.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "A website displays an FCA reference number. Is that enough to trust it?",
+                  ar: "يعرض موقع رقم تسجيل لدى هيئة السلوك المالي. هل يكفي ذلك للثقة به؟",
+                },
+                options: [
+                  { en: "Yes, the number cannot be faked", ar: "نعم، لا يمكن تزييف الرقم" },
+                  { en: "No, search the register yourself and use the contact details listed there", ar: "لا، ابحث في السجل بنفسك واستخدم بيانات التواصل المدرجة فيه" },
+                  { en: "Yes, if the website has been running a long time", ar: "نعم، إذا كان الموقع يعمل منذ مدة طويلة" },
+                  { en: "Only if a friend has used it", ar: "فقط إذا استخدمه صديق" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Numbers are copied from real firms all the time. The register tells you what a firm is actually permitted to do, and its listed contact details are the ones you can trust.",
+                  ar: "تُنسخ الأرقام من شركات حقيقية باستمرار. السجل يخبرك بما يُسمح للشركة فعلاً بمزاولته، وبيانات التواصل المدرجة فيه هي التي يمكنك الوثوق بها.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each situation to the right response.",
+                  ar: "صِل كل حالة بالاستجابة الصحيحة.",
+                },
+                pairs: [
+                  {
+                    left: { en: "They claim to be authorised", ar: "يدّعون أنهم مرخّصون" },
+                    right: { en: "Check the firm on the register, then call the number listed there", ar: "تحقّق من الشركة في السجل، ثم اتصل بالرقم المدرج فيه" },
+                  },
+                  {
+                    left: { en: "The email links to the regulator's website", ar: "البريد يحتوي رابطاً لموقع الجهاز الرقابي" },
+                    right: { en: "Do not click it, type the address yourself", ar: "لا تضغط عليه، اكتب العنوان بنفسك" },
+                  },
+                  {
+                    left: { en: "The offer closes today", ar: "العرض ينتهي اليوم" },
+                    right: { en: "Treat that as a warning sign, not a reason to hurry", ar: "اعتبره علامة تحذير، لا سبباً للاستعجال" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "Someone from your course shows a large gain and invites you into a group that promises high fixed returns, saying the firm is authorised but the deal is kept quiet. What is the strongest move?",
+                  ar: "يعرض عليك أحد زملائك مكسباً كبيراً ويدعوك إلى مجموعة تَعِد بعوائد ثابتة مرتفعة، ويقول إن الشركة مرخّصة لكن الاتفاق سري. ما أقوى خطوة؟",
+                },
+                options: [
+                  {
+                    label: { en: "Join for a small amount to test it", ar: "انضم بمبلغ صغير لتجربته" },
+                    outcome: {
+                      en: "A first withdrawal is often allowed on purpose, because it buys trust for a much larger one. Testing with a small amount is exactly the move the structure is built for.",
+                      ar: "يُسمح أحياناً بأول سحب عمداً، لأنه يشتري ثقة تُمكّن من سحب أكبر بكثير. والتجربة بمبلغ صغير هي بالضبط الخطوة التي بُني الهيكل لأجلها.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Decline, because guaranteed high returns and secrecy are both warning signs",
+                      ar: "ارفض، لأن العوائد المرتفعة المضمونة والسرّية علامتا تحذير",
+                    },
+                    outcome: {
+                      en: "Correct, and two separate signs at once makes it stronger. The check is free: look the firm up on the register yourself and use the listed contact details, not theirs.",
+                      ar: "صحيح، واجتماع علامتين مستقلتين يزيد الأمر وضوحاً. والفحص مجاني: ابحث عن الشركة في السجل بنفسك واستخدم بيانات التواصل المدرجة فيه لا بياناتهم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Ask your friend to send proof of their gain first", ar: "اطلب من صديقك إثبات مكسبه أولاً" },
+                    outcome: {
+                      en: "A screenshot is not evidence, and someone whose own money is already in has a reason to want you in too.",
+                      ar: "لقطة الشاشة ليست دليلاً، ومن كان ماله داخل التجربة لديه سبب ليريد دخولك معه.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "If money is already gone", ar: "إذا ذهب المال بالفعل" },
+                body: {
+                  en: "Report it to the regulator and to the national fraud reporting service, and do it quickly because early reports help recover funds and warn others. Then expect a second approach, from someone offering to get your money back for an upfront fee. That is a known follow up fraud, and the people running it read the same lists you appear on.",
+                  ar: "أبلغ الجهاز الرقابي وخدمة الإبلاغ الوطنية عن الاحتيال، وبادر بذلك لأن الإبلاغ المبكر يساعد في استعادة الأموال وتحذير الآخرين. ثم توقّع تواصلاً ثانياً من شخص يعرض إعادة أموالك مقابل رسوم مقدّمة. هذا احتيال متابعة معروف، والقائمون عليه يقرؤون القوائم نفسها التي يظهر فيها اسمك.",
+                },
+              },
+            ],
+            sources: [SOURCES.fcaScams, SOURCES.fscs, SOURCES.moneyHelper],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "islamic",
+    title: { en: "Islamic Finance", ar: "التمويل الإسلامي" },
+    tagline: { en: "Practical halal money, not a rulings revision class", ar: "مال حلال عملي، لا مراجعة أحكام" },
+    icon: "◇",
+    optional: true,
+    audience: {
+      en: "Optional branch. Assumes you know why riba is prohibited, this is about applying it to real UK products.",
+      ar: "مسار اختياري. يفترض أنك تعرف حكم الربا, التركيز هنا على تطبيقه على المنتجات الواقعية.",
+    },
+    units: [
+      {
+        id: "islamic-u1",
+        title: { en: "Applying it, not reciting it", ar: "التطبيق لا الترديد" },
+        lessons: [
+          {
+            id: "islamic-mortgage",
+            title: { en: "Reading an Islamic mortgage", ar: "قراءة رهن إسلامي" },
+            objective: {
+              en: "Tell the three main home finance structures apart, and know what to ask before signing.",
+              ar: "افرق بين هياكل التمويل العقاري الثلاثة الرئيسية، واعرف ما تسأل عنه قبل التوقيع.",
+            },
+            minutes: 9,
+            xp: 150,
+            relevance: {
+              en: "A house is the largest purchase most people ever make, and it is the point where the prohibition on interest stops being theoretical. Islamic home finance exists for this, but the products are not identical and the scholars are not unanimous about all of them.",
+              ar: "المنزل أكبر عملية شراء يقوم بها معظم الناس، وهو النقطة التي يتوقف عندها تحريم الربا عن كونه نظرياً. التمويل العقاري الإسلامي وُجد لهذا، لكن المنتجات ليست متطابقة والعلماء ليسوا متفقين على كل منها.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Lending money for interest is the thing being avoided", ar: "إقراض المال بفائدة هو ما يُتجنَّب" },
+                body: {
+                  en: "A conventional mortgage is a loan of money repaid with more money. Islamic finance reaches the same practical outcome, buying a home over time, by using a contract where the bank earns from trade, from rent, or from a share of ownership rather than from lending cash.",
+                  ar: "الرهن التقليدي قرض مال يُسدَّد بمال أكثر. التمويل الإسلامي يصل إلى النتيجة العملية نفسها، تملك منزل على مدى سنوات، عبر عقد يكسب فيه البنك من التجارة أو من الإيجار أو من حصة ملكية، لا من إقراض نقد.",
+                },
+                points: [
+                  {
+                    en: "The bank still makes money. The difference is what it is making money from.",
+                    ar: "البنك يربح في كل الأحوال. الفرق هو مصدر هذا الربح.",
+                  },
+                  {
+                    en: "Because a real asset or a real share is involved, the bank carries genuine risk, which interest on a loan does not require.",
+                    ar: "لأن هناك أصلاً حقيقياً أو حصة حقيقية، يتحمّل البنك مخاطرة حقيقية، وهو ما لا تتطلبه الفائدة على قرض.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The three structures you will meet", ar: "الهياكل الثلاثة التي ستقابلها" },
+                setup: {
+                  en: "Almost every UK Islamic home finance product is built on one of these. Knowing which one you are being offered is the first thing to establish.",
+                  ar: "كل منتج تمويل عقاري إسلامي في بريطانيا تقريباً يقوم على واحد من هذه. ومعرفة أيها يُعرض عليك هي أول ما يجب تحديده.",
+                },
+                rows: [
+                  {
+                    label: { en: "Murabaha, a cost plus sale", ar: "المرابحة، بيع بزيادة معلنة" },
+                    value: {
+                      en: "The bank buys the property and sells it to you at a disclosed markup, paid in instalments",
+                      ar: "يشتري البنك العقار ويبيعه لك بزيادة معلنة، تُسدَّد على أقساط",
+                    },
+                  },
+                  {
+                    label: { en: "Ijara, a lease", ar: "الإجارة، عقد إيجار" },
+                    value: {
+                      en: "The bank owns the property, you pay rent, and ownership usually transfers at the end",
+                      ar: "يملك البنك العقار وتدفع إيجاراً، وتنتقل الملكية عادة في النهاية",
+                    },
+                  },
+                  {
+                    label: { en: "Diminishing musharakah, a partnership", ar: "المشاركة المتناقصة، شراكة" },
+                    value: {
+                      en: "You and the bank own it together, you buy out the bank's share over time and pay rent on that share",
+                      ar: "تملكان العقار معاً، وتشتري حصة البنك تدريجياً وتدفع إيجاراً على تلك الحصة",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "In each case the money the bank receives is a profit on a sale, a rent on a lease, or a return on a share. Ask which structure you are being offered, because it changes what you actually own during the term.",
+                  ar: "في كل حالة يكون ما يستلمه البنك ربحاً على بيع، أو إيجاراً على عقد إيجار، أو عائداً على حصة. اسأل أي هيكل يُعرض عليك، لأنه يغيّر ما تملكه فعلاً خلال المدة.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Halal does not mean identical, and scholars differ", ar: "الحلال لا يعني التطابق، والعلماء يختلفون" },
+                body: {
+                  en: "Islamic Finance Guru, who have published a formal Sharia policy, describe Islamic mortgages as halal but with room for improvement and work still to be done on the products. Many UK products are priced by reference to a conventional interest benchmark, and scholars differ on how much that matters. Islamic Finance Guru state that where they hold a minority view they will flag it, and their policy is explicit that they do not issue rulings and that readers should consult their own scholars.",
+                  ar: "تصف منصة Islamic Finance Guru، التي نشرت سياسة شرعية رسمية، الرهون الإسلامية بأنها حلال لكن فيها مجالاً للتحسين وما زال هناك عمل يُنجز على المنتجات. كثير من المنتجات البريطانية يُسعَّر بالرجوع إلى مؤشر فائدة تقليدي، والعلماء يختلفون في مدى أهمية ذلك. وتنص سياسة المنصة صراحة على أنها لا تُصدر فتاوى، وأن على القارئ الرجوع إلى علمائه.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In a murabaha, what does the bank earn?",
+                  ar: "في المرابحة، من أين يكسب البنك؟",
+                },
+                options: [
+                  { en: "Interest on the money it lent you", ar: "فائدة على المال الذي أقرضك" },
+                  { en: "A markup on a sale, disclosed up front", ar: "زيادة على بيع، معلنة مقدماً" },
+                  { en: "A share of your salary", ar: "حصة من راتبك" },
+                  { en: "Nothing, it is a charity", ar: "لا شيء، فهو عمل خيري" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The bank's return comes from the sale price, not from a charge for the use of money. The markup is fixed and known when you sign, which is what separates it from a variable interest charge.",
+                  ar: "عائد البنك يأتي من ثمن البيع، لا من مقابل استخدام المال. والزيادة ثابتة ومعلومة عند التوقيع، وهذا ما يميزها عن فائدة متغيرة.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "In diminishing musharakah, what happens as you make payments?",
+                  ar: "في المشاركة المتناقصة، ماذا يحدث مع سدادك للدفعات؟",
+                },
+                options: [
+                  { en: "You repay a loan with interest", ar: "تسدّد قرضاً بفائدة" },
+                  { en: "You buy the bank's share until you own it all", ar: "تشتري حصة البنك حتى تملك العقار كاملاً" },
+                  { en: "The bank's share grows", ar: "تزداد حصة البنك" },
+                  { en: "Nothing changes until the end", ar: "لا شيء يتغير حتى النهاية" },
+                ],
+                answer: 1,
+                why: {
+                  en: "Your ownership share rises and the bank's falls. Rent is paid on the portion the bank still owns, so the rent falls as your share grows, which is a different shape from a level interest payment.",
+                  ar: "ترتفع حصتك وتنخفض حصة البنك. ويُدفع الإيجار على الجزء الذي ما زال البنك يملكه، فيقل الإيجار مع نمو حصتك، وهذا شكل مختلف عن دفعة فائدة ثابتة.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each structure to how the bank earns.",
+                  ar: "صِل كل هيكل بطريقة كسب البنك فيه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Murabaha", ar: "مرابحة" },
+                    right: { en: "A disclosed markup on a sale", ar: "زيادة معلنة على بيع" },
+                  },
+                  {
+                    left: { en: "Ijara", ar: "إجارة" },
+                    right: { en: "Rent on a property it owns", ar: "إيجار على عقار يملكه" },
+                  },
+                  {
+                    left: { en: "Diminishing musharakah", ar: "مشاركة متناقصة" },
+                    right: { en: "A return on the share it still holds", ar: "عائد على الحصة التي ما زال يملكها" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Scholars do not agree on every structure. What is the right response?",
+                  ar: "لا يتفق العلماء على كل هيكل. ما التصرف الصحيح؟",
+                },
+                options: [
+                  {
+                    en: "Check the provider's Shariah board, then consult your own scholar and read the contract",
+                    ar: "تحقّق من هيئة الرقابة الشرعية للمزوّد، ثم استشر عالمك واقرأ العقد",
+                  },
+                  { en: "Assume the word halal settles it", ar: "افترض أن كلمة حلال تحسم الأمر" },
+                  { en: "Avoid home ownership entirely", ar: "تجنّب تملك المنزل تماماً" },
+                  { en: "Take whichever is cheapest", ar: "اختر الأرخص" },
+                ],
+                answer: 0,
+                why: {
+                  en: "A provider having its own Shariah board tells you the provider's position, not yours. Where credible scholars differ, the honest approach is to find out which view you are following and why.",
+                  ar: "وجود هيئة رقابة شرعية لدى المزوّد يخبرك بموقف المزوّد لا بموقفك. وحين يختلف علماء معتبرون، فالمنهج الصادق هو معرفة أي رأي تتبع ولماذا.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are offered a home finance plan and the rent or profit rate can be reviewed during the term. What is the most useful thing to establish before signing?",
+                  ar: "يُعرض عليك برنامج تمويل عقاري وقابلية مراجعة الإيجار أو معدل الربح خلال المدة. ما أنفع ما تحدّده قبل التوقيع؟",
+                },
+                options: [
+                  {
+                    label: { en: "Accept it, all mortgages do this", ar: "اقبله، فكل الرهون تفعل ذلك" },
+                    outcome: {
+                      en: "You may have taken on a cost that can move, without knowing how it is set or what it is tied to.",
+                      ar: "قد تكون تحمّلت كلفة قابلة للتغيّر دون أن تعرف كيف تُحدَّد أو بماذا ترتبط.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "How the rate is set, what it is linked to, and how the rent reflects the share still owned",
+                      ar: "كيف يُحدَّد المعدل، وبماذا يرتبط، وكيف يعكس الإيجار الحصة التي ما زال البنك يملكها",
+                    },
+                    outcome: {
+                      en: "That is the right question. The structure only means something if the rent tracks the bank's falling share rather than sitting at a fixed level.",
+                      ar: "هذا هو السؤال الصحيح. والهيكل لا يعني شيئاً إلا إذا تبع الإيجار حصة البنك المتناقصة بدلاً من الثبات عند مستوى واحد.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Compare only the headline percentage", ar: "قارن النسبة المعلنة فقط" },
+                    outcome: {
+                      en: "Two products can show the same number and behave quite differently, because one is a rent on a falling share and the other is a payment on a fixed amount.",
+                      ar: "قد يُظهر منتجان الرقم نفسه ويتصرفان بشكل مختلف تماماً، لأن أحدهما إيجار على حصة متناقصة والآخر دفعة على مبلغ ثابت.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What to take away", ar: "ما تأخذه معك" },
+                body: {
+                  en: "Learn which structure you are being offered, ask how the bank's return is calculated and whether it can change, check that the provider has its own Shariah board, and then take the contract to a scholar you trust before you sign. This lesson explains the mechanics. It does not rule on whether a particular product is permissible for you.",
+                  ar: "اعرف أي هيكل يُعرض عليك، واسأل كيف يُحسب عائد البنك وهل يمكن أن يتغيّر، وتحقّق من وجود هيئة رقابة شرعية لدى المزوّد، ثم اعرض العقد على عالم تثق به قبل التوقيع. هذا الدرس يشرح الآلية، ولا يحكم على جواز منتج بعينه لك.",
+                },
+              },
+            ],
+            sources: [SOURCES.ifg, SOURCES.ifgPolicy, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-screening",
+            title: { en: "Screening a stock properly", ar: "فحص سهم بعناية" },
+            objective: {
+              en: "Apply the business and financial screens, and understand why screeners disagree.",
+              ar: "طبّق الفحصين: النشاط والمالي، وافهم لماذا تختلف نتائج الفاحصين.",
+            },
+            minutes: 9,
+            xp: 150,
+            relevance: {
+              en: "Most large companies carry some debt and earn some interest somewhere. That is why a share is not judged only on what the company does, but also on how it is financed, and why the numbers matter as much as the business itself.",
+              ar: "معظم الشركات الكبيرة تحمل بعض الدَين وتكسب بعض الفائدة في مكان ما. ولهذا لا يُحكم على السهم بما تفعله الشركة فقط، بل أيضاً بكيفية تمويلها، ولهذا تكون الأرقام مهمة بقدر أهمية النشاط نفسه.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Two screens, not one", ar: "فحصان لا فحص واحد" },
+                body: {
+                  en: "Screening a share means answering two separate questions. What does the company actually do, and how is it financed? A company can pass the first and fail the second.",
+                  ar: "فحص السهم يعني الإجابة على سؤالين منفصلين: ماذا تفعل الشركة فعلاً، وكيف تُموَّل؟ وقد تنجح الشركة في الأول وتفشل في الثاني.",
+                },
+                points: [
+                  {
+                    en: "The business screen looks at the activity itself, such as alcohol, gambling or conventional banking, and it allows no small percentage of that.",
+                    ar: "فحص النشاط ينظر إلى النشاط ذاته، كالخمر أو القمار أو البنوك التقليدية، ولا يسمح بنسبة صغيرة منه.",
+                  },
+                  {
+                    en: "The financial screen looks at the balance sheet, because interest-bearing debt and interest income can appear in an otherwise ordinary business.",
+                    ar: "الفحص المالي ينظر إلى الميزانية، لأن الدَين بفائدة ودخل الفائدة قد يظهران في شركة عادية في ما عدا ذلك.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "How the financial screen is applied", ar: "كيف يُطبَّق الفحص المالي" },
+                setup: {
+                  en: "AAOIFI, the Accounting and Auditing Organization for Islamic Financial Institutions, sets Shariah Standard 21. It was founded in 1991 and its standards are followed by institutions in over 45 countries. The financial screen is expressed as ratios.",
+                  ar: "وضعت هيئة المحاسبة والمراجعة للمؤسسات المالية الإسلامية (AAOIFI) المعيار الشرعي رقم 21. تأسست عام 1991 وتتبع معاييرها مؤسسات في أكثر من 45 دولة. ويُعبَّر عن الفحص المالي بنسب.",
+                },
+                rows: [
+                  {
+                    label: { en: "Interest-bearing debt", ar: "الدَين بفائدة" },
+                    value: { en: "under 30% of market capitalisation", ar: "أقل من 30% من القيمة السوقية" },
+                  },
+                  {
+                    label: { en: "Income from interest", ar: "الدخل من الفائدة" },
+                    value: { en: "under 5% of revenue", ar: "أقل من 5% من الإيرادات" },
+                  },
+                  {
+                    label: { en: "Cash and interest-bearing securities", ar: "النقد والأوراق المالية بفائدة" },
+                    value: { en: "under 30% of market capitalisation", ar: "أقل من 30% من القيمة السوقية" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice that these are small tolerances, not permissions. A company is not being blessed for earning interest, it is being judged as an acceptable investment despite a small unavoidable amount.",
+                  ar: "لاحظ أن هذه نسب سماح صغيرة، لا إباحات. فالشركة لا تُبارَك لأجل كسبها فائدة، بل تُقيَّم كاستثمار مقبول رغم مبلغ صغير لا يمكن تجنّبه.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two screeners can disagree about the same stock", ar: "قد يختلف فاحصان على السهم نفسه" },
+                body: {
+                  en: "Several standards are in use alongside AAOIFI, including the Dow Jones Islamic Market, FTSE and MSCI methodologies. They define the ratios differently and use different denominators, so a company can pass one screen and fail another. The answer you get depends on the standard being applied, and taking one app's verdict as final is a mistake.",
+                  ar: "تُستخدم إلى جانب AAOIFI معايير عدة، منها منهجيات داو جونز الإسلامية وفوتسي ومورجان ستانلي. وهي تعرّف النسب بشكل مختلف وتستخدم مقامات مختلفة، فقد تنجح شركة في فحص وتفشل في آخر. والجواب الذي تحصل عليه يعتمد على المعيار المطبَّق، واعتبار نتيجة تطبيق واحد نهائية خطأ.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Which screen comes first?",
+                  ar: "أي فحص يأتي أولاً؟",
+                },
+                options: [
+                  { en: "The financial ratios", ar: "النسب المالية" },
+                  { en: "What the business actually does", ar: "ما تفعله الشركة فعلاً" },
+                  { en: "The share price", ar: "سعر السهم" },
+                  { en: "How long the company has existed", ar: "منذ متى توجد الشركة" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The business screen allows no tolerance at all. If the core activity is excluded, no ratio rescues it. Only if the activity is acceptable do the financial ratios come into play.",
+                  ar: "فحص النشاط لا يسمح بأي نسبة إطلاقاً. فإن كان النشاط الأساسي مستبعداً، لم تنفعه أي نسبة. ولا تدخل النسب المالية في الحساب إلا إذا كان النشاط مقبولاً.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "A company has interest-bearing debt equal to 40% of its market capitalisation. Does it pass the AAOIFI debt screen?",
+                  ar: "شركة دَينها بفائدة يساوي 40% من قيمتها السوقية. هل تنجح في فحص الدَين لدى AAOIFI؟",
+                },
+                options: [
+                  { en: "Yes, any amount is allowed", ar: "نعم، أي مبلغ مسموح" },
+                  { en: "No, the limit is under 30%", ar: "لا، الحد أقل من 30%" },
+                  { en: "Only if it pays no interest", ar: "فقط إن لم تدفع فائدة" },
+                  { en: "Only if its revenue is under 5%", ar: "فقط إن كانت إيراداتها أقل من 5%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "40% is above the 30% ceiling, so it fails. This is the kind of case where a company that looks perfectly ordinary can still be screened out, because of how it is financed rather than what it sells.",
+                  ar: "40% يتجاوز سقف 30%، فيفشل. وهذه هي الحالة التي قد تُستبعد فيها شركة تبدو عادية تماماً، بسبب طريقة تمويلها لا بسبب ما تبيعه.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each screen to what it measures.",
+                  ar: "صِل كل فحص بما يقيسه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Business activity screen", ar: "فحص النشاط" },
+                    right: { en: "What the company sells or does", ar: "ما تبيعه الشركة أو تفعله" },
+                  },
+                  {
+                    left: { en: "Debt ratio", ar: "نسبة الدَين" },
+                    right: { en: "How the company is financed", ar: "كيف تُموَّل الشركة" },
+                  },
+                  {
+                    left: { en: "Interest income ratio", ar: "نسبة دخل الفائدة" },
+                    right: { en: "How much it earns from interest", ar: "كم تكسب من الفائدة" },
+                  },
+                ],
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Why might two halal screeners give different answers on the same stock?",
+                  ar: "لماذا قد يعطي فاحصان مختلفان نتيجة مختلفة على السهم نفسه؟",
+                },
+                options: [
+                  { en: "One of them is wrong", ar: "أحدهما مخطئ" },
+                  { en: "They apply different standards, ratios and denominators", ar: "يطبّقان معايير ونسباً ومقامات مختلفة" },
+                  { en: "The share price changed", ar: "تغيّر سعر السهم" },
+                  { en: "It is random", ar: "الأمر عشوائي" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The standards genuinely differ. That is not a flaw to be resolved by picking the app that gives the answer you prefer, it is a reason to find out which standard you are following.",
+                  ar: "المعايير مختلفة فعلاً. وهذا ليس خللاً يُحل باختيار التطبيق الذي يعطي الجواب الذي تفضّله، بل سبب لمعرفة أي معيار تتبعه.",
+                },
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "A stock appears on one app's halal list and fails another. What is the most useful next step?",
+                  ar: "يظهر سهم في قائمة حلال لتطبيق ويفشل في آخر. ما أنفع خطوة تالية؟",
+                },
+                options: [
+                  {
+                    label: { en: "Use the app whose answer you prefer", ar: "استخدم التطبيق الذي تفضّل جوابه" },
+                    outcome: {
+                      en: "That is choosing the conclusion and then finding the method, which works in neither investing nor law.",
+                      ar: "هذا اختيار للنتيجة ثم البحث عن طريقة، وهو لا يصح في الاستثمار ولا في الفقه.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Find out which standard each app applies, and check the failing ratio against your own view",
+                      ar: "اعرف المعيار الذي يطبّقه كل تطبيق، وتحقّق من النسبة الراسبة مقابل رأيك",
+                    },
+                    outcome: {
+                      en: "Correct. The disagreement is usually traceable to one specific ratio crossing one specific threshold, and that is a question you can actually put to a scholar.",
+                      ar: "صحيح. الخلاف عادة يعود إلى نسبة محددة تتجاوز حداً محدداً، وهذا سؤال يمكنك فعلاً طرحه على عالم.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Avoid all shares", ar: "تجنّب كل الأسهم" },
+                    outcome: {
+                      en: "That removes the question rather than answering it, and gives up a legitimate route to building wealth.",
+                      ar: "هذا يحذف السؤال بدلاً من الإجابة عليه، ويتخلى عن طريق مشروع لبناء الثروة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Screening is arithmetic, not a feeling", ar: "الفحص حساب لا شعور" },
+                body: {
+                  en: "You do not need to like a company for it to pass, and liking it will not make it pass. Learn which standard you are following, apply the ratios, and where the standards disagree, take the actual disagreement to a scholar rather than to the app. This lesson explains the method. It does not rule on any particular share.",
+                  ar: "لا يلزمك أن تحب الشركة لتنجح، ومحبتها لن تُنجحها. اعرف أي معيار تتبع، وطبّق النسب، وحين تختلف المعايير اعرض الخلاف الحقيقي على عالم لا على التطبيق. هذا الدرس يشرح الطريقة، ولا يحكم على سهم بعينه.",
+                },
+              },
+            ],
+            sources: [SOURCES.aaoifi, SOURCES.ifg, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-zakat",
+            title: { en: "Zakat on a student's assets", ar: "الزكاة على أموال الطالب" },
+            objective: {
+              en: "Work out whether Zakat applies to you at all, and on what.",
+              ar: "حدّد إن كانت الزكاة تجب عليك أصلاً، وعلى أي مال.",
+            },
+            minutes: 8,
+            xp: 130,
+            relevance: {
+              en: "Students usually assume they owe nothing, and usually they are right, but the reasoning matters. Zakat falls on wealth that sits, not on income that arrives, and most student money is spent soon after it lands.",
+              ar: "يفترض الطلاب عادة أن لا شيء عليهم، وهم غالباً محقّون، لكن الاستدلال مهم. الزكاة تتعلق بالمال الذي يستقر، لا بالدخل الذي يصل، ومعظم أموال الطالب تُنفق بعد وصولها بقليل.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "A charge on wealth, not on income", ar: "زكاة على المال لا على الدخل" },
+                body: {
+                  en: "Zakat is the third pillar and it works differently from the tax you already know. It is not taken from what you earn. It falls on wealth you already hold, once a lunar year has passed on it, and only if that wealth is above a threshold.",
+                  ar: "الزكاة هي الركن الثالث، وهي تعمل بشكل مختلف عن الضريبة التي تعرفها. فهي لا تؤخذ من دخلك، بل تتعلق بمال تملكه بالفعل، بعد مرور سنة قمرية عليه، وفقط إن تجاوز حداً معيناً.",
+                },
+                points: [
+                  {
+                    en: "Income that arrives and is spent leaves nothing behind to be charged.",
+                    ar: "الدخل الذي يصل ويُنفق لا يترك شيئاً لتجب فيه الزكاة.",
+                  },
+                  {
+                    en: "Most students hold little beyond a term's expenses, which is why the honest answer is often that nothing is due.",
+                    ar: "معظم الطلاب لا يحتفظون بأكثر من مصاريف فصل دراسي، ولهذا يكون الجواب الصادق غالباً أنه لا شيء عليهم.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "The numbers that decide it", ar: "الأرقام التي تحسم الأمر" },
+                setup: {
+                  en: "The National Zakat Foundation, a UK zakat institution, publishes the nisab converted from the classical weights.",
+                  ar: "تنشر مؤسسة الزكاة الوطنية في بريطانيا حدّ النصاب محوَّلاً من الأوزان الفقهية.",
+                },
+                rows: [
+                  {
+                    label: { en: "Nisab by gold", ar: "النصاب بالذهب" },
+                    value: { en: "87.48 grams", ar: "87.48 غراماً" },
+                  },
+                  {
+                    label: { en: "Nisab by silver", ar: "النصاب بالفضة" },
+                    value: { en: "612.36 grams", ar: "612.36 غراماً" },
+                  },
+                  {
+                    label: { en: "Another opinion, also in use", ar: "رأي آخر معمول به أيضاً" },
+                    value: { en: "85 grams of gold, or 595 grams of silver", ar: "85 غراماً ذهباً أو 595 غراماً فضة" },
+                  },
+                  {
+                    label: { en: "The rate", ar: "المقدار" },
+                    value: { en: "2.5% of qualifying wealth", ar: "2.5% من المال الذي تجب فيه" },
+                  },
+                ],
+                takeaway: {
+                  en: "Notice that the nisab is a weight, not a sum of money. It has to be converted at the price of gold or silver on your own date, which means the figure changes every year, and the silver figure converts to a much lower amount than the gold one.",
+                  ar: "لاحظ أن النصاب وزن، لا مبلغ نقدي. ويجب تحويله بسعر الذهب أو الفضة في تاريخك أنت، ما يعني أن الرقم يتغير كل سنة، وأن رقم الفضة يعادل مبلغاً أقل بكثير من رقم الذهب.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "The choice of metal changes whether you owe", ar: "اختيار المعدن يغيّر وجوب الزكاة" },
+                body: {
+                  en: "Because silver is worth far less per gram, the silver nisab converts to a much smaller sum than the gold nisab in almost every market. Following the silver figure means more people reach the threshold. Islamic Finance Guru note that scholars hold credible but different views here. The practical point is to pick one, be consistent, and apply it to your own date rather than to whichever number looks kinder.",
+                  ar: "لأن قيمة الفضة لكل غرام أقل بكثير، فإن نصاب الفضة يعادل مبلغاً أصغر من نصاب الذهب في معظم الأسواق. واعتماد رقم الفضة يعني أن عدداً أكبر من الناس يبلغ الحد. وتشير منصة Islamic Finance Guru إلى أن للعلماء آراء معتبرة مختلفة هنا. والنقطة العملية أن تختار واحداً وتلتزم به وتطبّقه على تاريخك، لا على الرقم الأسهل.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What is the rate of Zakat on qualifying wealth?",
+                  ar: "ما مقدار الزكاة في المال الذي تجب فيه؟",
+                },
+                options: [
+                  { en: "1%", ar: "1%" },
+                  { en: "2.5%", ar: "2.5%" },
+                  { en: "5%", ar: "5%" },
+                  { en: "10%", ar: "10%" },
+                ],
+                answer: 1,
+                why: {
+                  en: "2.5% of the qualifying wealth, once a lunar year has passed on it and it stands above the nisab. The rate is not banded and does not rise with the amount.",
+                  ar: "2.5% من المال الذي تجب فيه، بعد مرور سنة قمرية عليه وكونه فوق النصاب. والمقدار ليس متدرجاً ولا يرتفع مع زيادة المبلغ.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "When does Zakat become due again?",
+                  ar: "متى تجب الزكاة مرة أخرى؟",
+                },
+                options: [
+                  { en: "Every time you are paid", ar: "كل مرة تُستلم فيها راتباً" },
+                  { en: "Once each lunar year, on your own anniversary date", ar: "مرة كل سنة قمرية، في تاريخك السنوي" },
+                  { en: "Only in Ramadan", ar: "في رمضان فقط" },
+                  { en: "Whenever you choose", ar: "متى شئت" },
+                ],
+                answer: 1,
+                why: {
+                  en: "It falls due on the anniversary of the lunar date you last paid it. Many people deliberately pay in Ramadan for the reward, which is fine, but the obligation itself follows your own date rather than the month.",
+                  ar: "تجب في ذكرى التاريخ القمري الذي دفعت فيه آخر مرة. وكثيرون يتعمّدون الدفع في رمضان طلباً للأجر، وهذا حسن، لكن الوجوب نفسه يتبع تاريخك لا الشهر.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What does the nisab actually represent?",
+                  ar: "ما الذي يمثّله النصاب فعلاً؟",
+                },
+                options: [
+                  { en: "A fixed amount of pounds", ar: "مبلغ ثابت بالجنيه" },
+                  { en: "A weight of gold or silver, converted to money on your date", ar: "وزن من الذهب أو الفضة، يُحوَّل إلى مال في تاريخك" },
+                  { en: "A percentage of your salary", ar: "نسبة من راتبك" },
+                  { en: "Your total savings", ar: "إجمالي مدخراتك" },
+                ],
+                answer: 1,
+                why: {
+                  en: "It is a weight that has to be priced. That is exactly why the threshold moves each year and why the figure you see on one website may not match another.",
+                  ar: "هو وزن يجب تسعيره. ولهذا بالضبط يتحرك الحد كل سنة، ولهذا قد لا يطابق الرقم الذي تراه في موقع رقم موقع آخر.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each term to what it means.",
+                  ar: "صِل كل مصطلح بمعناه.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Nisab", ar: "النصاب" },
+                    right: { en: "The threshold above which Zakat applies", ar: "الحد الذي تجب الزكاة فوقه" },
+                  },
+                  {
+                    left: { en: "2.5%", ar: "2.5%" },
+                    right: { en: "The amount taken from qualifying wealth", ar: "المقدار المأخوذ من المال الذي تجب فيه" },
+                  },
+                  {
+                    left: { en: "Your anniversary date", ar: "تاريخك السنوي" },
+                    right: { en: "When the year has passed and it falls due", ar: "متى مرّت السنة ووجبت" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You are a student with £900 saved, no gold, no silver, no investments, and the money has been there for a year. What is the most sensible position?",
+                  ar: "أنت طالب لديك £900 مدّخرة، ولا ذهب ولا فضة ولا استثمارات، والمال باقٍ منذ سنة. ما الموقف الأسلم؟",
+                },
+                options: [
+                  {
+                    label: { en: "Pay 2.5% immediately because you have savings", ar: "ادفع 2.5% فوراً لأن لديك مدخرات" },
+                    outcome: {
+                      en: "You may be giving what is not due. Zakat is not triggered by having savings, it is triggered by being above the nisab.",
+                      ar: "قد تكون دفعت ما لا يجب. فوجوب الزكاة لا يتحقق بمجرد وجود مدخرات، بل بتجاوز النصاب.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Check the current nisab value, then decide, since £900 is probably below it",
+                      ar: "تحقّق من قيمة النصاب الحالية ثم قرّر، فـ £900 غالباً أقل منه",
+                    },
+                    outcome: {
+                      en: "Correct approach. Convert the nisab at the current price on your date, and if you are below it, nothing is due this year. Recheck next year, because prices move.",
+                      ar: "منهج صحيح. حوّل النصاب بسعر اليوم في تاريخك، وإن كنت دونه فلا شيء عليك هذه السنة. وأعد التحقق السنة القادمة لأن الأسعار تتغير.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Assume students never owe anything", ar: "افترض أن الطلاب لا يجب عليهم شيء أبداً" },
+                    outcome: {
+                      en: "The assumption often happens to be right, but arriving at it by accident means you will not notice the year it stops being true.",
+                      ar: "الافتراض يصح غالباً بالمصادفة، لكن الوصول إليه بالحظ يعني أنك لن تنتبه للسنة التي يتوقف فيها عن الصحة.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "Knowing beats guessing", ar: "العلم أفضل من الظن" },
+                body: {
+                  en: "Students usually owe little or nothing, and knowing that with reasons is worth more than assuming it. Convert your nisab on your own date, check whether a lunar year has passed, and if the answer is still unclear, a zakat calculator or your local scholar can settle it in minutes. This lesson explains how the calculation works. It does not give a ruling on your particular assets.",
+                  ar: "الطلاب غالباً لا يجب عليهم إلا القليل أو لا شيء، ومعرفة ذلك مع الأسباب أنفع من افتراضه. حوّل نصابك في تاريخك، وانظر هل مرّت سنة قمرية، وإن بقي الأمر غير واضح فحاسبة زكاة أو عالم في منطقتك يحسمه في دقائق. هذا الدرس يشرح كيف يعمل الحساب، ولا يفتي في أموالك بعينها.",
+                },
+              },
+            ],
+            sources: [SOURCES.nzf, SOURCES.islamicRelief, SOURCES.ifg, SOURCES.darulFiqh],
+          },
+          {
+            id: "islamic-savings",
+            title: { en: "Interest-free saving that still grows", ar: "ادخار بلا فائدة وينمو رغم ذلك" },
+            objective: {
+              en: "Understand what an Islamic savings account pays, and what it does not promise.",
+              ar: "افهم ما يدفعه حساب ادخار إسلامي، وما لا يَعِد به.",
+            },
+            minutes: 8,
+            xp: 140,
+            relevance: {
+              en: "Keeping everything in a current account feels safe and quietly loses money, because prices rise while the balance does not. Islamic banks offer a way to hold savings without interest, but the return works on a different basis, and the difference is not just wording.",
+              ar: "إبقاء كل مالك في الحساب الجاري يبدو آمناً ويخسر بهدوء، لأن الأسعار ترتفع والرصيد لا يرتفع. وتقدّم البنوك الإسلامية طريقة لحفظ المدخرات دون فائدة، لكن العائد يقوم على أساس مختلف، والفرق ليس في الصياغة فقط.",
+            },
+            steps: [
+              {
+                k: "idea",
+                title: { en: "Profit sharing instead of interest", ar: "مشاركة في الربح بدلاً من الفائدة" },
+                body: {
+                  en: "An Islamic savings account is not an interest account with a different label. You are not lending the bank money for a charge. Your money is put to work in the bank's halal activities, and you receive a share of the profit those activities produce.",
+                  ar: "حساب الادخار الإسلامي ليس حساب فائدة بمسمّى آخر. أنت لا تُقرض البنك مالاً مقابل مقابل مالي. بل يُشغَّل مالك في أنشطة البنك الحلال، وتستلم حصة من الربح الذي تنتجه تلك الأنشطة.",
+                },
+                points: [
+                  {
+                    en: "A conventional account pays interest, which is the thing being avoided.",
+                    ar: "الحساب التقليدي يدفع فائدة، وهي الأمر الذي يُتجنَّب.",
+                  },
+                  {
+                    en: "An Islamic account pays a profit share, and a share can be less than expected, because it depends on how the underlying activity performed.",
+                    ar: "الحساب الإسلامي يدفع حصة من الربح، والحصة قد تقل عن المتوقع، لأنها تعتمد على أداء النشاط الأساسي.",
+                  },
+                ],
+              },
+              {
+                k: "example",
+                title: { en: "What the number on the page really is", ar: "ما هو الرقم المذكور فعلاً" },
+                setup: {
+                  en: "Moneyfacts, which tracks UK savings accounts, explains the difference plainly: where a conventional account pays interest, a Shariah compliant account pays what is called an expected profit rate.",
+                  ar: "توضّح مؤسسة Moneyfacts، التي تتابع حسابات الادخار في بريطانيا، الفرق ببساطة: حيث يدفع الحساب التقليدي فائدة، يدفع الحساب المتوافق مع الشريعة ما يسمى بمعدل الربح المتوقع.",
+                },
+                rows: [
+                  {
+                    label: { en: "What you are paid", ar: "ما يُدفع لك" },
+                    value: { en: "A share of profit, not interest", ar: "حصة من الربح، لا فائدة" },
+                  },
+                  {
+                    label: { en: "Is it promised?", ar: "هل هو مضمون؟" },
+                    value: {
+                      en: "It is targeted, not guaranteed, because it depends on the underlying assets",
+                      ar: "هو مستهدف لا مضمون، لأنه يعتمد على الأصول الأساسية",
+                    },
+                  },
+                  {
+                    label: { en: "Who reviews the structure?", ar: "من يراجع الهيكل؟" },
+                    value: { en: "The bank's Shariah board", ar: "هيئة الرقابة الشرعية في البنك" },
+                  },
+                  {
+                    label: { en: "Is it still protected if the bank fails?", ar: "هل يبقى محمياً إن تعثّر البنك؟" },
+                    value: {
+                      en: "Yes, the same deposit guarantee scheme as any authorised UK bank",
+                      ar: "نعم، النظام نفسه لضمان الودائع كما في أي بنك بريطاني مرخّص",
+                    },
+                  },
+                ],
+                takeaway: {
+                  en: "An expected profit rate of 3.9% and a savings rate of 3.9% look identical on a comparison table and are not the same promise. One is a share of a result, the other is a contractual charge for the use of money.",
+                  ar: "معدل ربح متوقع 3.9% ومعدل ادخار 3.9% يبدوان متطابقين في جدول المقارنة، وهما ليسا الوعد نفسه. أحدهما حصة من نتيجة، والآخر مقابل تعاقدي على استخدام المال.",
+                },
+              },
+              {
+                k: "watchout",
+                title: { en: "Two things that are easy to miss", ar: "أمران يسهل تفويتهما" },
+                body: {
+                  en: "First, the word expected is doing real work. If the bank's underlying activity underperforms, the profit share can be lower, and that is a feature of the structure rather than a failure of it. Second, an Islamic account is still a bank account, so deposit protection applies per bank and not per account. Two accounts with brands that share a licence count as one for the guarantee limit.",
+                  ar: "أولاً، كلمة متوقع تؤدي دوراً حقيقياً. فإن ضعف أداء نشاط البنك الأساسي، قد تقل حصة الربح، وهذا من طبيعة الهيكل لا خلل فيه. وثانياً، الحساب الإسلامي يبقى حساباً بنكياً، فحماية الودائع تُحسب لكل بنك لا لكل حساب. وحسابان لعلامتين تتقاسمان ترخيصاً واحداً يُعدّان حساباً واحداً في حد الضمان.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "What does an Islamic savings account pay you?",
+                  ar: "ما الذي يدفعه لك حساب الادخار الإسلامي؟",
+                },
+                options: [
+                  { en: "Interest", ar: "فائدة" },
+                  { en: "A share of profit", ar: "حصة من الربح" },
+                  { en: "A dividend", ar: "أرباح أسهم" },
+                  { en: "Nothing at all", ar: "لا شيء إطلاقاً" },
+                ],
+                answer: 1,
+                why: {
+                  en: "A profit share from the bank's halal activity. That is why the rate is described as expected rather than as a rate you are owed.",
+                  ar: "حصة من الربح الناتج عن نشاط البنك الحلال. ولهذا يوصف المعدل بأنه متوقع لا بأنه مبلغ مستحق لك.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Is the expected profit rate guaranteed?",
+                  ar: "هل معدل الربح المتوقع مضمون؟",
+                },
+                options: [
+                  { en: "Yes, exactly like an interest rate", ar: "نعم، تماماً كسعر الفائدة" },
+                  { en: "No, it is targeted and depends on how the underlying assets perform", ar: "لا، هو مستهدف ويعتمد على أداء الأصول الأساسية" },
+                  { en: "Only in the first year", ar: "في السنة الأولى فقط" },
+                  { en: "Only above a certain balance", ar: "فقط فوق رصيد معيّن" },
+                ],
+                answer: 1,
+                why: {
+                  en: "That is the point of sharing profit rather than charging for money. The return is tied to a real result, which is also why the bank carries genuine risk.",
+                  ar: "هذا هو معنى مشاركة الربح بدلاً من أخذ مقابل على المال. فالعائد مرتبط بنتيجة حقيقية، ولهذا أيضاً يتحمّل البنك مخاطرة حقيقية.",
+                },
+              },
+              {
+                k: "choice",
+                prompt: {
+                  en: "Why does leaving all your money in a current account lose value over time?",
+                  ar: "لماذا يفقد مالك قيمته إن تركته كله في الحساب الجاري؟",
+                },
+                options: [
+                  { en: "Because of bank charges", ar: "بسبب رسوم البنك" },
+                  { en: "Because prices rise while the balance does not", ar: "لأن الأسعار ترتفع والرصيد لا يرتفع" },
+                  { en: "Because of tax", ar: "بسبب الضريبة" },
+                  { en: "It does not lose value", ar: "لا يفقد قيمته" },
+                ],
+                answer: 1,
+                why: {
+                  en: "The balance stays the same and buys less each year. Doing nothing is itself a decision, which is why leaving savings in cash is a real cost even though it never shows up on a statement.",
+                  ar: "يبقى الرصيد كما هو ويشتري أقل كل سنة. وعدم فعل شيء قرار بحد ذاته، ولهذا فإن ترك المدخرات نقداً كلفة حقيقية حتى إن لم تظهر في أي كشف.",
+                },
+              },
+              {
+                k: "match",
+                prompt: {
+                  en: "Match each statement to the right account.",
+                  ar: "صِل كل عبارة بالحساب المناسب.",
+                },
+                pairs: [
+                  {
+                    left: { en: "Pays interest", ar: "يدفع فائدة" },
+                    right: { en: "A conventional savings account", ar: "حساب ادخار تقليدي" },
+                  },
+                  {
+                    left: { en: "Pays an expected profit rate", ar: "يدفع معدل ربح متوقع" },
+                    right: { en: "An Islamic savings account", ar: "حساب ادخار إسلامي" },
+                  },
+                  {
+                    left: { en: "Covered by the deposit guarantee scheme", ar: "مشمول بنظام ضمان الودائع" },
+                    right: { en: "Both of them", ar: "كلاهما" },
+                  },
+                ],
+              },
+              {
+                k: "scenario",
+                prompt: {
+                  en: "You need to park £300 for six months. A conventional easy access account offers 4.0% and an Islamic account offers 3.9%. What is the best way to think about it?",
+                  ar: "تحتاج إلى إيداع £300 لمدة ستة أشهر. حساب تقليدي سهل الوصول يعطي 4.0% وحساب إسلامي يعطي 3.9%. ما أفضل طريقة للتفكير؟",
+                },
+                options: [
+                  {
+                    label: { en: "Take the higher number, the difference is real money", ar: "خذ الرقم الأعلى، فالفرق مال حقيقي" },
+                    outcome: {
+                      en: "Over six months on £300 the gap is a matter of pence, while the question you are actually answering is about interest itself. The headline number is the smaller consideration here.",
+                      ar: "على £300 وستة أشهر يكون الفرق بضعة قروش، بينما السؤال الذي تجيب عليه فعلاً يتعلق بالفائدة نفسها. الرقم المعلن هو الاعتبار الأصغر هنا.",
+                    },
+                    delta: 0,
+                  },
+                  {
+                    label: {
+                      en: "Recognise the 0.1% is not the deciding factor, and that both are protected by the same scheme",
+                      ar: "أدرك أن 0.1% ليست العامل الحاسم، وأن كليهما مشمول بالنظام نفسه",
+                    },
+                    outcome: {
+                      en: "Correct framing. The two accounts carry the same guarantee, so the decision is about whether you want to receive interest, not about the rate at all.",
+                      ar: "تأطير صحيح. الحسابان يحملان الضمان نفسه، فالقرار يتعلق بما إذا كنت تريد استلام فائدة، لا بالمعدل إطلاقاً.",
+                    },
+                    delta: 20,
+                  },
+                  {
+                    label: { en: "Leave it in the current account to avoid deciding", ar: "اتركه في الحساب الجاري لتجنّب القرار" },
+                    outcome: {
+                      en: "Six months of doing nothing is still a decision, and it is the only option here that definitely loses value.",
+                      ar: "ستة أشهر من عدم الفعل قرار أيضاً، وهو الخيار الوحيد هنا الذي يخسر قيمة بالتأكيد.",
+                    },
+                    delta: 0,
+                  },
+                ],
+              },
+              {
+                k: "idea",
+                title: { en: "What to check, and what else applies", ar: "ما تتحقق منه، وما ينطبق أيضاً" },
+                body: {
+                  en: "Look for an authorised UK bank, a stated basis for the profit share, and a Shariah board reviewing the structure. Remember that savings are part of what Zakat is calculated on, so the account is not outside that. And since providers and scholars differ on the details, ask your own scholar before moving a large amount. This lesson explains how the product works. It does not rule on any particular account.",
+                  ar: "ابحث عن بنك بريطاني مرخّص، وأساس معلن لتوزيع الربح، وهيئة رقابة شرعية تراجع الهيكل. وتذكّر أن المدخرات تدخل في حساب الزكاة، فالحساب ليس خارج ذلك. ولأن المزوّدين والعلماء يختلفون في التفاصيل، استشر عالمك قبل نقل مبلغ كبير. هذا الدرس يشرح كيف يعمل المنتج، ولا يفتي في حساب بعينه.",
+                },
+              },
+            ],
+            sources: [SOURCES.ifg, SOURCES.moneyfacts, SOURCES.nzf, SOURCES.fscs],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* Lookups                                                             */
+/* ------------------------------------------------------------------ */
+
+export const allLessons = (): Array<{ lesson: Lesson; track: Track; unit: Unit }> =>
+  tracks.flatMap((track) =>
+    track.units.flatMap((unit) => unit.lessons.map((lesson) => ({ lesson, track, unit }))),
+  );
+
+export const findLesson = (lessonId: string) =>
+  allLessons().find((entry) => entry.lesson.id === lessonId);
+
+export const coreTracks = tracks.filter((track) => !track.optional);
+
+/** Total lessons a student must complete in the core curriculum. */
+export const coreLessonCount = coreTracks.reduce(
+  (total, track) =>
+    total + track.units.reduce((sum, unit) => sum + unit.lessons.length, 0),
+  0,
+);

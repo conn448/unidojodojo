@@ -11,16 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as CertificatesRouteImport } from './routes/certificates'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as HomeRouteImport } from './routes/home'
-import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PuzzleRouteImport } from './routes/puzzle'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SocietyRouteImport } from './routes/society'
 import { Route as TopicsRouteImport } from './routes/topics'
 import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
 import { Route as TopicsIndexRouteImport } from './routes/topics.index'
@@ -36,11 +32,6 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CertificatesRoute = CertificatesRouteImport.update({
-  id: '/certificates',
-  path: '/certificates',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FeedbackRoute = FeedbackRouteImport.update({
   id: '/feedback',
   path: '/feedback',
@@ -49,11 +40,6 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeaderboardRoute = LeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -71,19 +57,9 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PuzzleRoute = PuzzleRouteImport.update({
-  id: '/puzzle',
-  path: '/puzzle',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SocietyRoute = SocietyRouteImport.update({
-  id: '/society',
-  path: '/society',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TopicsRoute = TopicsRouteImport.update({
@@ -110,16 +86,12 @@ const TopicsTrackIdRoute = TopicsTrackIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/certificates': typeof CertificatesRoute
   '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
-  '/puzzle': typeof PuzzleRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -128,16 +100,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/certificates': typeof CertificatesRoute
   '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
-  '/puzzle': typeof PuzzleRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
   '/topics': typeof TopicsIndexRoute
@@ -146,16 +114,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/certificates': typeof CertificatesRoute
   '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
-  '/puzzle': typeof PuzzleRoute
   '/settings': typeof SettingsRoute
-  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -166,16 +130,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/certificates'
     | '/feedback'
     | '/home'
-    | '/leaderboard'
     | '/onboarding'
     | '/privacy'
     | '/profile'
-    | '/puzzle'
     | '/settings'
-    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -184,16 +144,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/certificates'
     | '/feedback'
     | '/home'
-    | '/leaderboard'
     | '/onboarding'
     | '/privacy'
     | '/profile'
-    | '/puzzle'
     | '/settings'
-    | '/society'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
     | '/topics'
@@ -201,16 +157,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
-    | '/certificates'
     | '/feedback'
     | '/home'
-    | '/leaderboard'
     | '/onboarding'
     | '/privacy'
     | '/profile'
-    | '/puzzle'
     | '/settings'
-    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -220,16 +172,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  CertificatesRoute: typeof CertificatesRoute
   FeedbackRoute: typeof FeedbackRoute
   HomeRoute: typeof HomeRoute
-  LeaderboardRoute: typeof LeaderboardRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
-  PuzzleRoute: typeof PuzzleRoute
   SettingsRoute: typeof SettingsRoute
-  SocietyRoute: typeof SocietyRoute
   TopicsRoute: typeof TopicsRouteWithChildren
   LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
@@ -250,13 +198,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/certificates': {
-      id: '/certificates'
-      path: '/certificates'
-      fullPath: '/certificates'
-      preLoaderRoute: typeof CertificatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/feedback': {
       id: '/feedback'
       path: '/feedback'
@@ -269,13 +210,6 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/leaderboard': {
-      id: '/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/leaderboard'
-      preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -299,25 +233,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/puzzle': {
-      id: '/puzzle'
-      path: '/puzzle'
-      fullPath: '/puzzle'
-      preLoaderRoute: typeof PuzzleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/society': {
-      id: '/society'
-      path: '/society'
-      fullPath: '/society'
-      preLoaderRoute: typeof SocietyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/topics': {
@@ -367,16 +287,12 @@ const TopicsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  CertificatesRoute: CertificatesRoute,
   FeedbackRoute: FeedbackRoute,
   HomeRoute: HomeRoute,
-  LeaderboardRoute: LeaderboardRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
-  PuzzleRoute: PuzzleRoute,
   SettingsRoute: SettingsRoute,
-  SocietyRoute: SocietyRoute,
   TopicsRoute: TopicsRouteWithChildren,
   LessonLessonIdRoute: LessonLessonIdRoute,
 }

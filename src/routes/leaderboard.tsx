@@ -1,1 +1,0 @@
-import{createFileRoute}from"@tanstack/react-router";import{LeaderboardPage}from"@/components/unidojo/rewards";import{pageMeta}from"@/lib/seo";export const Route=createFileRoute("/leaderboard")({head:()=>pageMeta("Campus leaderboard — UniDojo","See this week’s consistent UniDojo learners."),component:LeaderboardPage});
