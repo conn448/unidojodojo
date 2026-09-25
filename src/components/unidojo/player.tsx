@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Mascot, Page, useApp } from "@/components/unidojo/app";
 import { findLesson, stepPhase, stepsFor, type L, type Locale, type Step } from "@/lib/curriculum";
 import { useNation } from "@/lib/use-nation";
+import { useAuth } from "@/lib/use-auth";
+import { saveAnswer, saveLessonResult } from "@/lib/use-progress";
+import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 
 const MAX_HEARTS = 5;
@@ -36,6 +39,7 @@ type Answer =
 
 export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const { locale, play, completeLesson } = useApp();
+  const { user } = useAuth();
   const { nation, setNation, ready: nationReady } = useNation();
   const entry = useMemo(() => findLesson(lessonId), [lessonId]);
 
@@ -257,6 +261,17 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const isLast = index + 1 >= steps.length;
 
   const handleCheck = (correct: boolean) => {
+    // Recorded whether right or wrong. Never awaited, because a dropped write
+    // must not interrupt the lesson or cost the learner a heart.
+    if (user && entry) {
+      void saveAnswer({
+        userId: user.id,
+        lessonId: entry.lesson.id,
+        questionId: String(index),
+        answer: answer as unknown as Json,
+        correct,
+      });
+    }
     if (correct) {
       play("win");
       setXp((v) => v + (entry.lesson.xp || 100) / Math.max(practice.length, 1));
@@ -276,6 +291,20 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const handleContinue = () => {
     if (isLast) {
       completeLesson();
+      if (user && entry) {
+        // Same maths the results screen shows, so the stored score and the
+        // score on screen can never disagree.
+        const practiceCount = Math.max(practice.length, 1);
+        const wrongCount = Math.min(missed.length, practiceCount);
+        const score = Math.round((Math.max(practiceCount - wrongCount, 0) / practiceCount) * 100);
+        void saveLessonResult({
+          userId: user.id,
+          lessonId: entry.lesson.id,
+          trackId: entry.track.id,
+          completed: true,
+          score,
+        });
+      }
       play("win");
       setOutcome("finished");
       return;
