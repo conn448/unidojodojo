@@ -155,11 +155,9 @@ export function Mascot({ pose = "wave", className }: { pose?: string; className?
       <div className="ear ear-a" />
       <div className="ear ear-b" />
       <div className="face">
-        <span className="eye eye-a" />
-        <span className="eye eye-b" />
         <span className="mask mask-a" />
         <span className="mask mask-b" />
-        <span className="nose" />
+        <span className="mouth" />
       </div>
     </div>
   );
