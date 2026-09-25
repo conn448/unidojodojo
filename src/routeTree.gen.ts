@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SocietyRouteImport } from './routes/society'
 import { Route as TopicsRouteImport } from './routes/topics'
 import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
 import { Route as TopicsIndexRouteImport } from './routes/topics.index'
@@ -28,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -36,6 +46,26 @@ const HomeRoute = HomeRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocietyRoute = SocietyRouteImport.update({
+  id: '/society',
+  path: '/society',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TopicsRoute = TopicsRouteImport.update({
@@ -62,8 +92,13 @@ const TopicsTrackIdRoute = TopicsTrackIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -72,8 +107,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/society': typeof SocietyRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
   '/topics': typeof TopicsIndexRoute
@@ -82,8 +122,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/feedback': typeof FeedbackRoute
   '/home': typeof HomeRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/society': typeof SocietyRoute
   '/topics': typeof TopicsRouteWithChildren
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/topics/$trackId': typeof TopicsTrackIdRoute
@@ -94,8 +139,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/feedback'
     | '/home'
     | '/onboarding'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -104,8 +154,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/feedback'
     | '/home'
     | '/onboarding'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/society'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
     | '/topics'
@@ -113,8 +168,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/feedback'
     | '/home'
     | '/onboarding'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/society'
     | '/topics'
     | '/lesson/$lessonId'
     | '/topics/$trackId'
@@ -124,8 +184,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  FeedbackRoute: typeof FeedbackRoute
   HomeRoute: typeof HomeRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
+  SocietyRoute: typeof SocietyRoute
   TopicsRoute: typeof TopicsRouteWithChildren
   LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
@@ -146,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
@@ -158,6 +230,34 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/society': {
+      id: '/society'
+      path: '/society'
+      fullPath: '/society'
+      preLoaderRoute: typeof SocietyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/topics': {
@@ -207,8 +307,13 @@ const TopicsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  FeedbackRoute: FeedbackRoute,
   HomeRoute: HomeRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
+  SocietyRoute: SocietyRoute,
   TopicsRoute: TopicsRouteWithChildren,
   LessonLessonIdRoute: LessonLessonIdRoute,
 }
