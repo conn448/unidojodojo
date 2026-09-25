@@ -33,6 +33,7 @@ import {
   useApp,
   useCopy,
 } from "./app";
+import { CharacterCard } from "./character";
 import { LanguageIntro } from "./language-intro";
 import { NationPicker } from "./nation-picker";
 import { dailyRunway, tracks } from "@/lib/unidojo-data";
@@ -42,6 +43,9 @@ import { useAuth } from "@/lib/use-auth";
 import { useProfile } from "@/lib/use-profile";
 import { useProgress } from "@/lib/use-progress";
 import { submitFeedback, exportMyData, deleteMyAccount } from "@/lib/account";
+import { forgetAccount } from "@/lib/account-state";
+import { rememberOnboarding } from "@/lib/onboarding";
+import { PATHWAYS, pathwayOf, type Pathway } from "@/lib/world/pathways";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -98,7 +102,7 @@ export function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [choice, setChoice] = useState(0);
   const [university, setUniversity] = useState("");
-  const { save } = useProfile();
+  const { save, signedIn } = useProfile();
   const levels = ["Starting fresh", "Know the basics", "Ready to level up"];
   const goals = ["Spend with confidence", "Build a safety buffer", "Understand investing"];
   return (
@@ -198,7 +202,14 @@ export function OnboardingPage() {
                 localStorage.setItem("ud_onboarded", "yes");
                 // Saved only here, on the deliberate finish, not on every
                 // keystroke of the name field.
-                void save({ display_name: name, university, language: locale });
+                if (signedIn) {
+                  void save({ display_name: name, university, language: locale });
+                } else {
+                  // There is no profile row to write to yet, so `save` would be a
+                  // silent no-op and these answers would be lost. Hold them for
+                  // the account that is created next.
+                  rememberOnboarding({ display_name: name, university, language: locale });
+                }
                 nav({ to: "/home" });
               }
             }}
@@ -366,19 +377,76 @@ function RunwayNode({
     </div>
   );
 }
+
+/**
+ * A card in the Finance Around the World section.
+ *
+ * Deliberately distinct from a core `TrackCard`: the accent icon rather than the
+ * solid primary one, and an explicit Optional tag, so the section reads as
+ * exploration rather than as more of the required path.
+ */
+function PathwayCard({ pathway, track }: { pathway: Pathway; track: (typeof tracks)[number] }) {
+  const { locale } = useApp(),
+    t = useCopy();
+  return (
+    <Link
+      to="/topics/$trackId"
+      params={{ trackId: track.id }}
+      className="group block rounded-card border-2 border-border bg-card p-5 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <span className="grid size-12 flex-none place-items-center rounded-button bg-accent-soft text-2xl">
+          {pathway.icon}
+        </span>
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+          {t.optionalLabel}
+        </span>
+      </div>
+      <h3 className="font-display text-xl font-extrabold">{track.title[locale]}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        {track.description[locale]}
+      </p>
+      <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-muted-foreground">
+        {track.lessons.length} {locale === "ar" ? "دروس" : "lessons"}
+        <ChevronRight className="directional size-4" />
+      </span>
+    </Link>
+  );
+}
+
 export function TopicsPage({ trackId }: { trackId?: string }) {
   const { locale } = useApp(),
     t = useCopy();
   const list = trackId ? tracks.filter((x) => x.id === trackId) : tracks;
+  // A track either belongs to a pathway or it is core. Anything not named in
+  // PATHWAYS stays in the core grid, so a new track can never silently vanish
+  // from the interface just because someone forgot to list it.
+  const core = tracks.filter((x) => !pathwayOf(x.id));
+  const pathway = trackId ? pathwayOf(trackId) : undefined;
   return (
     <Page>
       <Header title={trackId ? (list[0]?.title[locale] ?? t.learn) : t.learn} back={!!trackId} />
       {!trackId ? (
-        <div className="grid gap-4 md:grid-cols-3">
-          {list.map((x, i) => (
-            <TrackCard key={x.id} track={x} index={i} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            {core.map((x, i) => (
+              <TrackCard key={x.id} track={x} index={i} />
+            ))}
+          </div>
+          <section className="mt-12">
+            <SectionTitle title={t.worldTitle} />
+            <p className="mb-6 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {t.worldIntro}
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              {PATHWAYS.map((entry) => {
+                const track = tracks.find((x) => x.id === entry.trackIds[0]);
+                if (!track) return null;
+                return <PathwayCard key={entry.id} pathway={entry} track={track} />;
+              })}
+            </div>
+          </section>
+        </>
       ) : (
         <>
           <section className="mb-8 rounded-card bg-primary p-6 text-primary-foreground">
@@ -386,6 +454,13 @@ export function TopicsPage({ trackId }: { trackId?: string }) {
             <h1 className="mt-6 font-display text-3xl font-bold">{list[0]?.title[locale]}</h1>
             <p className="mt-2 max-w-lg opacity-75">{list[0]?.description[locale]}</p>
           </section>
+          {/* One line per pathway, from the data, so a new pathway brings its own
+              framing instead of needing a branch here. */}
+          {pathway && (
+            <p className="mb-6 border-s-2 border-accent ps-3 text-sm leading-6 text-muted-foreground">
+              {pathway.note[locale]}
+            </p>
+          )}
           <div className="space-y-3">
             {list[0]?.lessons.map((l, i) => (
               <Link
@@ -414,7 +489,7 @@ export function TopicsPage({ trackId }: { trackId?: string }) {
 }
 export function ProfilePage() {
   const t = useCopy(),
-    { name, locale, streak } = useApp();
+    { name, locale, streak, points } = useApp();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { completed, accuracy } = useProgress();
@@ -435,6 +510,7 @@ export function ProfilePage() {
           ) : null}
         </div>
       </div>
+      <CharacterCard points={points} streak={streak} />
       <section className="py-7">
         <SectionTitle title={locale === "ar" ? "تعلّمك" : "Your learning"} />
         <div className="grid grid-cols-3 gap-3 text-center">
@@ -654,6 +730,9 @@ export function PrivacyPage() {
     setStatus("");
     const result = await deleteMyAccount();
     if (result.ok) {
+      // Clear this device's copy before signing out, so the account is gone
+      // locally too and not just on the server.
+      forgetAccount(user.id);
       await signOut();
       return;
     }

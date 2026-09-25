@@ -15,6 +15,10 @@
  * audience is UK university students but the app may be read elsewhere.
  */
 
+import { communityTrack } from "./world/community";
+import { ethicalTrack } from "./world/ethical";
+import { internationalTrack } from "./world/international";
+
 export type Locale = "en" | "ar";
 /** A string that exists in both shipping languages. */
 export type L = Record<Locale, string>;
@@ -261,7 +265,7 @@ export const SOURCES = {
 /* Tracks                                                              */
 /* ------------------------------------------------------------------ */
 
-export const tracks: Track[] = [
+const authoredTracks: Track[] = [
   {
     id: "money",
     title: { en: "Money Basics", ar: "أساسيات المال" },
@@ -3139,6 +3143,21 @@ export const tracks: Track[] = [
       },
     ],
   },
+];
+
+/**
+ * Every track the interface can see: the core curriculum written in this file,
+ * then the optional Finance Around the World pathways.
+ *
+ * The world pathways live in their own modules so this file stays readable, and
+ * so adding one is a new file plus one entry in `./world/pathways.ts` rather
+ * than an edit in the middle of four thousand lines of content.
+ */
+export const tracks: Track[] = [
+  ...authoredTracks,
+  ethicalTrack,
+  internationalTrack,
+  communityTrack,
 ];
 
 /* ------------------------------------------------------------------ */
