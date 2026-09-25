@@ -26,7 +26,10 @@ export default defineConfig(({ mode }) => {
 
     // GitHub Pages publishes this repository below /unidojodojo/.
     // Keep local development at / while making every production asset resolvable.
-    base: process.env["NODE_ENV"] === "production" ? "/unidojodojo/" : "/",
+    // A root-hosted deploy (Vercel) sets VITE_BASE=/ to override the prefix.
+    base:
+      process.env["VITE_BASE"] ??
+      (process.env["NODE_ENV"] === "production" ? "/unidojodojo/" : "/"),
 
     css: { transformer: "lightningcss" },
 
@@ -53,7 +56,15 @@ export default defineConfig(({ mode }) => {
       ignoreOutdatedRequests: true,
     },
 
-    server: { host: "::", port: 8080 },
+    // `host: "::"` binds to every interface so the LAN URL works on a phone.
+    // allowedHosts names the temporary Cloudflare quick tunnel used to give the
+    // local preview a public URL; Vite otherwise rejects any non-localhost Host
+    // header with "Blocked request. This host is not allowed."
+    server: {
+      host: "::",
+      port: 8080,
+      allowedHosts: [".trycloudflare.com"],
+    },
 
     plugins: [
       tailwindcss(),

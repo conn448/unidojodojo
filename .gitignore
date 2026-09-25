@@ -40,3 +40,6 @@ pages-artifact
 
 # Local portable toolchain (Node.js), machine-specific
 .tools/
+
+# Vercel CLI project link, machine-specific
+.vercel
